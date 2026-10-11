@@ -30,9 +30,9 @@ public class SimulationSnapshot {
     @Column(columnDefinition = "int not null")
     private Integer queueLength;
 
-//    @ManyToOne
-//    @JoinColumn(name = "simulation_id", nullable = false)
-//    private Simulation simulation;
+    @ManyToOne
+    @JoinColumn(name = "simulation_id", nullable = false)
+    private Simulation simulation;
 
     @ManyToOne
     @JoinColumn(name = "zone_id", nullable = false)
