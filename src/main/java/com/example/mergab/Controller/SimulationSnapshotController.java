@@ -25,9 +25,9 @@ public class SimulationSnapshotController {
 
 
     // Add snapshot
-    @PostMapping("/add/{zoneId}")
-    public ResponseEntity<?> addSimulationSnapshot(@PathVariable Integer zoneId, @RequestBody @Valid SimulationSnapshot snapshot) {
-        simulationSnapshotService.addSimulationSnapshot(zoneId, snapshot);
+    @PostMapping("/add/{simulationId}/{zoneId}")
+    public ResponseEntity<?> addSimulationSnapshot(@PathVariable Integer simulationId, @PathVariable Integer zoneId, @RequestBody @Valid SimulationSnapshot snapshot) {
+        simulationSnapshotService.addSimulationSnapshot(simulationId, zoneId, snapshot);
         return ResponseEntity.status(201).body(new ApiResponse("Simulation snapshot added successfully"));
     }
 
@@ -70,4 +70,15 @@ public class SimulationSnapshotController {
         return ResponseEntity.status(200).body(simulationSnapshotService.getSnapshotsByZoneOrdered(zoneId));
     }
 
+    // Get snapshots by simulation
+    @GetMapping("/get-by-simulation/{simulationId}")
+    public ResponseEntity<?> getSnapshotsBySimulation(@PathVariable Integer simulationId) {
+        return ResponseEntity.status(200).body(simulationSnapshotService.getSnapshotsBySimulation(simulationId));
+    }
+
+    // Get zone snapshots in a simulation
+    @GetMapping("/get-by-simulation-and-zone/{simulationId}/{zoneId}")
+    public ResponseEntity<?> getSnapshotsBySimulationAndZone(@PathVariable Integer simulationId, @PathVariable Integer zoneId) {
+        return ResponseEntity.status(200).body(simulationSnapshotService.getSnapshotsBySimulationAndZone(simulationId, zoneId));
+    }
 }

@@ -19,4 +19,8 @@ public interface SimulationSnapshotRepository extends JpaRepository<SimulationSn
     List<SimulationSnapshot> findBySimulation_Id(Integer simulationId);
 
     List<SimulationSnapshot> findBySimulation_IdAndZone_IdOrderByMinuteAsc(Integer simulationId, Integer zoneId);
+    boolean existsBySimulation_IdAndZone_IdAndMinute(Integer simulationId, Integer zoneId, Integer minute);
+
+
+
 }
