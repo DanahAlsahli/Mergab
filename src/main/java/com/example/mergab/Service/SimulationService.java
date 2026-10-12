@@ -25,8 +25,8 @@ public class SimulationService {
         return simulationRepository.findAll();
     }
 
-    // محاكاة المنظم نفسه
-    public List<Simulation> getMySimulations(Integer organizerId) {
+    // المحاكاة اللي أنشأها منظم معيّن
+    public List<Simulation> getSimulationsByOrganizer(Integer organizerId) {
         getOrganizer(organizerId);
         return simulationRepository.findSimulationsByOrganizer_Id(organizerId);
     }
@@ -50,8 +50,8 @@ public class SimulationService {
     }
 
     // التعديل مسموح بس قبل التشغيل
-    public void updateSimulation(Integer organizerId, Integer id, Simulation newSimulation) {
-        Simulation oldSimulation = getOwnedSimulation(organizerId, id);
+    public void updateSimulation(Integer id, Simulation newSimulation) {
+        Simulation oldSimulation = getSimulation(id);
         if (!oldSimulation.getStatus().equals("PENDING")) {
             throw new ApiException("Only pending simulations can be updated");
         }
@@ -62,8 +62,8 @@ public class SimulationService {
         simulationRepository.save(oldSimulation);
     }
 
-    public void deleteSimulation(Integer organizerId, Integer id) {
-        Simulation simulation = getOwnedSimulation(organizerId, id);
+    public void deleteSimulation(Integer id) {
+        Simulation simulation = getSimulation(id);
         if (simulation.getStatus().equals("RUNNING")) {
             throw new ApiException("Cannot delete a running simulation");
         }
@@ -80,14 +80,10 @@ public class SimulationService {
         return organizer;
     }
 
-    // يتأكد إن المحاكاة موجودة وإنها تابعة لنفس المنظم
-    private Simulation getOwnedSimulation(Integer organizerId, Integer simulationId) {
+    private Simulation getSimulation(Integer simulationId) {
         Simulation simulation = simulationRepository.findSimulationById(simulationId);
         if (simulation == null) {
             throw new ApiException("Simulation not found");
-        }
-        if (!simulation.getOrganizer().getId().equals(organizerId)) {
-            throw new ApiException("You are not allowed to modify this simulation");
         }
         return simulation;
     }

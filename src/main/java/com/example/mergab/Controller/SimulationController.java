@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-// TODO (Security): بدّلي {organizerId} بـ @AuthenticationPrincipal User user
+// TODO (Security): في add بدّلي {organizerId} بـ @AuthenticationPrincipal User user
 @RestController
 @RequestMapping("/api/v1/simulation")
 @RequiredArgsConstructor
@@ -21,9 +21,9 @@ public class SimulationController {
         return ResponseEntity.status(200).body(simulationService.getAllSimulations());
     }
 
-    @GetMapping("/my-simulations/{organizerId}")
-    public ResponseEntity<?> getMySimulations(@PathVariable Integer organizerId) {
-        return ResponseEntity.status(200).body(simulationService.getMySimulations(organizerId));
+    @GetMapping("/get-by-organizer/{organizerId}")
+    public ResponseEntity<?> getSimulationsByOrganizer(@PathVariable Integer organizerId) {
+        return ResponseEntity.status(200).body(simulationService.getSimulationsByOrganizer(organizerId));
     }
 
     @PostMapping("/add/{organizerId}/{historicalAttendanceId}")
@@ -32,15 +32,15 @@ public class SimulationController {
         return ResponseEntity.status(201).body(new ApiResponse("Simulation added successfully"));
     }
 
-    @PutMapping("/update/{organizerId}/{id}")
-    public ResponseEntity<?> updateSimulation(@PathVariable Integer organizerId, @PathVariable Integer id, @RequestBody @Valid Simulation simulation) {
-        simulationService.updateSimulation(organizerId, id, simulation);
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateSimulation(@PathVariable Integer id, @RequestBody @Valid Simulation simulation) {
+        simulationService.updateSimulation(id, simulation);
         return ResponseEntity.status(200).body(new ApiResponse("Simulation updated successfully"));
     }
 
-    @DeleteMapping("/delete/{organizerId}/{id}")
-    public ResponseEntity<?> deleteSimulation(@PathVariable Integer organizerId, @PathVariable Integer id) {
-        simulationService.deleteSimulation(organizerId, id);
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteSimulation(@PathVariable Integer id) {
+        simulationService.deleteSimulation(id);
         return ResponseEntity.status(200).body(new ApiResponse("Simulation deleted successfully"));
     }
 }

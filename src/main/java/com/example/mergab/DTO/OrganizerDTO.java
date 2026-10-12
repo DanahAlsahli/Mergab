@@ -25,10 +25,6 @@ public class OrganizerDTO {
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
 
-    @NotEmpty(message = "Organization name is required")
-    @Size(max = 100, message = "Organization name cannot exceed 100 characters")
-    private String organizationName;
-
     @NotEmpty(message = "Phone number is required")
     @Pattern(regexp = "^05\\d{8}$", message = "Phone number must start with 05 and be 10 digits")
     private String phoneNumber;

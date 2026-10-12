@@ -14,6 +14,7 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final OrganizerService organizerService;
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -49,6 +50,11 @@ public class UserService {
 
     public void deleteUser(Integer id) {
         User user = getUserById(id);
-        userRepository.delete(user); // cascade يحذف Organizer/Visitor المرتبط
+        // المنظم له حذف خاص يفك ربط فعالياته ومحاكاته
+        if (user.getOrganizer() != null) {
+            organizerService.deleteOrganizer(id);
+            return;
+        }
+        userRepository.delete(user); // cascade يحذف Visitor المرتبط
     }
 }
