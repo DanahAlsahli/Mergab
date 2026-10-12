@@ -4,7 +4,7 @@ import com.example.mergab.Api.ApiException;
 import com.example.mergab.Model.User;
 import com.example.mergab.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,7 +23,7 @@ public class UserService {
         if (userRepository.findUserByEmail(user.getEmail()) != null) {
             throw new ApiException("Email already exists");
         }
-        user.setPassword(new BCryptPasswordEncoder().encode(user.getPassword()));
+//        user.setPassword(new BCryptPasswordEncoder().encode(user.getPassword()));
         user.setRole("ORGANIZER");
         userRepository.save(user);
     }
@@ -41,7 +41,8 @@ public class UserService {
 
         oldUser.setFullName(newUser.getFullName());
         oldUser.setEmail(newUser.getEmail());
-        oldUser.setPassword(new BCryptPasswordEncoder().encode(newUser.getPassword()));
+        oldUser.setPassword(newUser.getPassword());
+//        oldUser.setPassword(new BCryptPasswordEncoder().encode(newUser.getPassword()));
 
         userRepository.save(oldUser);
     }

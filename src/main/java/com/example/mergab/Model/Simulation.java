@@ -30,8 +30,7 @@ public class Simulation {
     @Column(columnDefinition = "int not null")
     private Integer durationMinutes;
 
-    @Pattern(regexp = "^(PENDING|RUNNING|COMPLETED|FAILED)$",
-            message = "Status must be PENDING, RUNNING, COMPLETED or FAILED")
+    @Pattern(regexp = "^(PENDING|RUNNING|COMPLETED|FAILED)$", message = "Status must be PENDING, RUNNING, COMPLETED or FAILED")
     @Column(columnDefinition = "varchar(20) not null default 'PENDING' check (status in ('PENDING','RUNNING','COMPLETED','FAILED'))")
     private String status = "PENDING";
 

@@ -4,6 +4,7 @@ package com.example.mergab.Service;
 
 import com.example.mergab.Api.ApiException;
 import com.example.mergab.Model.SimulationSnapshot;
+import com.example.mergab.Model.Simulation;
 import com.example.mergab.Model.Zone;
 import com.example.mergab.Repository.SimulationSnapshotRepository;
 import com.example.mergab.Repository.ZoneRepository;
