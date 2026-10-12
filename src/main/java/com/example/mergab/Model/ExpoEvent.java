@@ -1,5 +1,6 @@
 package com.example.mergab.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -37,4 +38,10 @@ public class ExpoEvent {
     @ManyToOne
     @JoinColumn(name = "zone_id", nullable = false)
     private Zone zone;
+
+    // المنظم اللي أنشأ الفعالية
+    @ManyToOne
+    @JoinColumn(name = "organizer_id", referencedColumnName = "id", nullable = false)
+    @JsonIgnore
+    private Organizer organizer;
 }

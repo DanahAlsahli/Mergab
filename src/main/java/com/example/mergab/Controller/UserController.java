@@ -6,9 +6,9 @@ import com.example.mergab.Service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+// endpoints الأدمن (بعد السكيورتي: hasAuthority("ADMIN"))
 @RestController
 @RequestMapping("/api/v1/user")
 @RequiredArgsConstructor
@@ -21,21 +21,25 @@ public class UserController {
         return ResponseEntity.status(200).body(userService.getAllUsers());
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody @Valid User user) {
-        userService.register(user);
-        return ResponseEntity.status(200).body(new ApiResponse("User registered successfully"));
+    @GetMapping("/get/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable Integer id) {
+        return ResponseEntity.status(200).body(userService.getUserById(id));
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<?> updateUser(@AuthenticationPrincipal User user, @RequestBody @Valid User newUser) {
-        userService.updateUser(user.getId(), newUser);
-        return ResponseEntity.status(200).body(new ApiResponse("User updated successfully"));
+    @GetMapping("/get-by-role/{role}")
+    public ResponseEntity<?> getUsersByRole(@PathVariable String role) {
+        return ResponseEntity.status(200).body(userService.getUsersByRole(role));
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteUser(@AuthenticationPrincipal User user) {
-        userService.deleteUser(user.getId());
+    @PostMapping("/add-admin")
+    public ResponseEntity<?> addAdmin(@RequestBody @Valid User admin) {
+        userService.addAdmin(admin);
+        return ResponseEntity.status(201).body(new ApiResponse("Admin added successfully"));
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Integer id) {
+        userService.deleteUser(id);
         return ResponseEntity.status(200).body(new ApiResponse("User deleted successfully"));
     }
 }
