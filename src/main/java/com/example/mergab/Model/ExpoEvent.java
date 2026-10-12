@@ -39,9 +39,9 @@ public class ExpoEvent {
     @JoinColumn(name = "zone_id", nullable = false)
     private Zone zone;
 
-    // المنظم اللي أنشأ الفعالية
+    // المنظم اللي أنشأ الفعالية (createdBy) - يصير null لو انحذف المنظم
     @ManyToOne
-    @JoinColumn(name = "organizer_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "organizer_id", referencedColumnName = "id")
     @JsonIgnore
     private Organizer organizer;
 }

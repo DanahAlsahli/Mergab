@@ -2,9 +2,13 @@ package com.example.mergab.Service;
 
 import com.example.mergab.Api.ApiException;
 import com.example.mergab.DTO.OrganizerDTO;
+import com.example.mergab.Model.ExpoEvent;
 import com.example.mergab.Model.Organizer;
+import com.example.mergab.Model.Simulation;
 import com.example.mergab.Model.User;
+import com.example.mergab.Repository.ExpoEventRepository;
 import com.example.mergab.Repository.OrganizerRepository;
+import com.example.mergab.Repository.SimulationRepository;
 import com.example.mergab.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +21,8 @@ public class OrganizerService {
 
     private final OrganizerRepository organizerRepository;
     private final UserRepository userRepository;
+    private final ExpoEventRepository expoEventRepository;
+    private final SimulationRepository simulationRepository;
 
     public List<User> getAllOrganizers() {
         return userRepository.findUsersByRole("ORGANIZER");
@@ -33,7 +39,7 @@ public class OrganizerService {
         User user = new User(null, dto.getFullName(), dto.getEmail(), dto.getPassword(), "ORGANIZER", null, null);
         userRepository.save(user);
 
-        Organizer organizer = new Organizer(null, dto.getOrganizationName(), dto.getPhoneNumber(), user, null, null);
+        Organizer organizer = new Organizer(null, dto.getPhoneNumber(), user, null, null);
         organizerRepository.save(organizer);
     }
 
@@ -56,7 +62,6 @@ public class OrganizerService {
         user.setFullName(dto.getFullName());
         user.setEmail(dto.getEmail());
         user.setPassword(dto.getPassword());
-        organizer.setOrganizationName(dto.getOrganizationName());
         organizer.setPhoneNumber(dto.getPhoneNumber());
 
         userRepository.save(user);
@@ -68,6 +73,17 @@ public class OrganizerService {
         if (organizer == null) {
             throw new ApiException("Organizer not found");
         }
+
+        // نفك ربط شغله قبل الحذف عشان تبقى الفعاليات والمحاكاة
+        for (ExpoEvent event : expoEventRepository.findExpoEventsByOrganizer_Id(organizerId)) {
+            event.setOrganizer(null);
+            expoEventRepository.save(event);
+        }
+        for (Simulation simulation : simulationRepository.findSimulationsByOrganizer_Id(organizerId)) {
+            simulation.setOrganizer(null);
+            simulationRepository.save(simulation);
+        }
+
         userRepository.delete(organizer.getUser());
     }
 }

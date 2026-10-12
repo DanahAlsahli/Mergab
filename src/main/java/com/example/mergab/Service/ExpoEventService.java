@@ -25,8 +25,8 @@ public class ExpoEventService {
         return expoEventRepository.findAll();
     }
 
-    // فعاليات المنظم نفسه
-    public List<ExpoEvent> getMyEvents(Integer organizerId) {
+    // الفعاليات اللي أضافها منظم معيّن
+    public List<ExpoEvent> getEventsByOrganizer(Integer organizerId) {
         getOrganizer(organizerId);
         return expoEventRepository.findExpoEventsByOrganizer_Id(organizerId);
     }
@@ -51,8 +51,8 @@ public class ExpoEventService {
     }
 
     //update expo event
-    public void updateExpoEvent(Integer organizerId, Integer id, ExpoEvent expoEvent) {
-        ExpoEvent oldEvent = getOwnedEvent(organizerId, id);
+    public void updateExpoEvent(Integer id, ExpoEvent expoEvent) {
+        ExpoEvent oldEvent = getEventById(id);
 
         // Validate event dates
         if (!expoEvent.getEndDateTime().isAfter(expoEvent.getStartDateTime())) {
@@ -68,14 +68,14 @@ public class ExpoEventService {
     }
 
     //delete expo event
-    public void deleteExpoEvent(Integer organizerId, Integer id) {
-        ExpoEvent expoEvent = getOwnedEvent(organizerId, id);
+    public void deleteExpoEvent(Integer id) {
+        ExpoEvent expoEvent = getEventById(id);
         expoEventRepository.delete(expoEvent);
     }
 
     //change event zone
-    public void changeEventZone(Integer organizerId, Integer eventId, Integer zoneId) {
-        ExpoEvent expoEvent = getOwnedEvent(organizerId, eventId);
+    public void changeEventZone(Integer eventId, Integer zoneId) {
+        ExpoEvent expoEvent = getEventById(eventId);
 
         // Check if zone exists
         Zone zone = zoneRepository.findZoneById(zoneId);
@@ -118,14 +118,5 @@ public class ExpoEventService {
             throw new ApiException("Organizer not found");
         }
         return organizer;
-    }
-
-    // يتأكد إن الفعالية موجودة وإنها تابعة لنفس المنظم
-    private ExpoEvent getOwnedEvent(Integer organizerId, Integer eventId) {
-        ExpoEvent expoEvent = getEventById(eventId);
-        if (!expoEvent.getOrganizer().getId().equals(organizerId)) {
-            throw new ApiException("You are not allowed to modify this event");
-        }
-        return expoEvent;
     }
 }

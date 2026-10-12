@@ -19,9 +19,6 @@ public class Organizer {
     @Id
     private Integer id;
 
-    @Column(columnDefinition = "varchar(100) not null")
-    private String organizationName;
-
     @Column(columnDefinition = "varchar(10) not null unique")
     private String phoneNumber;
 
@@ -30,11 +27,13 @@ public class Organizer {
     @JsonIgnore
     private User user;
 
-    @OneToMany(mappedBy = "organizer", cascade = CascadeType.ALL)
+    // الفعاليات والمحاكاة اللي أنشأها (للتتبع فقط - أي منظم يقدر يعدّلها)
+    // بدون cascade: حذف المنظم ما يحذف شغله، لأنه شغل الإكسبو كامل
+    @OneToMany(mappedBy = "organizer")
     @JsonIgnore
     private Set<ExpoEvent> expoEvents;
 
-    @OneToMany(mappedBy = "organizer", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "organizer")
     @JsonIgnore
     private Set<Simulation> simulations;
 }

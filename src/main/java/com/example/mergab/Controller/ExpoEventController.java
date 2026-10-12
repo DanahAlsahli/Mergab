@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-// TODO (Security): بدّلي {organizerId} بـ @AuthenticationPrincipal User user
+// TODO (Security): في add بدّلي {organizerId} بـ @AuthenticationPrincipal User user
 @RestController
 @RequestMapping("/api/v1/expo-event")
 @RequiredArgsConstructor
@@ -22,10 +22,10 @@ public class ExpoEventController {
         return ResponseEntity.status(200).body(expoEventService.getExpoEvents());
     }
 
-    // Get organizer's own events
-    @GetMapping("/my-events/{organizerId}")
-    public ResponseEntity<?> getMyEvents(@PathVariable Integer organizerId) {
-        return ResponseEntity.status(200).body(expoEventService.getMyEvents(organizerId));
+    // Get events created by an organizer
+    @GetMapping("/get-by-organizer/{organizerId}")
+    public ResponseEntity<?> getEventsByOrganizer(@PathVariable Integer organizerId) {
+        return ResponseEntity.status(200).body(expoEventService.getEventsByOrganizer(organizerId));
     }
 
     // Add event
@@ -36,23 +36,23 @@ public class ExpoEventController {
     }
 
     // Update event
-    @PutMapping("/update/{organizerId}/{id}")
-    public ResponseEntity<?> updateExpoEvent(@PathVariable Integer organizerId, @PathVariable Integer id, @RequestBody @Valid ExpoEvent expoEvent) {
-        expoEventService.updateExpoEvent(organizerId, id, expoEvent);
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateExpoEvent(@PathVariable Integer id, @RequestBody @Valid ExpoEvent expoEvent) {
+        expoEventService.updateExpoEvent(id, expoEvent);
         return ResponseEntity.status(200).body(new ApiResponse("Event updated successfully"));
     }
 
     // Change event zone
-    @PutMapping("/change-zone/{organizerId}/{eventId}/{zoneId}")
-    public ResponseEntity<?> changeEventZone(@PathVariable Integer organizerId, @PathVariable Integer eventId, @PathVariable Integer zoneId) {
-        expoEventService.changeEventZone(organizerId, eventId, zoneId);
+    @PutMapping("/change-zone/{eventId}/{zoneId}")
+    public ResponseEntity<?> changeEventZone(@PathVariable Integer eventId, @PathVariable Integer zoneId) {
+        expoEventService.changeEventZone(eventId, zoneId);
         return ResponseEntity.status(200).body(new ApiResponse("Event zone changed successfully"));
     }
 
     // Delete event
-    @DeleteMapping("/delete/{organizerId}/{id}")
-    public ResponseEntity<?> deleteExpoEvent(@PathVariable Integer organizerId, @PathVariable Integer id) {
-        expoEventService.deleteExpoEvent(organizerId, id);
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteExpoEvent(@PathVariable Integer id) {
+        expoEventService.deleteExpoEvent(id);
         return ResponseEntity.status(200).body(new ApiResponse("Event deleted successfully"));
     }
 

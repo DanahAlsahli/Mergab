@@ -57,9 +57,9 @@ public class Simulation {
     @JsonIgnore
     private HistoricalAttendance historicalAttendance;
 
-    // المنظم اللي أنشأ المحاكاة
+    // المنظم اللي أنشأ المحاكاة (createdBy) - يصير null لو انحذف المنظم
     @ManyToOne
-    @JoinColumn(name = "organizer_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "organizer_id", referencedColumnName = "id")
     @JsonIgnore
     private Organizer organizer;
 }
