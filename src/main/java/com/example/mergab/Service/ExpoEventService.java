@@ -1,11 +1,11 @@
 package com.example.mergab.Service;
 
-
-
 import com.example.mergab.Api.ApiException;
 import com.example.mergab.Model.ExpoEvent;
+import com.example.mergab.Model.Organizer;
 import com.example.mergab.Model.Zone;
 import com.example.mergab.Repository.ExpoEventRepository;
+import com.example.mergab.Repository.OrganizerRepository;
 import com.example.mergab.Repository.ZoneRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,19 +16,26 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ExpoEventService {
 
-
     private final ExpoEventRepository expoEventRepository;
     private final ZoneRepository zoneRepository;
+    private final OrganizerRepository organizerRepository;
 
+    // كل الفعاليات (للأدمن والزوار)
     public List<ExpoEvent> getExpoEvents() {
         return expoEventRepository.findAll();
     }
 
-    public void addExpoEvent(Integer zoneId, ExpoEvent expoEvent) {
+    // فعاليات المنظم نفسه
+    public List<ExpoEvent> getMyEvents(Integer organizerId) {
+        getOrganizer(organizerId);
+        return expoEventRepository.findExpoEventsByOrganizer_Id(organizerId);
+    }
+
+    public void addExpoEvent(Integer organizerId, Integer zoneId, ExpoEvent expoEvent) {
+        Organizer organizer = getOrganizer(organizerId);
 
         // Check if zone exists
         Zone zone = zoneRepository.findZoneById(zoneId);
-
         if (zone == null) {
             throw new ApiException("Zone not found");
         }
@@ -39,19 +46,13 @@ public class ExpoEventService {
         }
 
         expoEvent.setZone(zone);
+        expoEvent.setOrganizer(organizer);
         expoEventRepository.save(expoEvent);
     }
 
-
     //update expo event
-    public void updateExpoEvent(Integer id, ExpoEvent expoEvent) {
-
-        // Check if event exists
-        ExpoEvent oldEvent = expoEventRepository.findExpoEventById(id);
-
-        if (oldEvent == null) {
-            throw new ApiException("Event not found");
-        }
+    public void updateExpoEvent(Integer organizerId, Integer id, ExpoEvent expoEvent) {
+        ExpoEvent oldEvent = getOwnedEvent(organizerId, id);
 
         // Validate event dates
         if (!expoEvent.getEndDateTime().isAfter(expoEvent.getStartDateTime())) {
@@ -66,33 +67,18 @@ public class ExpoEventService {
         expoEventRepository.save(oldEvent);
     }
 
-
-    //delet expo event
-    public void deleteExpoEvent(Integer id) {
-        // Check if event exists
-        ExpoEvent expoEvent = expoEventRepository.findExpoEventById(id);
-
-        if (expoEvent == null) {
-            throw new ApiException("Event not found");
-        }
-
+    //delete expo event
+    public void deleteExpoEvent(Integer organizerId, Integer id) {
+        ExpoEvent expoEvent = getOwnedEvent(organizerId, id);
         expoEventRepository.delete(expoEvent);
     }
 
-
     //change event zone
-    public void changeEventZone(Integer eventId, Integer zoneId) {
-
-        // Check if event exists
-        ExpoEvent expoEvent = expoEventRepository.findExpoEventById(eventId);
-
-        if (expoEvent == null) {
-            throw new ApiException("Event not found");
-        }
+    public void changeEventZone(Integer organizerId, Integer eventId, Integer zoneId) {
+        ExpoEvent expoEvent = getOwnedEvent(organizerId, eventId);
 
         // Check if zone exists
         Zone zone = zoneRepository.findZoneById(zoneId);
-
         if (zone == null) {
             throw new ApiException("Zone not found");
         }
@@ -108,27 +94,38 @@ public class ExpoEventService {
 
     // Get events by zone
     public List<ExpoEvent> getEventsByZone(Integer zoneId) {
-
-        // Check if zone exists
         Zone zone = zoneRepository.findZoneById(zoneId);
-
         if (zone == null) {
             throw new ApiException("Zone not found");
         }
-
         return expoEventRepository.findByZone_Id(zoneId);
     }
 
     // Get event by ID
     public ExpoEvent getEventById(Integer id) {
-
         ExpoEvent expoEvent = expoEventRepository.findExpoEventById(id);
-
-        // Check if event exists
         if (expoEvent == null) {
             throw new ApiException("Event not found");
         }
+        return expoEvent;
+    }
 
+    // ===== helpers =====
+
+    private Organizer getOrganizer(Integer organizerId) {
+        Organizer organizer = organizerRepository.findOrganizerById(organizerId);
+        if (organizer == null) {
+            throw new ApiException("Organizer not found");
+        }
+        return organizer;
+    }
+
+    // يتأكد إن الفعالية موجودة وإنها تابعة لنفس المنظم
+    private ExpoEvent getOwnedEvent(Integer organizerId, Integer eventId) {
+        ExpoEvent expoEvent = getEventById(eventId);
+        if (!expoEvent.getOrganizer().getId().equals(organizerId)) {
+            throw new ApiException("You are not allowed to modify this event");
+        }
         return expoEvent;
     }
 }

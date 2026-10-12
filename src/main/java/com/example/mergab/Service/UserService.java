@@ -4,11 +4,11 @@ import com.example.mergab.Api.ApiException;
 import com.example.mergab.Model.User;
 import com.example.mergab.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+// عمليات الأدمن على كل المستخدمين
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -19,39 +19,36 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public void register(User user) {
-        if (userRepository.findUserByEmail(user.getEmail()) != null) {
-            throw new ApiException("Email already exists");
-        }
-//        user.setPassword(new BCryptPasswordEncoder().encode(user.getPassword()));
-        user.setRole("ORGANIZER");
-        userRepository.save(user);
-    }
-
-    public void updateUser(Integer userId, User newUser) {
-        User oldUser = userRepository.findUserById(userId);
-        if (oldUser == null) {
-            throw new ApiException("User not found");
-        }
-
-        User emailOwner = userRepository.findUserByEmail(newUser.getEmail());
-        if (emailOwner != null && !emailOwner.getId().equals(userId)) {
-            throw new ApiException("Email already exists");
-        }
-
-        oldUser.setFullName(newUser.getFullName());
-        oldUser.setEmail(newUser.getEmail());
-        oldUser.setPassword(newUser.getPassword());
-//        oldUser.setPassword(new BCryptPasswordEncoder().encode(newUser.getPassword()));
-
-        userRepository.save(oldUser);
-    }
-
-    public void deleteUser(Integer userId) {
-        User user = userRepository.findUserById(userId);
+    public User getUserById(Integer id) {
+        User user = userRepository.findUserById(id);
         if (user == null) {
             throw new ApiException("User not found");
         }
-        userRepository.delete(user);
+        return user;
+    }
+
+    public List<User> getUsersByRole(String role) {
+        role = role.toUpperCase();
+        if (!role.matches("^(ADMIN|ORGANIZER|VISITOR)$")) {
+            throw new ApiException("Role must be ADMIN, ORGANIZER or VISITOR");
+        }
+        return userRepository.findUsersByRole(role);
+    }
+
+    // الأدمن ما له تسجيل عام، يضيفه أدمن ثاني (أو يُدخل يدويًا أول مرة)
+    public void addAdmin(User admin) {
+        if (userRepository.findUserByEmail(admin.getEmail()) != null) {
+            throw new ApiException("Email already exists");
+        }
+        // TODO (Security): admin.setPassword(new BCryptPasswordEncoder().encode(admin.getPassword()));
+        admin.setRole("ADMIN");
+        admin.setOrganizer(null);
+        admin.setVisitor(null);
+        userRepository.save(admin);
+    }
+
+    public void deleteUser(Integer id) {
+        User user = getUserById(id);
+        userRepository.delete(user); // cascade يحذف Organizer/Visitor المرتبط
     }
 }

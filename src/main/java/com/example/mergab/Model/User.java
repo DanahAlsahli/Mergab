@@ -1,5 +1,6 @@
 package com.example.mergab.Model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
@@ -9,20 +10,18 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
+// الحساب الأساسي (تسجيل الدخول) - مشترك بين الأدوار الثلاثة
+// ADMIN     : مستخدم فقط (ما له جدول خاص)
+// ORGANIZER : مستخدم + جدول Organizer
+// VISITOR   : مستخدم + جدول Visitor
+// TODO (Security): رجّعي implements UserDetails + getAuthorities() لما نفعل السكيورتي
 @Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class User implements UserDetails {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,40 +38,20 @@ public class User implements UserDetails {
     private String email;
 
     @NotEmpty(message = "Password is required")
+    @Size(min = 6, message = "Password must be at least 6 characters")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // ما يطلع في الـ response
     @Column(columnDefinition = "varchar(255) not null")
     private String password;
 
+    @Pattern(regexp = "^(ADMIN|ORGANIZER|VISITOR)$", message = "Role must be ADMIN, ORGANIZER or VISITOR")
+    @Column(columnDefinition = "varchar(20) not null check (role in ('ADMIN','ORGANIZER','VISITOR'))")
+    private String role;
 
-    @Pattern(regexp = "^ORGANIZER$", message = "Role must be ORGANIZER")
-    @Column(columnDefinition = "varchar(20) not null default 'ORGANIZER'")
-    private String role = "ORGANIZER";
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @PrimaryKeyJoinColumn
+    private Organizer organizer;
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority(this.role));    }
-
-    @Override
-    public String getUsername() {
-        return this.email;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @PrimaryKeyJoinColumn
+    private Visitor visitor;
 }

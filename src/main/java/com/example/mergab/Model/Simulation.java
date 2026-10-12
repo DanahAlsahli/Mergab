@@ -56,4 +56,10 @@ public class Simulation {
     @JoinColumn(name = "historical_attendance_id", referencedColumnName = "id", nullable = false)
     @JsonIgnore
     private HistoricalAttendance historicalAttendance;
+
+    // المنظم اللي أنشأ المحاكاة
+    @ManyToOne
+    @JoinColumn(name = "organizer_id", referencedColumnName = "id", nullable = false)
+    @JsonIgnore
+    private Organizer organizer;
 }

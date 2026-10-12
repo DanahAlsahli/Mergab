@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface SimulationRepository extends JpaRepository<Simulation, Integer> {
     Simulation findSimulationById(Integer id);
+    List<Simulation> findSimulationsByOrganizer_Id(Integer organizerId);
 
 }

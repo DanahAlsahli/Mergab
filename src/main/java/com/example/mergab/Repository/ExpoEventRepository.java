@@ -11,5 +11,6 @@ import java.util.List;
 public interface ExpoEventRepository extends JpaRepository<ExpoEvent,Integer> {
     ExpoEvent findExpoEventById(Integer id);
     List<ExpoEvent> findByZone_Id(Integer zoneId);
+    List<ExpoEvent> findExpoEventsByOrganizer_Id(Integer organizerId);
 
 }
