@@ -67,4 +67,14 @@ public class ExpoEventController {
     public ResponseEntity<?> getEventsByZone(@PathVariable Integer zoneId) {
         return ResponseEntity.status(200).body(expoEventService.getEventsByZone(zoneId));
     }
+
+    @GetMapping("/get-upcoming")
+    public ResponseEntity<?> getUpcomingEvents() {
+        return ResponseEntity.status(200).body(expoEventService.getUpcomingEvents());
+    }
+
+    @GetMapping("/get-today")
+    public ResponseEntity<?> getTodayEvents() {
+        return ResponseEntity.status(200).body(expoEventService.getTodayEvents());
+    }
 }

@@ -3,6 +3,7 @@ package com.example.mergab.Service;
 import com.example.mergab.Api.ApiException;
 import com.example.mergab.Model.HistoricalAttendance;
 import com.example.mergab.Repository.HistoricalAttendanceRepository;
+import com.example.mergab.Repository.SimulationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import java.util.List;
 public class HistoricalAttendanceService {
 
     private final HistoricalAttendanceRepository historicalAttendanceRepository;
+    private final SimulationRepository simulationRepository;
 
     public List<HistoricalAttendance> getAllAttendance() {
         return historicalAttendanceRepository.findAll();
@@ -49,9 +51,34 @@ public class HistoricalAttendanceService {
 
     public void deleteAttendance(Integer id) {
         HistoricalAttendance attendance = historicalAttendanceRepository.findHistoricalAttendanceById(id);
+
+        // Check if attendance exists
         if (attendance == null) {
             throw new ApiException("Historical attendance not found");
         }
+
+        // Prevent deleting attendance used by simulations
+        if (simulationRepository.existsByHistoricalAttendance_Id(id)) {
+            throw new ApiException("Cannot delete historical attendance used by simulations");
+        }
+
         historicalAttendanceRepository.delete(attendance);
+    }
+
+    // Get historical attendance by ID
+    public HistoricalAttendance getAttendanceById(Integer id) {
+        HistoricalAttendance attendance = historicalAttendanceRepository.findHistoricalAttendanceById(id);
+
+        // Check if attendance exists
+        if (attendance == null) {
+            throw new ApiException("Historical attendance not found");
+        }
+
+        return attendance;
+    }
+
+    // Get attendance records by expo name
+    public List<HistoricalAttendance> getAttendanceByExpo(String expoName) {
+        return historicalAttendanceRepository.findByExpoNameOrderByAttendanceDateDesc(expoName);
     }
 }

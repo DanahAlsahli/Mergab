@@ -110,4 +110,40 @@ public class ZoneConnectionService {
 
         zoneConnectionRepository.delete(zoneConnection);
     }
+
+
+    // Get connection by ID
+    public ZoneConnection getZoneConnectionById(Integer id) {
+
+        ZoneConnection connection = zoneConnectionRepository.findZoneConnectionById(id);
+
+        // Check if connection exists
+        if (connection == null) {
+            throw new ApiException("Zone connection not found");
+        }
+
+        return connection;
+    }
+
+    // Get outgoing connections from a zone
+    public List<ZoneConnection> getOutgoingConnections(Integer zoneId) {
+
+        // Check if zone exists
+        if (zoneRepository.findZoneById(zoneId) == null) {
+            throw new ApiException("Zone not found");
+        }
+
+        return zoneConnectionRepository.findByFromZone_Id(zoneId);
+    }
+
+    // Get all connections related to a zone
+    public List<ZoneConnection> getConnectionsByZone(Integer zoneId) {
+
+        // Check if zone exists
+        if (zoneRepository.findZoneById(zoneId) == null) {
+            throw new ApiException("Zone not found");
+        }
+
+        return zoneConnectionRepository.findByFromZone_IdOrToZone_Id(zoneId, zoneId);
+    }
 }

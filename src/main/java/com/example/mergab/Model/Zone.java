@@ -45,12 +45,11 @@ public class Zone {
     @JsonIgnore
     private Set<ZoneConnection> incomingConnections;
 
-    @OneToMany(mappedBy = "zone")
+    @OneToMany(mappedBy = "zone", cascade = CascadeType.REMOVE)
     @JsonIgnore
     private Set<ExpoEvent> events;
 
-
-    @OneToMany(mappedBy = "zone")
+    @OneToMany(mappedBy = "zone", cascade = CascadeType.REMOVE)
     @JsonIgnore
     private Set<SimulationSnapshot> snapshots;
 }

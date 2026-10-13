@@ -43,4 +43,19 @@ public class ZoneController {
     public ResponseEntity<?> getZoneByName(@PathVariable String name) {
         return ResponseEntity.status(200).body(zoneService.getZoneByName(name));
     }
+
+    @GetMapping("/get-by-id/{id}")
+    public ResponseEntity<?> getZoneById(@PathVariable Integer id) {
+        return ResponseEntity.status(200).body(zoneService.getZoneById(id));
+    }
+
+    @GetMapping("/get-available")
+    public ResponseEntity<?> getAvailableZones() {
+        return ResponseEntity.status(200).body(zoneService.getAvailableZones());
+    }
+
+    @GetMapping("/get-occupancy/{id}")
+    public ResponseEntity<?> getZoneOccupancy(@PathVariable Integer id) {
+        return ResponseEntity.status(200).body(zoneService.getZoneOccupancy(id));
+    }
 }

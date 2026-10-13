@@ -48,7 +48,8 @@ public class Simulation {
     @JsonIgnore
     private Set<Intervention> interventions;
 
-    @OneToMany(mappedBy = "simulation")
+    // Delete snapshots when their simulation is deleted
+    @OneToMany(mappedBy = "simulation", cascade = CascadeType.REMOVE)
     @JsonIgnore
     private Set<SimulationSnapshot> snapshots;
 
@@ -59,7 +60,7 @@ public class Simulation {
 
     // المنظم اللي أنشأ المحاكاة (createdBy) - يصير null لو انحذف المنظم
     @ManyToOne
-    @JoinColumn(name = "organizer_id", referencedColumnName = "id")
+    @JoinColumn(name = "organizer_id")
     @JsonIgnore
     private Organizer organizer;
 }

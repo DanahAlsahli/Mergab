@@ -38,4 +38,14 @@ public class HistoricalAttendanceController {
         return ResponseEntity.status(200).body(new ApiResponse("Historical attendance deleted successfully"));
     }
 
+    @GetMapping("/get-by-id/{id}")
+    public ResponseEntity<?> getAttendanceById(@PathVariable Integer id) {
+        return ResponseEntity.status(200).body(historicalAttendanceService.getAttendanceById(id));
+    }
+
+    @GetMapping("/get-by-expo/{expoName}")
+    public ResponseEntity<?> getAttendanceByExpo(@PathVariable String expoName) {
+        return ResponseEntity.status(200).body(historicalAttendanceService.getAttendanceByExpo(expoName));
+    }
+
 }

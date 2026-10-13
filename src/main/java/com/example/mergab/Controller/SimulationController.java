@@ -43,4 +43,14 @@ public class SimulationController {
         simulationService.deleteSimulation(id);
         return ResponseEntity.status(200).body(new ApiResponse("Simulation deleted successfully"));
     }
+
+    @GetMapping("/get-by-id/{id}")
+    public ResponseEntity<?> getSimulationById(@PathVariable Integer id) {
+        return ResponseEntity.status(200).body(simulationService.getSimulationById(id));
+    }
+
+    @GetMapping("/get-by-status/{status}")
+    public ResponseEntity<?> getSimulationsByStatus(@PathVariable String status) {
+        return ResponseEntity.status(200).body(simulationService.getSimulationsByStatus(status));
+    }
 }

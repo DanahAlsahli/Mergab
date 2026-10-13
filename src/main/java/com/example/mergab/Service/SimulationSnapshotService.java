@@ -192,4 +192,46 @@ public class SimulationSnapshotService {
 
         return simulationSnapshotRepository.findBySimulation_IdAndZone_IdOrderByMinuteAsc(simulationId, zoneId);
     }
+
+    // Get all zone snapshots at a specific minute
+    public List<SimulationSnapshot> getSnapshotsAtMinute(
+            Integer simulationId, Integer minute) {
+
+        // Check if simulation exists
+        if (!simulationRepository.existsById(simulationId)) {
+            throw new ApiException("Simulation not found");
+        }
+
+        // Validate minute
+        if (minute < 0) {
+            throw new ApiException("Minute cannot be negative");
+        }
+
+        return simulationSnapshotRepository.findBySimulation_IdAndMinute(simulationId, minute);
+    }
+
+
+    // Get peak occupancy for a zone in a simulation
+    public SimulationSnapshot getPeakOccupancy(
+            Integer simulationId, Integer zoneId) {
+
+        // Check if simulation exists
+        if (!simulationRepository.existsById(simulationId)) {
+            throw new ApiException("Simulation not found");
+        }
+
+        // Check if zone exists
+        if (!zoneRepository.existsById(zoneId)) {
+            throw new ApiException("Zone not found");
+        }
+
+        SimulationSnapshot snapshot = simulationSnapshotRepository.findFirstBySimulation_IdAndZone_IdOrderByOccupancyDesc(simulationId, zoneId);
+
+        // Check if snapshot data exists
+        if (snapshot == null) {
+            throw new ApiException("No snapshots found for this zone in the simulation");
+        }
+
+        return snapshot;
+    }
 }

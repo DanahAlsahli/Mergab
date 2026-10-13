@@ -1,8 +1,11 @@
 package com.example.mergab.Service;
 
 import com.example.mergab.Api.ApiException;
+import com.example.mergab.Model.ExpoEvent;
+import com.example.mergab.Model.Simulation;
 import com.example.mergab.Model.User;
-import com.example.mergab.Repository.UserRepository;
+import com.example.mergab.Repository.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +17,10 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final OrganizerService organizerService;
+    private final OrganizerRepository organizerRepository;
+    private final VisitorRepository visitorRepository;
+    private final ExpoEventRepository expoEventRepository;
+    private final SimulationRepository simulationRepository;
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -48,13 +54,38 @@ public class UserService {
         userRepository.save(admin);
     }
 
+    @Transactional
     public void deleteUser(Integer id) {
         User user = getUserById(id);
-        // المنظم له حذف خاص يفك ربط فعالياته ومحاكاته
-        if (user.getOrganizer() != null) {
-            organizerService.deleteOrganizer(id);
-            return;
+
+        if ("ORGANIZER".equals(user.getRole())) {
+
+            // Keep events and simulations, but remove their organizer reference
+            for (ExpoEvent event : expoEventRepository.findExpoEventsByOrganizer_Id(id)) {
+                event.setOrganizer(null);
+                expoEventRepository.save(event);
+            }
+
+            for (Simulation simulation : simulationRepository.findSimulationsByOrganizer_Id(id)) {
+                simulation.setOrganizer(null);
+                simulationRepository.save(simulation);
+            }
+
+            // Delete organizer profile before deleting the user account
+            user.setOrganizer(null);
+            organizerRepository.deleteById(id);
+            organizerRepository.flush();
         }
-        userRepository.delete(user); // cascade يحذف Visitor المرتبط
+
+        if ("VISITOR".equals(user.getRole())) {
+
+            // Delete visitor profile before deleting the user account
+            user.setVisitor(null);
+            visitorRepository.deleteById(id);
+            visitorRepository.flush();
+        }
+
+        // Delete the user account (ADMIN, ORGANIZER, or VISITOR)
+        userRepository.delete(user);
     }
 }

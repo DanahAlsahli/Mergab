@@ -10,6 +10,7 @@ import com.example.mergab.Repository.ExpoEventRepository;
 import com.example.mergab.Repository.OrganizerRepository;
 import com.example.mergab.Repository.SimulationRepository;
 import com.example.mergab.Repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,7 @@ public class OrganizerService {
         return userRepository.findUsersByRole("ORGANIZER");
     }
 
+    @Transactional
     public void register(OrganizerDTO dto) {
         if (userRepository.findUserByEmail(dto.getEmail()) != null) {
             throw new ApiException("Email already exists");
@@ -40,9 +42,11 @@ public class OrganizerService {
         userRepository.save(user);
 
         Organizer organizer = new Organizer(null, dto.getPhoneNumber(), user, null, null);
+        user.setOrganizer(organizer);
         organizerRepository.save(organizer);
     }
 
+    @Transactional
     public void updateOrganizer(Integer organizerId, OrganizerDTO dto) {
         Organizer organizer = organizerRepository.findOrganizerById(organizerId);
         if (organizer == null) {
@@ -68,6 +72,7 @@ public class OrganizerService {
         organizerRepository.save(organizer);
     }
 
+    @Transactional
     public void deleteOrganizer(Integer organizerId) {
         Organizer organizer = organizerRepository.findOrganizerById(organizerId);
         if (organizer == null) {
@@ -83,7 +88,13 @@ public class OrganizerService {
             simulation.setOrganizer(null);
             simulationRepository.save(simulation);
         }
+        User user = organizer.getUser();
 
-        userRepository.delete(organizer.getUser());
+        user.setOrganizer(null);
+        organizerRepository.delete(organizer);
+        organizerRepository.flush();
+
+        userRepository.delete(user);
+
     }
 }

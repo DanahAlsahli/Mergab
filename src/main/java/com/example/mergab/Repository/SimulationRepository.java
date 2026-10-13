@@ -10,5 +10,7 @@ import java.util.List;
 public interface SimulationRepository extends JpaRepository<Simulation, Integer> {
     Simulation findSimulationById(Integer id);
     List<Simulation> findSimulationsByOrganizer_Id(Integer organizerId);
+    List<Simulation> findByStatus(String status);
+    boolean existsByHistoricalAttendance_Id(Integer historicalAttendanceId);
 
 }

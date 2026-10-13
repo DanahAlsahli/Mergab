@@ -50,5 +50,19 @@ public class ZoneConnectionController {
         return ResponseEntity.status(200).body(new ApiResponse("Zone connection deleted successfully"));
     }
 
+    @GetMapping("/get-by-id/{id}")
+    public ResponseEntity<?> getZoneConnectionById(@PathVariable Integer id) {
+        return ResponseEntity.status(200).body(zoneConnectionService.getZoneConnectionById(id));
+    }
+
+    @GetMapping("/get-outgoing/{zoneId}")
+    public ResponseEntity<?> getOutgoingConnections(@PathVariable Integer zoneId) {
+        return ResponseEntity.status(200).body(zoneConnectionService.getOutgoingConnections(zoneId));
+    }
+
+    @GetMapping("/get-by-zone/{zoneId}")
+    public ResponseEntity<?> getConnectionsByZone(@PathVariable Integer zoneId) {
+        return ResponseEntity.status(200).body(zoneConnectionService.getConnectionsByZone(zoneId));
+    }
 
 }

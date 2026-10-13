@@ -6,6 +6,7 @@ import com.example.mergab.Model.Simulation;
 import com.example.mergab.Model.Zone;
 import com.example.mergab.Repository.InterventionRepository;
 import com.example.mergab.Repository.SimulationRepository;
+import com.example.mergab.Repository.ZoneConnectionRepository;
 import com.example.mergab.Repository.ZoneRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ public class InterventionService {
     private final InterventionRepository interventionRepository;
     private final SimulationRepository simulationRepository;
     private final ZoneRepository zoneRepository;
+    private final ZoneConnectionRepository zoneConnectionRepository;
 
     public List<Intervention> getAllInterventions() {
         return interventionRepository.findAll();
@@ -29,8 +31,10 @@ public class InterventionService {
         if (simulation == null) {
             throw new ApiException("Simulation not found");
         }
-        if (simulation.getStatus().equals("RUNNING")) {
-            throw new ApiException("Cannot add intervention to a running simulation");
+
+        // Allow interventions only before simulation starts
+        if (!simulation.getStatus().equals("PENDING")) {
+            throw new ApiException("Interventions can only be added to pending simulations");
         }
 
         Zone sourceZone = zoneRepository.findZoneById(sourceZoneId);
@@ -51,9 +55,11 @@ public class InterventionService {
         }
 
         Simulation simulation = oldIntervention.getSimulation();
-        if (simulation.getStatus().equals("RUNNING")) {
-            throw new ApiException("Cannot update intervention of a running simulation");
+        // Prevent modifying interventions after simulation starts
+        if (!simulation.getStatus().equals("PENDING")) {
+            throw new ApiException("Only pending simulation interventions can be updated");
         }
+
 
         Zone sourceZone = zoneRepository.findZoneById(sourceZoneId);
         Zone targetZone = zoneRepository.findZoneById(targetZoneId);
@@ -72,8 +78,10 @@ public class InterventionService {
         if (intervention == null) {
             throw new ApiException("Intervention not found");
         }
-        if (intervention.getSimulation().getStatus().equals("RUNNING")) {
-            throw new ApiException("Cannot delete intervention of a running simulation");
+
+        // Prevent deleting interventions after simulation starts
+        if (!intervention.getSimulation().getStatus().equals("PENDING")) {
+            throw new ApiException("Only pending simulation interventions can be deleted");
         }
         interventionRepository.delete(intervention);
     }
@@ -89,8 +97,36 @@ public class InterventionService {
         if (sourceZone.getId().equals(targetZone.getId())) {
             throw new ApiException("Source zone and target zone must be different");
         }
+        // Check if a directed connection exists
+        if (!zoneConnectionRepository.existsByFromZone_IdAndToZone_Id(sourceZone.getId(), targetZone.getId())) {
+            throw new ApiException("No connection exists between source and target zones");
+        }
         if (startMinute >= simulation.getDurationMinutes()) {
             throw new ApiException("Start minute must be less than simulation duration");
         }
+    }
+
+
+    // Get intervention by ID
+    public Intervention getInterventionById(Integer id) {
+        Intervention intervention = interventionRepository.findInterventionById(id);
+
+        // Check if intervention exists
+        if (intervention == null) {
+            throw new ApiException("Intervention not found");
+        }
+
+        return intervention;
+    }
+
+    // Get interventions for a simulation
+    public List<Intervention> getInterventionsBySimulation(Integer simulationId) {
+
+        // Check if simulation exists
+        if (!simulationRepository.existsById(simulationId)) {
+            throw new ApiException("Simulation not found");
+        }
+
+        return interventionRepository.findBySimulation_Id(simulationId);
     }
 }

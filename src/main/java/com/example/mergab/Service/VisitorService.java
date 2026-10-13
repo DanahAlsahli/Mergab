@@ -6,6 +6,7 @@ import com.example.mergab.Model.User;
 import com.example.mergab.Model.Visitor;
 import com.example.mergab.Repository.UserRepository;
 import com.example.mergab.Repository.VisitorRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,7 @@ public class VisitorService {
         return userRepository.findUsersByRole("VISITOR");
     }
 
+    @Transactional
     public void register(VisitorDTO dto) {
         if (userRepository.findUserByEmail(dto.getEmail()) != null) {
             throw new ApiException("Email already exists");
@@ -34,9 +36,13 @@ public class VisitorService {
         userRepository.save(user);
 
         Visitor visitor = new Visitor(null, dto.getPhoneNumber(), user);
+        user.setVisitor(visitor);
         visitorRepository.save(visitor);
+
+
     }
 
+    @Transactional
     public void updateVisitor(Integer visitorId, VisitorDTO dto) {
         Visitor visitor = visitorRepository.findVisitorById(visitorId);
         if (visitor == null) {
@@ -62,11 +68,21 @@ public class VisitorService {
         visitorRepository.save(visitor);
     }
 
+    @Transactional
     public void deleteVisitor(Integer visitorId) {
         Visitor visitor = visitorRepository.findVisitorById(visitorId);
+
         if (visitor == null) {
             throw new ApiException("Visitor not found");
         }
-        userRepository.delete(visitor.getUser());
+
+        User user = visitor.getUser();
+
+        user.setVisitor(null);
+
+        visitorRepository.delete(visitor);
+        visitorRepository.flush();
+
+        userRepository.delete(user);
     }
 }

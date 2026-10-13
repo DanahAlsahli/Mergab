@@ -10,5 +10,6 @@ import java.util.List;
 public interface InterventionRepository extends JpaRepository<Intervention, Integer> {
 
     Intervention findInterventionById(Integer id);
+    List<Intervention> findBySimulation_Id(Integer simulationId);
 
 }

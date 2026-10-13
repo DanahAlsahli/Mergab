@@ -43,4 +43,15 @@ public class InterventionController {
         interventionService.deleteIntervention(id);
         return ResponseEntity.status(200).body(new ApiResponse("Intervention deleted successfully"));
     }
+
+
+    @GetMapping("/get-by-id/{id}")
+    public ResponseEntity<?> getInterventionById(@PathVariable Integer id) {
+        return ResponseEntity.status(200).body(interventionService.getInterventionById(id));
+    }
+
+    @GetMapping("/get-by-simulation/{simulationId}")
+    public ResponseEntity<?> getInterventionsBySimulation(@PathVariable Integer simulationId) {
+        return ResponseEntity.status(200).body(interventionService.getInterventionsBySimulation(simulationId));
+    }
 }

@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 public interface HistoricalAttendanceRepository extends JpaRepository<HistoricalAttendance,Integer> {
@@ -13,4 +14,6 @@ public interface HistoricalAttendanceRepository extends JpaRepository<Historical
 
     // نفس المعرض في نفس اليوم ما يتكرر
     HistoricalAttendance findHistoricalAttendanceByExpoNameAndAttendanceDate(String expoName, LocalDate attendanceDate);
+
+    List<HistoricalAttendance> findByExpoNameOrderByAttendanceDateDesc(String expoName);
 }

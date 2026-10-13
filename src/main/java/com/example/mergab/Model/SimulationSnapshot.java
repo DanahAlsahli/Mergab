@@ -4,6 +4,11 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+
+
+// يمنع تكرار Snapshot لنفس المحاكاة والمنطقة والدقيقة داخل قاعدة البيانات
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"simulation_id", "zone_id", "minute"}))
+
 @Entity
 @Getter
 @Setter

@@ -5,6 +5,7 @@ import com.example.mergab.Api.ApiException;
 import com.example.mergab.Model.Zone;
 import com.example.mergab.Repository.ZoneConnectionRepository;
 import com.example.mergab.Repository.ZoneRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -63,16 +64,18 @@ public class ZoneService {
         zoneRepository.save(oldZone);
     }
 
-    //delete zone
+    // Delete zone
+    @Transactional
     public void deleteZone(Integer id) {
 
         Zone zone = zoneRepository.findZoneById(id);
 
+        // Check if zone exists
         if (zone == null) {
             throw new ApiException("Zone not found");
         }
 
-        // Prevent deleting zones with existing connections
+        // Prevent deletion if zone has connections
         if (zoneConnectionRepository.existsByFromZone_IdOrToZone_Id(id, id)) {
             throw new ApiException("Cannot delete a zone with existing connections");
         }
@@ -90,5 +93,29 @@ public class ZoneService {
 
 
         return zone;
+    }
+
+    // Get zone by ID
+    public Zone getZoneById(Integer id) {
+        Zone zone = zoneRepository.findZoneById(id);
+
+        // Check if zone exists
+        if (zone == null) {
+            throw new ApiException("Zone not found");
+        }
+
+        return zone;
+    }
+
+    // Get available zones based on initial visitors
+    public List<Zone> getAvailableZones() {
+        return zoneRepository.findAvailableZones();
+    }
+
+    // Get initial occupancy percentage
+    public double getZoneOccupancy(Integer zoneId) {
+        Zone zone = getZoneById(zoneId);
+
+        return (zone.getInitialVisitors() * 100.0) / zone.getCapacity();
     }
 }

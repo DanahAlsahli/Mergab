@@ -10,6 +10,8 @@ import com.example.mergab.Repository.ZoneRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -110,6 +112,23 @@ public class ExpoEventService {
         return expoEvent;
     }
 
+    // Get upcoming and ongoing events
+    public List<ExpoEvent> getUpcomingEvents() {
+        return expoEventRepository
+                .findByEndDateTimeAfterOrderByStartDateTimeAsc(LocalDateTime.now());
+    }
+
+
+    // Get today's events
+    public List<ExpoEvent> getTodayEvents() {
+
+        LocalDate today = LocalDate.now();
+
+        LocalDateTime dayStart = today.atStartOfDay();
+        LocalDateTime dayEnd = today.plusDays(1).atStartOfDay();
+
+        return expoEventRepository.findByStartDateTimeBeforeAndEndDateTimeAfterOrderByStartDateTimeAsc(dayEnd, dayStart);
+    }
     // ===== helpers =====
 
     private Organizer getOrganizer(Integer organizerId) {

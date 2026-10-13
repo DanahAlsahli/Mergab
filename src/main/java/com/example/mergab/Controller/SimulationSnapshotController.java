@@ -81,4 +81,16 @@ public class SimulationSnapshotController {
     public ResponseEntity<?> getSnapshotsBySimulationAndZone(@PathVariable Integer simulationId, @PathVariable Integer zoneId) {
         return ResponseEntity.status(200).body(simulationSnapshotService.getSnapshotsBySimulationAndZone(simulationId, zoneId));
     }
+
+    @GetMapping("/get-at-minute/{simulationId}/{minute}")
+    public ResponseEntity<?> getSnapshotsAtMinute(@PathVariable Integer simulationId, @PathVariable Integer minute) {
+
+        return ResponseEntity.status(200).body(simulationSnapshotService.getSnapshotsAtMinute(simulationId, minute));
+    }
+
+    @GetMapping("/get-peak-occupancy/{simulationId}/{zoneId}")
+    public ResponseEntity<?> getPeakOccupancy(@PathVariable Integer simulationId, @PathVariable Integer zoneId) {
+
+        return ResponseEntity.status(200).body(simulationSnapshotService.getPeakOccupancy(simulationId, zoneId));
+    }
 }

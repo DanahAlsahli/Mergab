@@ -14,6 +14,10 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.util.Set;
 
+
+
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"expo_name", "attendance_date"}))
+
 @Getter
 @Setter
 @Entity
@@ -43,7 +47,8 @@ public class HistoricalAttendance {
     @Column(columnDefinition = "varchar(500) not null")
     private String sourceUrl;
 
-    @OneToMany(mappedBy = "historicalAttendance", cascade = CascadeType.ALL)
+    // Historical attendance should not delete its simulations
+    @OneToMany(mappedBy = "historicalAttendance")
     @JsonIgnore
     private Set<Simulation> simulations;
 }

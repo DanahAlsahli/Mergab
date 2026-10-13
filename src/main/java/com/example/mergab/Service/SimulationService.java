@@ -70,6 +70,22 @@ public class SimulationService {
         simulationRepository.delete(simulation);
     }
 
+    // Get simulation by ID
+    public Simulation getSimulationById(Integer id) {
+        return getSimulation(id);
+    }
+
+    // Get simulations by status
+    public List<Simulation> getSimulationsByStatus(String status) {
+
+        // Validate simulation status
+        if (!List.of("PENDING", "RUNNING", "COMPLETED", "FAILED").contains(status)) {
+            throw new ApiException("Invalid simulation status");
+        }
+
+        return simulationRepository.findByStatus(status);
+    }
+
     // ===== helpers =====
 
     private Organizer getOrganizer(Integer organizerId) {
