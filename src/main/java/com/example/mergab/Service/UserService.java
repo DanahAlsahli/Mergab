@@ -21,6 +21,7 @@ public class UserService {
     private final VisitorRepository visitorRepository;
     private final ExpoEventRepository expoEventRepository;
     private final SimulationRepository simulationRepository;
+    private final ZoneVisitRepository zoneVisitRepository;
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -78,6 +79,11 @@ public class UserService {
         }
 
         if ("VISITOR".equals(user.getRole())) {
+
+            // Prevent deleting a visitor with zone visit history
+            if (zoneVisitRepository.existsByVisitor_Id(id)) {
+                throw new ApiException("Cannot delete a visitor with zone visit history");
+            }
 
             // Delete visitor profile before deleting the user account
             user.setVisitor(null);

@@ -6,11 +6,13 @@ import com.example.mergab.Model.User;
 import com.example.mergab.Model.Visitor;
 import com.example.mergab.Repository.UserRepository;
 import com.example.mergab.Repository.VisitorRepository;
+import com.example.mergab.Repository.ZoneVisitRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +20,8 @@ public class VisitorService {
 
     private final VisitorRepository visitorRepository;
     private final UserRepository userRepository;
+    private final QrCodeService qrCodeService;
+    private final ZoneVisitRepository zoneVisitRepository;
 
     public List<User> getAllVisitors() {
         return userRepository.findUsersByRole("VISITOR");
@@ -35,8 +39,7 @@ public class VisitorService {
         User user = new User(null, dto.getFullName(), dto.getEmail(), dto.getPassword(), "VISITOR", null, null);
         userRepository.save(user);
 
-        Visitor visitor = new Visitor(null, dto.getPhoneNumber(), user);
-        user.setVisitor(visitor);
+        Visitor visitor = new Visitor(null, dto.getPhoneNumber(), UUID.randomUUID().toString(), user, null);        user.setVisitor(visitor);
         visitorRepository.save(visitor);
 
 
@@ -75,6 +78,9 @@ public class VisitorService {
         if (visitor == null) {
             throw new ApiException("Visitor not found");
         }
+        if (zoneVisitRepository.existsByVisitor_Id(visitorId)) {
+            throw new ApiException("Cannot delete a visitor with zone visit history");
+        }
 
         User user = visitor.getUser();
 
@@ -85,4 +91,18 @@ public class VisitorService {
 
         userRepository.delete(user);
     }
+
+
+    // Generate the visitor's QR code image
+    public byte[] getVisitorQrCode(Integer visitorId) {
+
+        Visitor visitor = visitorRepository.findVisitorById(visitorId);
+
+        if (visitor == null) {
+            throw new ApiException("Visitor not found");
+        }
+
+        return qrCodeService.generateQrCode(visitor.getQrToken());
+    }
+
 }

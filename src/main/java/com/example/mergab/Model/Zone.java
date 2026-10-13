@@ -52,4 +52,8 @@ public class Zone {
     @OneToMany(mappedBy = "zone", cascade = CascadeType.REMOVE)
     @JsonIgnore
     private Set<SimulationSnapshot> snapshots;
+
+    @OneToMany(mappedBy = "zone")
+    @JsonIgnore
+    private Set<ZoneVisit> zoneVisits;
 }

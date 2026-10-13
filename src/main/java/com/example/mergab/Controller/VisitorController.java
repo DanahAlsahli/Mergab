@@ -5,6 +5,7 @@ import com.example.mergab.DTO.VisitorDTO;
 import com.example.mergab.Service.VisitorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,4 +38,14 @@ public class VisitorController {
         visitorService.deleteVisitor(id);
         return ResponseEntity.status(200).body(new ApiResponse("Visitor deleted successfully"));
     }
+
+
+
+    // Get the visitor's QR code as a PNG image
+    @GetMapping(value = "/qr-code/{visitorId}", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> getVisitorQrCode(@PathVariable Integer visitorId) {
+
+        return ResponseEntity.status(200).contentType(MediaType.IMAGE_PNG).body(visitorService.getVisitorQrCode(visitorId));
+    }
+
 }

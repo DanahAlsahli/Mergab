@@ -5,6 +5,7 @@ import com.example.mergab.Api.ApiException;
 import com.example.mergab.Model.Zone;
 import com.example.mergab.Repository.ZoneConnectionRepository;
 import com.example.mergab.Repository.ZoneRepository;
+import com.example.mergab.Repository.ZoneVisitRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.List;
 public class ZoneService {
     private final ZoneRepository zoneRepository;
     private final ZoneConnectionRepository zoneConnectionRepository;
+    private final ZoneVisitRepository zoneVisitRepository;
 
 
     //get all zones
@@ -78,6 +80,10 @@ public class ZoneService {
         // Prevent deletion if zone has connections
         if (zoneConnectionRepository.existsByFromZone_IdOrToZone_Id(id, id)) {
             throw new ApiException("Cannot delete a zone with existing connections");
+        }
+        // Prevent deleting a zone that has visitor history
+        if (zoneVisitRepository.existsByZone_Id(id)) {
+            throw new ApiException("Cannot delete a zone with visitor history");
         }
 
         zoneRepository.delete(zone);

@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Set;
+
 @Entity
 @Getter
 @Setter
@@ -20,8 +22,15 @@ public class Visitor {
     @Column(columnDefinition = "varchar(10) not null unique")
     private String phoneNumber;
 
+    @Column(nullable = false, unique = true, updatable = false)
+    private String qrToken;
+
     @OneToOne
     @MapsId
     @JsonIgnore
     private User user;
+
+    @OneToMany(mappedBy = "visitor")
+    @JsonIgnore
+    private Set<ZoneVisit> zoneVisits;
 }
