@@ -4,11 +4,24 @@ import com.example.mergab.Api.ApiException;
 import com.example.mergab.Model.HistoricalAttendance;
 import com.example.mergab.Model.Organizer;
 import com.example.mergab.Model.Simulation;
+import com.example.mergab.Model.SimulationSnapshot;
+import com.example.mergab.Model.Zone;
+import com.example.mergab.Repository.SimulationSnapshotRepository;
+import com.example.mergab.Repository.ZoneConnectionRepository;
+import com.example.mergab.Repository.ZoneRepository;
+import com.example.mergab.Simulation.CrowdSimulationEngine;
+import com.example.mergab.Simulation.SimulationSnapshotRecord;
 import com.example.mergab.Repository.HistoricalAttendanceRepository;
 import com.example.mergab.Repository.OrganizerRepository;
 import com.example.mergab.Repository.SimulationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import java.util.List;
 
@@ -19,6 +32,11 @@ public class SimulationService {
     private final SimulationRepository simulationRepository;
     private final HistoricalAttendanceRepository historicalAttendanceRepository;
     private final OrganizerRepository organizerRepository;
+    private final SimulationSnapshotRepository simulationSnapshotRepository;
+    private final ZoneRepository zoneRepository;
+    private final ZoneConnectionRepository zoneConnectionRepository;
+
+    private final CrowdSimulationEngine crowdSimulationEngine = new CrowdSimulationEngine();
 
     // كل المحاكاة (للأدمن)
     public List<Simulation> getAllSimulations() {
@@ -60,6 +78,60 @@ public class SimulationService {
         oldSimulation.setRandomSeed(newSimulation.getRandomSeed());
 
         simulationRepository.save(oldSimulation);
+    }
+
+    /** Run a pending simulation and persist one snapshot per zone per minute. */
+    @Transactional
+    public List<SimulationSnapshot> runSimulation(Integer simulationId) {
+        Simulation simulation = getSimulation(simulationId);
+        if (!"PENDING".equals(simulation.getStatus())) {
+            throw new ApiException("Only pending simulations can be run");
+        }
+
+        List<Zone> zones = zoneRepository.findAll();
+        if (zones.isEmpty()) {
+            throw new ApiException("Cannot run a simulation without zones");
+        }
+
+        for (Zone zone : zones) {
+            if (zone.getInitialVisitors() > zone.getCapacity()) {
+                throw new ApiException("Initial visitors exceed capacity for zone: " + zone.getName());
+            }
+        }
+
+        simulation.setStatus("RUNNING");
+        simulation.setStartDateTime(LocalDateTime.now());
+        simulationRepository.save(simulation);
+
+        List<SimulationSnapshotRecord> records =
+                crowdSimulationEngine.runSimulationWithMultipleConnections(
+                        zones,
+                        zoneConnectionRepository.findAll(),
+                        simulation.getDurationMinutes()
+                );
+
+        Map<Integer, Zone> zonesById = zones.stream().collect(
+                Collectors.toMap(Zone::getId, Function.identity())
+        );
+        List<SimulationSnapshot> snapshots = records.stream().map(record -> {
+            Zone zone = zonesById.get(record.zoneId());
+            if (zone == null) {
+                throw new ApiException("Simulation produced a snapshot for an unknown zone");
+            }
+            SimulationSnapshot snapshot = new SimulationSnapshot();
+            snapshot.setSimulation(simulation);
+            snapshot.setZone(zone);
+            snapshot.setMinute(record.minute());
+            snapshot.setOccupancy(record.occupancy());
+            snapshot.setQueueLength(record.queueLength());
+            return snapshot;
+        }).toList();
+
+        simulationSnapshotRepository.saveAll(snapshots);
+        simulation.setStatus("COMPLETED");
+        simulation.setEndDateTime(LocalDateTime.now());
+        simulationRepository.save(simulation);
+        return snapshots;
     }
 
     public void deleteSimulation(Integer id) {

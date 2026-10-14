@@ -2,6 +2,8 @@ package com.example.mergab.Controller;
 
 import com.example.mergab.Api.ApiResponse;
 import com.example.mergab.Model.Simulation;
+import com.example.mergab.Model.SimulationSnapshot;
+import java.util.List;
 import com.example.mergab.Service.SimulationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,13 @@ public class SimulationController {
     public ResponseEntity<?> addSimulation(@PathVariable Integer organizerId, @PathVariable Integer historicalAttendanceId, @RequestBody @Valid Simulation simulation) {
         simulationService.addSimulation(organizerId, historicalAttendanceId, simulation);
         return ResponseEntity.status(201).body(new ApiResponse("Simulation added successfully"));
+    }
+
+    // run the simulation
+    @PostMapping("/run/{id}")
+    public ResponseEntity<?> runSimulation(@PathVariable Integer id) {
+        List<SimulationSnapshot> snapshots = simulationService.runSimulation(id);
+        return ResponseEntity.status(200).body(snapshots);
     }
 
     @PutMapping("/update/{id}")
