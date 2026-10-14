@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="../../static/img/favicon.png">
+<title data-i18n="o.t.events">مرقاب</title>
+<script src="../../static/js/i18n.js"></script>
+<script src="../../static/js/i18n-staff.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@500;600;700&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" rel="stylesheet">
+<link rel="stylesheet" href="../../static/css/mergab.css">
+</head>
+<body data-area="organizer" data-page="events">
+<header id="vHeader"></header>
+
+<main>
+  <section class="page-band o-band" id="band">
+    <div class="geo" aria-hidden="true"></div>
+    <div class="o-wrap">
+      <div><span class="eyebrow" data-i18n="motto"></span>
+        <h1 id="bandH" data-i18n="o.nav.events"></h1>
+        <p id="bandP" data-i18n="o.ev.sub"></p></div>
+    </div>
+  </section>
+  <div class="sadu" aria-hidden="true"></div>
+
+  <div class="o-wrap o-body">
+    <section id="eventsTable"></section>
+  </div>
+</main>
+
+<footer id="vFooter"></footer>
+
+<script src="../../static/js/site-config.js"></script>
+<script src="../../static/js/mock-server.js"></script>
+<script src="../../static/js/api.js"></script>
+<script src="../../static/js/organizer.js"></script>
+<script>
+  const { api, esc, num, fmtDateTime, toDate, isToday } = Mergab;
+  const user = Org.shell();
+  if (user) {
+    const table = Org.mount({
+      el: '#eventsTable',
+      title: t('o.ev.all'), addLabel: t('o.ev.add'), editTitle: t('o.ev.edit'), emptyText: t('o.ev.empty'),
+      load: () => api.get('/expo-event/get'),
+      sort: (a, b) => toDate(a.startDateTime) - toDate(b.startDateTime),
+      searchText: e => e.name + ' ' + (e.zone && e.zone.name) + ' ' + Mergab.zoneName(e.zone),
+      columns: [
+        { label: t('o.col.event'), render: e => `<b>${esc(e.name)}</b>${isToday(e.startDateTime) ? ` <span class="badge st-RUNNING">${esc(t('today'))}</span>` : ''}` },
+        { label: t('o.col.start'), render: e => fmtDateTime(e.startDateTime) },
+        { label: t('o.col.end'), render: e => fmtDateTime(e.endDateTime) },
+        { label: t('o.col.zone'), render: e => Org.zoneCell(e.zone) },
+        { label: t('o.col.demand'), render: e => num(e.expectedDemand) }
+      ],
+      fields: [
+        { name: 'name', label: t('o.col.event'), required: true, full: true },
+        { name: 'startDateTime', label: t('o.col.start'), type: 'datetime-local', required: true },
+        { name: 'endDateTime', label: t('o.col.end'), type: 'datetime-local', required: true },
+        { name: 'zoneId', label: t('o.col.zone'), type: 'select', required: true, options: Org.zoneOptions, value: e => e.zone && e.zone.id },
+        { name: 'expectedDemand', label: t('o.col.demand'), type: 'number', required: true, min: 0, help: t('o.ev.demandHelp') }
+      ],
+      create: d => api.post(`/expo-event/add/${user.id}/${d.zoneId}`, {
+        name: d.name, startDateTime: d.startDateTime, endDateTime: d.endDateTime, expectedDemand: d.expectedDemand
+      }),
+      update: async (e, d) => {
+        await api.put('/expo-event/update/' + e.id, { name: d.name, startDateTime: d.startDateTime, endDateTime: d.endDateTime, expectedDemand: d.expectedDemand });
+        if (e.zone && String(e.zone.id) !== String(d.zoneId)) await api.put(`/expo-event/change-zone/${e.id}/${d.zoneId}`);
+      },
+      remove: e => api.del('/expo-event/delete/' + e.id),
+      deleteText: e => t('o.ev.del', { e: e.name })
+    });
+    if (location.hash === '#add') { history.replaceState(null, '', location.pathname); table.open(null); }
+  }
+</script>
+</body>
+</html>

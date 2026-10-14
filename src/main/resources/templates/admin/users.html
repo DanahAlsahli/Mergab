@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="../../static/img/favicon.png">
+<title data-i18n="o.t.users">مرقاب</title>
+<script src="../../static/js/i18n.js"></script>
+<script src="../../static/js/i18n-staff.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@500;600;700&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" rel="stylesheet">
+<link rel="stylesheet" href="../../static/css/mergab.css">
+</head>
+<body data-area="admin" data-page="users">
+<header id="vHeader"></header>
+
+<main>
+  <section class="page-band o-band" id="band">
+    <div class="geo" aria-hidden="true"></div>
+    <div class="o-wrap">
+      <div><span class="eyebrow" data-i18n="motto"></span>
+        <h1 id="bandH" data-i18n="o.nav.users"></h1>
+        <p id="bandP" data-i18n="o.usr.sub"></p></div>
+    </div>
+  </section>
+  <div class="sadu" aria-hidden="true"></div>
+
+  <div class="o-wrap o-body">
+    <div class="chips" role="group" id="roleTabs" data-i18n-aria="o.usr.filter"></div>
+    <section id="usersTable"></section>
+  </div>
+</main>
+
+<footer id="vFooter"></footer>
+
+<script src="../../static/js/site-config.js"></script>
+<script src="../../static/js/mock-server.js"></script>
+<script src="../../static/js/api.js"></script>
+<script src="../../static/js/organizer.js"></script>
+<script>
+  const { api, esc, roleBadge, toast } = Mergab;
+  const I = Org.icon;
+  const me = Org.shell();
+  let tab = 'ALL';
+  if (me) {
+    const TABS = [['ALL', 'o.usr.allTab'], ['ADMIN', 'o.adm.admins'], ['ORGANIZER', 'o.adm.orgs'], ['VISITOR', 'o.adm.visitors']];
+    const tabsEl = document.getElementById('roleTabs');
+    const drawTabs = () => tabsEl.innerHTML = TABS.map(x => `<button type="button" class="chip" data-t="${x[0]}" aria-pressed="${x[0] === tab}">${esc(t(x[1]))}</button>`).join('');
+    drawTabs();
+    const table = Org.mount({
+      el: '#usersTable',
+      title: t('o.usr.accounts'), addLabel: t('o.usr.add'), addTitle: t('o.usr.addTitle'), emptyText: t('o.usr.empty'),
+      load: () => api.get('/user/get-all').then(list => list.filter(u => tab === 'ALL' || u.role === tab)),
+      sort: (a, b) => b.id - a.id,
+      searchText: u => u.fullName + ' ' + u.email + ' ' + u.role,
+      columns: [
+        { label: t('o.usr.name'), render: u => `<span style="display:flex;align-items:center;gap:10px"><span class="avatar" aria-hidden="true" style="width:34px;height:34px;font-size:12px">${esc(Mergab.initials(u.fullName))}</span><b>${esc(u.fullName)}</b>${u.id === me.id ? ` <small style="color:var(--muted)">${esc(t('o.usr.you'))}</small>` : ''}</span>` },
+        { label: t('f.email'), render: u => `<span dir="ltr">${esc(u.email)}</span>` },
+        { label: t('f.phone'), render: u => `<span dir="ltr">${esc((u.organizer && u.organizer.phoneNumber) || (u.visitor && u.visitor.phoneNumber) || '—')}</span>` },
+        { label: t('o.usr.role'), render: u => roleBadge(u.role) },
+        { label: t('o.usr.prayer'), render: u => u.role !== 'VISITOR' ? '<span style="color:var(--muted)">—</span>' : (u.visitor && u.visitor.showPrayerTimes ? `<span class="badge" style="background:#E6F0EC;color:var(--green-700)">${I('pray', 14)}${esc(t('o.usr.on'))}</span>` : `<span style="color:var(--muted)">${esc(t('o.usr.off'))}</span>`) },
+        { label: t('o.usr.created'), render: u => esc(t(u.role === 'VISITOR' ? 'o.usr.self' : 'o.usr.byAdmin')) }
+      ],
+      fields: [
+        { name: 'role', label: t('o.usr.role'), type: 'select', required: true, full: true, default: 'ORGANIZER',
+          options: () => [{ value: 'ORGANIZER', label: t('o.usr.roleOrg') }, { value: 'ADMIN', label: t('o.usr.roleAdmin') }] },
+        { name: 'fullName', label: t('f.fullName'), required: true, full: true },
+        { name: 'email', label: t('f.email'), type: 'email', required: true, dir: 'ltr' },
+        { name: 'phoneNumber', label: t('f.phone'), type: 'tel', placeholder: '05XXXXXXXX', dir: 'ltr', help: t('o.usr.phoneHelp') },
+        { name: 'password', label: t('o.usr.tempPass'), type: 'text', required: true, full: true, dir: 'ltr',
+          default: () => 'Mergab#' + Math.floor(1000 + Math.random() * 9000), help: t('o.usr.passHelp') }
+      ],
+      create: d => {
+        if (d.role === 'ADMIN') return api.post('/user/add-admin', { fullName: d.fullName, email: d.email, password: d.password, role: 'ADMIN' });
+        if (!d.phoneNumber) { toast(t('o.usr.phoneReq'), 'error'); return Promise.reject(); }
+        return api.post('/organizer/register', { fullName: d.fullName, email: d.email, phoneNumber: d.phoneNumber, password: d.password });
+      },
+      remove: u => api.del('/user/delete/' + u.id),
+      deleteText: u => t('o.usr.del', { n: u.fullName })
+    });
+    tabsEl.addEventListener('click', e => {
+      const b = e.target.closest('[data-t]'); if (!b) return;
+      tab = b.dataset.t; drawTabs(); table.reload();
+    });
+    if (location.hash === '#add') { history.replaceState(null, '', location.pathname); table.open(null); }
+  }
+</script>
+</body>
+</html>

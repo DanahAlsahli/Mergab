@@ -38,6 +38,8 @@ public class ZoneService {
             throw new ApiException("Initial visitors cannot exceed zone capacity");
         }
 
+        // Validate virtual map coordinates
+        validateMapCoordinates(zone.getMapX(), zone.getMapY());
         zoneRepository.save(zone);
     }
 
@@ -63,6 +65,15 @@ public class ZoneService {
         oldZone.setName(zone.getName());
         oldZone.setCapacity(zone.getCapacity());
         oldZone.setInitialVisitors(zone.getInitialVisitors());
+        oldZone.setHasPrayerArea(Boolean.TRUE.equals(zone.getHasPrayerArea()));
+        oldZone.setIndoor(Boolean.TRUE.equals(zone.getIndoor()));
+
+        // Validate virtual map coordinates
+        validateMapCoordinates(zone.getMapX(), zone.getMapY());
+
+        // Update zone position on the Expo map
+        oldZone.setMapX(zone.getMapX());
+        oldZone.setMapY(zone.getMapY());
         zoneRepository.save(oldZone);
     }
 
@@ -123,5 +134,29 @@ public class ZoneService {
         Zone zone = getZoneById(zoneId);
 
         return (zone.getInitialVisitors() * 100.0) / zone.getCapacity();
+    }
+
+
+    //helper methods
+
+
+    // Validate optional Expo map coordinates (0–100%)
+    private void validateMapCoordinates(Double mapX, Double mapY) {
+
+        // Both coordinates must be provided together
+        if ((mapX == null) != (mapY == null)) {
+            throw new ApiException("Both mapX and mapY are required together");
+        }
+
+        // Existing zones may have no map coordinates
+        if (mapX == null) {
+            return;
+        }
+
+        if (!Double.isFinite(mapX) || !Double.isFinite(mapY)
+                || mapX < 0 || mapX > 100
+                || mapY < 0 || mapY > 100) {
+            throw new ApiException("Map coordinates must be between 0 and 100");
+        }
     }
 }

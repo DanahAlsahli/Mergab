@@ -22,4 +22,6 @@ public interface ZoneRepository extends JpaRepository<Zone,Integer> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT z FROM Zone z WHERE z.id = :id")
     Zone findZoneForUpdate(@Param("id") Integer id);
+
+    List<Zone> findAllByHasPrayerAreaTrue();
 }
