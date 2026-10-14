@@ -10,6 +10,10 @@ import com.example.mergab.Repository.ZoneRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import com.example.mergab.Model.ZoneConnection;
+import com.example.mergab.Repository.ZoneConnectionRepository;
+import java.util.*;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,6 +25,7 @@ public class ExpoEventService {
     private final ExpoEventRepository expoEventRepository;
     private final ZoneRepository zoneRepository;
     private final OrganizerRepository organizerRepository;
+    private final ZoneConnectionRepository zoneConnectionRepository;
 
     // كل الفعاليات (للأدمن والزوار)
     public List<ExpoEvent> getExpoEvents() {
@@ -128,6 +133,67 @@ public class ExpoEventService {
         LocalDateTime dayEnd = today.plusDays(1).atStartOfDay();
 
         return expoEventRepository.findByStartDateTimeBeforeAndEndDateTimeAfterOrderByStartDateTimeAsc(dayEnd, dayStart);
+    }
+
+    // Find a route from the visitor's current zone to the event's zone using BFS
+    public List<String> getRouteToEvent(Integer eventId, Integer fromZoneId) {
+        ExpoEvent event = getEventById(eventId);
+
+        Zone startZone = zoneRepository.findZoneById(fromZoneId);
+        if (startZone == null) {
+            throw new ApiException("Starting zone not found");
+        }
+
+        Zone destination = event.getZone();
+        if (destination == null) {
+            throw new ApiException("Event has no assigned zone");
+        }
+
+        Queue<Integer> queue = new ArrayDeque<>();
+        Map<Integer, Integer> previous = new HashMap<>();
+        Set<Integer> visited = new HashSet<>();
+
+        queue.add(fromZoneId);
+        visited.add(fromZoneId);
+
+        while (!queue.isEmpty()) {
+            Integer current = queue.poll();
+
+            if (current.equals(destination.getId())) {
+                break;
+            }
+
+            for (ZoneConnection connection : zoneConnectionRepository.findByFromZone_Id(current)) {
+                Integer next = connection.getToZone().getId();
+
+                if (visited.add(next)) {
+                    previous.put(next, current);
+                    queue.add(next);
+                }
+            }
+        }
+
+        if (!visited.contains(destination.getId())) {
+            throw new ApiException("No route found to this event");
+        }
+
+        List<Integer> routeIds = new ArrayList<>();
+        Integer current = destination.getId();
+
+        while (current != null) {
+            routeIds.add(current);
+            current = previous.get(current);
+        }
+
+        Collections.reverse(routeIds);
+
+        List<String> route = new ArrayList<>();
+        for (Integer zoneId : routeIds) {
+            Zone zone = zoneRepository.findZoneById(zoneId);
+            route.add(zone.getName());
+        }
+
+        return route;
     }
     // ===== helpers =====
 
