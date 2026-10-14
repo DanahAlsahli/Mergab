@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="../assets/img/favicon.png">
+<title data-i18n="o.t.connections">مرقاب</title>
+<script src="../assets/js/i18n.js"></script>
+<script src="../assets/js/i18n-staff.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@500;600;700&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/mergab.css">
+</head>
+<body data-area="organizer" data-page="connections">
+<header id="vHeader"></header>
+
+<main>
+  <section class="page-band o-band" id="band">
+    <div class="geo" aria-hidden="true"></div>
+    <div class="o-wrap">
+      <div><span class="eyebrow" data-i18n="motto"></span>
+        <h1 id="bandH" data-i18n="o.nav.connections"></h1>
+        <p id="bandP" data-i18n="o.conn.sub"></p></div>
+    </div>
+  </section>
+  <div class="sadu" aria-hidden="true"></div>
+
+  <div class="o-wrap o-body">
+    <section id="connTable"></section>
+  </div>
+</main>
+
+<footer id="vFooter"></footer>
+
+<script src="../assets/js/site-config.js"></script>
+<script src="../assets/js/mock-server.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/organizer.js"></script>
+<script>
+  const { api, esc, num } = Mergab;
+  const arrow = () => `<span aria-hidden="true" style="color:var(--muted)">${Org.icon(I18n.isAr ? 'arrowStart' : 'arrowEnd', 18)}</span>`;
+  if (Org.shell()) {
+    Org.mount({
+      el: '#connTable',
+      title: t('o.conn.all'), addLabel: t('o.conn.add'), editTitle: t('o.conn.edit'), emptyText: t('o.conn.empty'),
+      load: () => api.get('/zone-connection/get'),
+      searchText: c => (c.fromZone && c.fromZone.name) + ' ' + (c.toZone && c.toZone.name) + ' ' + Mergab.zoneName(c.fromZone) + ' ' + Mergab.zoneName(c.toZone),
+      columns: [
+        { label: t('o.col.from'), render: c => Org.zoneCell(c.fromZone) },
+        { label: '', render: arrow },
+        { label: t('o.col.to'), render: c => Org.zoneCell(c.toZone) },
+        { label: t('o.col.perMin'), render: c => num(c.maxVisitorsPerMinute) }
+      ],
+      fields: [
+        { name: 'fromZoneId', label: t('o.col.from'), type: 'select', required: true, options: Org.zoneOptions, value: c => c.fromZone && c.fromZone.id },
+        { name: 'toZoneId', label: t('o.col.to'), type: 'select', required: true, options: Org.zoneOptions, value: c => c.toZone && c.toZone.id },
+        { name: 'maxVisitorsPerMinute', label: t('o.col.perMin'), type: 'number', required: true, min: 1, full: true }
+      ],
+      create: d => api.post(`/zone-connection/add/${d.fromZoneId}/${d.toZoneId}`, { maxVisitorsPerMinute: d.maxVisitorsPerMinute }),
+      update: async (c, d) => {
+        const changed = String(c.fromZone.id) !== String(d.fromZoneId) || String(c.toZone.id) !== String(d.toZoneId);
+        if (changed) await api.put(`/zone-connection/change-zones/${c.id}/${d.fromZoneId}/${d.toZoneId}`);
+        if (c.maxVisitorsPerMinute !== d.maxVisitorsPerMinute) await api.put('/zone-connection/update/' + c.id, { maxVisitorsPerMinute: d.maxVisitorsPerMinute });
+      },
+      remove: c => api.del('/zone-connection/delete/' + c.id)
+    });
+  }
+</script>
+</body>
+</html>

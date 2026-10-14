@@ -1,0 +1,226 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="../assets/img/favicon.png">
+<title data-i18n="acc.title">مرقاب</title>
+<script src="../assets/js/i18n.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@500;600;700&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/mergab.css">
+<style>
+  .acc-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .acc-grid { grid-template-columns: minmax(0, 1fr); } }
+  .saved { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-top: 1px solid #F0ECE3; }
+  .saved:first-child { border-top: 0; }
+  .saved .thumb { width: 64px; height: 52px; border-radius: 12px; flex: none; }
+  .saved .meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+</style>
+</head>
+<body>
+<header id="vHeader"></header>
+
+<main class="v-wrap" style="padding-top:28px">
+  <div class="note" id="welcome" hidden style="background:#E3F2E9;border-color:#C5E3D1;color:#1F6B45;font-size:15px;margin-bottom:18px" data-i18n-html="acc.welcome"></div>
+
+  <div class="v-map-head" style="padding-top:0">
+    <div><h1 id="hello" class="section-title-sa"></h1><p data-i18n="acc.sub"></p></div>
+  </div>
+
+  <div class="card-row">
+    <section aria-labelledby="cardT">
+      <h2 id="cardT" class="sr-only" data-i18n="card.title"></h2>
+      <div class="entry-card">
+        <div class="geo" aria-hidden="true"></div>
+        <div class="sadu sadu-thin" aria-hidden="true"></div>
+        <div class="in">
+          <div class="top"><img id="cardLogo" alt="Mergab"><span data-i18n="card.label"></span></div>
+          <div class="who"><b id="cardName"></b><small data-i18n="card.sub"></small></div>
+          <button type="button" class="qr-box" id="qrBox" style="border:0;cursor:zoom-in" data-i18n-aria="card.full"><span class="empty" data-i18n="loading"></span></button>
+          <div class="entry-status" id="entryStatus"><i></i><span></span></div>
+          <div class="entry-actions">
+            <a class="btn btn-gold" id="dlBtn" download="mergab-card.png" href="#"></a>
+            <button type="button" class="btn btn-on-dark" id="fullBtn"></button>
+          </div>
+          <button type="button" class="entry-demo" id="demoBtn" hidden></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card card-pad" id="visits" aria-labelledby="hTitle">
+      <div class="card-head"><div><h2 id="hTitle" data-i18n="hist.title"></h2><p style="margin:4px 0 0;color:var(--muted);font-size:14px" id="hSub" data-i18n="hist.sub"></p></div></div>
+      <div class="visit-list" id="visitList"></div>
+    </section>
+  </div>
+
+  <div class="qr-modal" id="qrModal" hidden role="dialog" aria-modal="true" aria-labelledby="qrMT">
+    <div class="box">
+      <h2 id="qrMT" style="font-size:20px" data-i18n="card.title"></h2>
+      <img id="qrBig" alt="">
+      <p data-i18n="card.bright"></p>
+      <button type="button" class="btn btn-primary" id="qrClose" data-i18n="card.close"></button>
+    </div>
+  </div>
+
+  <div class="acc-grid">
+    <section class="card card-pad" aria-labelledby="pTitle">
+      <h2 id="pTitle" style="font-size:19px;margin-bottom:16px" data-i18n="acc.details"></h2>
+      <form id="profile" style="display:flex;flex-direction:column;gap:14px" novalidate>
+        <label class="field"><span data-i18n="f.fullName"></span><input type="text" name="fullName" required minlength="3" maxlength="50" autocomplete="name"></label>
+        <label class="field"><span data-i18n="f.email"></span><input type="email" name="email" required dir="ltr" autocomplete="email"></label>
+        <label class="field"><span data-i18n="f.phone"></span><input type="tel" name="phoneNumber" required pattern="05[0-9]{8}" dir="ltr" autocomplete="tel"></label>
+        <label class="field"><span data-i18n="f.password"></span><input type="password" name="password" required minlength="6" autocomplete="new-password"><small data-i18n="acc.passConfirm"></small></label>
+        <label class="opt-card"><input type="checkbox" name="showPrayerTimes" class="switch"><span class="ic" data-ic="pray"></span>
+        <span class="txt"><b data-i18n="opt.prayer"></b><small data-i18n="opt.prayerHelp"></small></span></label>
+        <button type="submit" class="btn btn-primary" style="align-self:flex-start" data-i18n="acc.saveChanges"></button>
+      </form>
+      <hr style="border:0;border-top:1px solid var(--line);margin:22px 0 16px">
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <button type="button" class="btn btn-ghost" id="logoutBtn" data-i18n="auth.logout"></button>
+        <button type="button" class="btn btn-danger" id="deleteBtn" data-i18n="acc.delete"></button>
+      </div>
+    </section>
+
+    <section class="card card-pad" id="saved" aria-labelledby="sTitle">
+      <div class="card-head"><h2 id="sTitle" data-i18n="acc.saved"></h2><a class="v-link" href="map.html" id="addLink"></a></div>
+      <div id="savedList"></div>
+    </section>
+  </div>
+</main>
+
+<footer id="vFooter"></footer>
+
+<script src="../assets/js/site-config.js"></script>
+<script src="../assets/js/qr.js"></script>
+<script src="../assets/js/mock-server.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/visitor.js"></script>
+<script>
+  const { api, auth, esc, level, zoneName, toast, toDate, fmtTime, fmtDate, isToday } = Mergab;
+  const I = Visitor.icon;
+  const me = auth.require(['VISITOR']);   // الصفحة للزائر فقط
+
+  if (me) {
+    const form = document.getElementById('profile');
+    if (I18n.isAr) form.querySelectorAll('[dir=ltr]').forEach(i => i.style.textAlign = 'right');
+    if (new URLSearchParams(location.search).get('welcome')) document.getElementById('welcome').hidden = false;
+    document.querySelectorAll('[data-ic]').forEach(el => el.innerHTML = Visitor.icon(el.dataset.ic, 22));
+    document.getElementById('hello').textContent = t('acc.hello', { n: me.fullName.split(' ')[0] });
+    document.getElementById('addLink').innerHTML = esc(t('acc.addFromMap')) + ' ' + Visitor.next(16);
+
+    api.get('/user/me').then(u => {
+      form.fullName.value = u.fullName || '';
+      form.email.value = u.email || '';
+      form.phoneNumber.value = (u.visitor && u.visitor.phoneNumber) || '';
+      form.showPrayerTimes.checked = !!(u.visitor && u.visitor.showPrayerTimes);
+    });
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      const body = { fullName: form.fullName.value.trim(), email: form.email.value.trim(), phoneNumber: form.phoneNumber.value.trim(), password: form.password.value, showPrayerTimes: form.showPrayerTimes.checked };
+      try {
+        await api.put('/visitor/update/' + me.id, body);
+        await auth.login(body.email, body.password);   // نحدّث الجلسة
+        form.password.value = '';
+        document.getElementById('hello').textContent = t('acc.hello', { n: body.fullName.split(' ')[0] });
+        Visitor.shell();
+      } catch (err) { /* الرسالة ظهرت */ }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => auth.logout());
+    document.getElementById('deleteBtn').addEventListener('click', async () => {
+      if (!confirm(t('acc.deleteConfirm'))) return;
+      try { await api.del('/visitor/delete/' + me.id); auth.logout(); } catch (err) {}
+    });
+
+    /* ---------- بطاقة الدخول (GET /visitor/qr-code/{visitorId}) ---------- */
+    const logo = document.getElementById('cardLogo');
+    logo.src = Mergab.ROOT + 'assets/img/logo-white.png';
+    document.getElementById('cardName').textContent = me.fullName;
+    document.getElementById('dlBtn').innerHTML = I('download', 18) + ' ' + esc(t('card.download'));
+    document.getElementById('fullBtn').innerHTML = I('expand', 18) + ' ' + esc(t('card.full'));
+    let qrUrl = null;
+    api.image('/visitor/qr-code/' + me.id).then(url => {
+      qrUrl = url;
+      document.getElementById('qrBox').innerHTML = `<img src="${url}" alt="${esc(t('card.title'))}">`;
+      document.getElementById('dlBtn').href = url;
+      document.getElementById('qrBig').src = url;
+    }).catch(() => { document.getElementById('qrBox').innerHTML = `<span class="empty">${esc(t('card.err'))}</span>`; });
+
+    const modal = document.getElementById('qrModal');
+    const openQr = () => { if (qrUrl) { modal.hidden = false; document.getElementById('qrClose').focus(); } };
+    document.getElementById('qrBox').addEventListener('click', openQr);
+    document.getElementById('fullBtn').addEventListener('click', openQr);
+    document.getElementById('qrClose').addEventListener('click', () => { modal.hidden = true; });
+    modal.addEventListener('click', e => { if (e.target === modal) modal.hidden = true; });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.hidden = true; });
+
+    /* ---------- زياراتي (GET /zone-visit/history/{visitorId}) ---------- */
+    function minutesBetween(a, b) { return Math.max(0, Math.round(((b ? toDate(b) : new Date()) - toDate(a)) / 60000)); }
+    function durText(m) { const h = Math.floor(m / 60); return h ? t('hist.durH', { h, m: m % 60 }) : t('hist.dur', { m }); }
+    async function renderVisits() {
+      const [list, zones] = await Promise.all([api.get('/zone-visit/history/' + me.id), api.get('/zone/get')]);
+      const visits = (list || []).slice().sort((a, b) => toDate(b.checkInTime) - toDate(a.checkInTime));
+      const active = visits.find(v => !v.checkOutTime);
+      const st = document.getElementById('entryStatus');
+      st.classList.toggle('inside', !!active);
+      st.querySelector('span').innerHTML = active
+        ? `${esc(t('card.inside', { z: zoneName(active.zoneName) }))}<small>${esc(t('card.since', { t: fmtTime(active.checkInTime) }))}</small>`
+        : esc(t('card.outside'));
+      const total = visits.reduce((s, v) => s + minutesBetween(v.checkInTime, v.checkOutTime), 0);
+      document.getElementById('hSub').textContent = visits.length ? t('hist.total', { n: visits.length, m: total }) : t('hist.sub');
+      let lastDay = '';
+      document.getElementById('visitList').innerHTML = visits.length ? visits.map(v => {
+        const z = zones.find(x => x.id === v.zoneId) || { name: v.zoneName };
+        const day = isToday(v.checkInTime) ? t('today') : fmtDate(v.checkInTime);
+        const head = day !== lastDay ? `<div class="visit-day">${esc(day)}</div>` : '';
+        lastDay = day;
+        return head + `<div class="visit-row"><span class="thumb" style="${Visitor.zoneArt(z)}" aria-hidden="true"></span>
+          <span class="meta"><b>${esc(zoneName(v.zoneName))}</b>
+          <small>${esc(t('hist.in'))} ${fmtTime(v.checkInTime)}${v.checkOutTime ? ' · ' + esc(t('hist.out')) + ' ' + fmtTime(v.checkOutTime) : ''}${v.manualCheckOut ? ' · ' + esc(t('hist.manual')) : ''}</small></span>
+          ${v.checkOutTime ? `<span class="dur">${esc(durText(minutesBetween(v.checkInTime, v.checkOutTime)))}</span>` : `<span class="live">${esc(t('hist.still'))}</span>`}</div>`;
+      }).join('') : `<div class="empty">${esc(t('hist.empty'))}</div>`;
+      return active;
+    }
+    renderVisits();
+
+    // وضع تجريبي فقط: زر يحاكي مسح موظف البوابة عشان تشوفين البطاقة والسجل يتغيرون
+    if (Mergab.MODE === 'mock' && window.MockServer && MockServer.demoScan) {
+      const demo = document.getElementById('demoBtn');
+      demo.hidden = false;
+      demo.textContent = t('card.demo');
+      demo.addEventListener('click', async () => {
+        const zones = await api.get('/zone/get');
+        const pick = zones.filter(z => !/gate/i.test(z.name))[Math.floor(Math.random() * 6)] || zones[0];
+        try {
+          const r = await MockServer.demoScan(me.id, pick.id);
+          toast(t(r.out ? 'card.demoOut' : 'card.demoIn', { z: zoneName(r.zone) }), 'success');
+          renderVisits();
+        } catch (err) { toast(err.message, 'error'); }
+      });
+    }
+
+    async function renderSaved() {
+      const zones = await api.get('/zone/get');
+      const list = Visitor.saved.list().map(n => zones.find(z => z.name === n)).filter(Boolean);
+      document.getElementById('savedList').innerHTML = list.length ? list.map(z => {
+        const lv = level(z.initialVisitors, z.capacity);
+        return `<div class="saved"><span class="thumb" style="${Visitor.zoneArt(z)}" aria-hidden="true"></span>
+          <span class="meta"><b>${esc(zoneName(z))}</b><span class="badge" style="background:${lv.soft};color:#14211C">${esc(lv.label)} · <span dir="ltr">${lv.percent}%</span></span></span>
+          <a class="btn btn-ghost btn-sm" href="map.html?zone=${encodeURIComponent(z.name)}">${esc(t('onMap'))}</a>
+          <button type="button" class="icon-btn danger" data-rm="${esc(z.name)}" aria-label="${esc(t('acc.remove', { z: zoneName(z) }))}">${I('heart', 18, '#C0392B', true)}</button></div>`;
+      }).join('') : `<div class="empty">${t('acc.savedEmpty')}</div>`;
+    }
+    document.getElementById('savedList').addEventListener('click', e => {
+      const b = e.target.closest('[data-rm]');
+      if (b) { Visitor.saved.toggle(b.dataset.rm); toast(t('map.removedToast'), 'success'); renderSaved(); }
+    });
+    document.getElementById('savedList').innerHTML = `<div class="empty">${esc(t('loading'))}</div>`;
+    renderSaved();
+  }
+</script>
+</body>
+</html>

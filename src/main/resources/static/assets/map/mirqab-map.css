@@ -1,0 +1,220 @@
+/* =========================================================
+   Mirqab 3D Map — mirqab-map.css
+   كل الكلاسات تبدأ بـ mqm- عشان ما تتعارض مع Bootstrap أو أي CSS ثاني
+   ========================================================= */
+
+.mqm {
+  --mqm-rot: -25deg;
+  --mqm-tilt: 55deg;
+  --mqm-scale: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 380px;
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: 20px;
+  background: radial-gradient(ellipse at 50% 40%, #F1ECE2 0%, #E2DACA 100%);
+  perspective: 1600px;
+  perspective-origin: 50% 30%;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+  cursor: grab;
+  font-family: inherit;
+}
+.mqm.mqm-dragging { cursor: grabbing; }
+.mqm.mqm-dragging .mqm-scene,
+.mqm.mqm-dragging .mqm-label,
+.mqm.mqm-dragging .mqm-billboard,
+.mqm.mqm-dragging .mqm-compass { transition: none; }
+
+/* المشهد المائل */
+.mqm-scene {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-style: preserve-3d;
+  transform: translate(-50%, -50%) scale(var(--mqm-scale)) rotateX(var(--mqm-tilt)) rotateZ(var(--mqm-rot));
+  transition: transform .6s cubic-bezier(.2, .7, .2, 1);
+}
+.mqm-scene * { transform-style: preserve-3d; }
+
+.mqm-p { position: absolute; box-sizing: border-box; pointer-events: none; }
+
+.mqm-ground { background: #E4D7BC; border-radius: 26px; box-shadow: 0 0 0 7px #D6C7A6; }
+.mqm-walk { background: #FBF8F1; }
+
+/* المباني */
+.mqm-face { pointer-events: auto; cursor: pointer; }
+.mqm-top { border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06); transition: background-color .4s; }
+.mqm-wall { background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, .18) 0 2px, transparent 2px 7px); transition: background-color .4s; }
+.mqm-wall-x { background-image: repeating-linear-gradient(90deg, rgba(255, 255, 255, .18) 0 2px, transparent 2px 7px); }
+.mqm-selected { box-shadow: 0 0 0 3px #1E6FD9, inset 0 0 0 1px rgba(0, 0, 0, .06) !important; }
+
+/* الساحة والقبة */
+.mqm-plaza { border-radius: 50%; background: #F3EDE0; border: 2px solid #DCCFB3; transition: background-color .4s; }
+.mqm-dome { border-radius: 50%; border: 1.5px solid #C8892B; background: rgba(231, 201, 138, .16); transition: border-color .4s, background-color .4s; }
+.mqm-glow { border-radius: 50%; }
+
+/* أسماء المناطق (تبقى مقابلة الشاشة دايم) */
+.mqm-label,
+.mqm-billboard {
+  position: absolute;
+  transform-origin: 0 0;
+  transform: translateZ(var(--z)) rotateZ(calc(-1 * var(--mqm-rot))) rotateX(calc(-1 * var(--mqm-tilt))) translate(-50%, -100%);
+  transition: transform .6s cubic-bezier(.2, .7, .2, 1);
+  white-space: nowrap;
+}
+.mqm-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 3px 7px;
+  border-radius: 999px;
+  border: 1px solid #E2DCCF;
+  background: #FFFFFF;
+  color: #14211C;
+  font-family: inherit;
+  font-size: 8.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 2px 6px rgba(16, 35, 29, .18);
+}
+.mqm-label:hover { border-color: #10231D; }
+.mqm-label.mqm-active { background: #10231D; color: #FFFFFF; border-color: #10231D; box-shadow: 0 4px 12px rgba(16, 35, 29, .35); }
+.mqm-dot { width: 6px; height: 6px; border-radius: 50%; flex: none; background: #9AA5A0; }
+
+/* موقع الزائر */
+.mqm-me { border-radius: 50%; background: #1E6FD9; border: 3px solid #FFFFFF; animation: mqm-pulse 1.6s ease-out infinite; }
+.mqm-billboard.mqm-me-label {
+  padding: 3px 7px;
+  box-shadow: 0 3px 10px rgba(30, 111, 217, .4); border-radius: 7px; background: #1E6FD9; color: #FFFFFF; font-size: 9px; font-weight: 700; }
+@keyframes mqm-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(30, 111, 217, .55); }
+  100% { box-shadow: 0 0 0 14px rgba(30, 111, 217, 0); }
+}
+
+/* المسار */
+.mqm-route {
+  background: repeating-linear-gradient(90deg, #1E6FD9 0 9px, #6FA6EE 9px 14px);
+  background-size: 28px 100%;
+  box-shadow: 0 0 0 1.5px #FFFFFF;
+  animation: mqm-flow .9s linear infinite;
+}
+.mqm-route-alt { background: repeating-linear-gradient(90deg, #C6372C 0 6px, transparent 6px 11px); opacity: .75; }
+@keyframes mqm-flow { to { background-position: 28px 0; } }
+
+/* أزرار التحكم */
+.mqm-controls { position: absolute; top: 14px; left: 14px; z-index: 5; display: flex; flex-direction: column; gap: 8px; }
+.mqm-btn {
+  width: 42px; height: 42px; padding: 0; border: 0; border-radius: 12px;
+  background: #FFFFFF; color: #14211C; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(20, 33, 28, .15);
+}
+.mqm-btn:hover { background: #F4F1EA; }
+.mqm-compass { display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 10px; font-weight: 700; line-height: 1; transform: rotate(var(--mqm-rot)); transition: transform .6s cubic-bezier(.2, .7, .2, 1); }
+
+.mqm-heat {
+  position: absolute; top: 14px; right: 14px; z-index: 5;
+  min-height: 42px; padding: 0 16px; border: 0; border-radius: 999px;
+  background: #FFFFFF; color: #14211C; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  box-shadow: 0 2px 8px rgba(20, 33, 28, .15);
+}
+.mqm-heat[aria-pressed="true"] { background: #10231D; color: #FFFFFF; }
+
+.mqm-legend {
+  position: absolute; bottom: 14px; right: 14px; z-index: 5;
+  display: flex; flex-wrap: wrap; gap: 10px; padding: 8px 12px; border-radius: 12px;
+  background: rgba(255, 255, 255, .94); color: #14211C; font-size: 12px;
+  box-shadow: 0 2px 8px rgba(20, 33, 28, .12);
+}
+.mqm-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.mqm-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+/* =========================================================
+   وضع الصورة (mode: 'image')
+   ========================================================= */
+.mqm.mqm-imode { background: #10231D; perspective: none; cursor: default; touch-action: auto; }
+.mqm.mqm-imode.mqm-dragging { cursor: grabbing; }
+.mqm-istage {
+  position: absolute; left: 50%; top: 50%;
+  transform-origin: 50% 50%;
+  transition: transform .35s cubic-bezier(.2, .7, .2, 1);
+}
+.mqm.mqm-dragging .mqm-istage { transition: none; }
+.mqm-img { display: block; width: 100%; height: 100%; object-fit: fill; user-select: none; -webkit-user-drag: none; }
+.mqm-isvg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+
+/* علامة المنطقة: بطاقة ملونة بسهم تحتها (حجمها ثابت مع التكبير) */
+.mqm-marker {
+  --bg: #FFFFFF; --ink: #14211C; --bd: #E2DCCF;
+  position: absolute;
+  transform-origin: 50% 100%;
+  transform: translate(-50%, calc(-100% - 7px)) scale(var(--mqm-inv, 1));
+  display: inline-flex; align-items: center; gap: 6px;
+  margin: 0; padding: 7px 12px;
+  border-radius: 12px; border: 1.5px solid var(--bd);
+  background: var(--bg); color: var(--ink);
+  font-family: inherit; font-size: 13px; font-weight: 700; line-height: 1.2; white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+  transition: background-color .4s, color .4s, box-shadow .2s;
+}
+.mqm-marker::after {
+  content: ''; position: absolute; left: 50%; top: 100%;
+  margin-left: -7px; border: 7px solid transparent; border-top-color: var(--bg);
+}
+.mqm-marker:hover { box-shadow: 0 8px 22px rgba(0, 0, 0, .45); }
+.mqm-marker.mqm-active { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+.mqm-marker .mqm-dot { background: currentColor; }
+.mqm-marker:focus-visible { outline: 3px solid #C8892B; outline-offset: 2px; }
+
+.mqm-ring {
+  --c: rgba(192, 57, 43, .55);
+  position: absolute; width: 46px; height: 46px; margin: -23px 0 0 -23px;
+  border-radius: 50%; pointer-events: none; display: none;
+  transform: scale(var(--mqm-inv, 1));
+  animation: mqm-ring 1.6s ease-out infinite;
+}
+@keyframes mqm-ring {
+  0% { box-shadow: 0 0 0 0 var(--c); background: var(--c); }
+  100% { box-shadow: 0 0 0 26px rgba(0, 0, 0, 0); background: rgba(0, 0, 0, 0); }
+}
+
+.mqm-ime {
+  position: absolute; width: 16px; height: 16px; border-radius: 50%;
+  background: #1E6FD9; border: 3px solid #FFFFFF; box-sizing: border-box;
+  transform: translate(-50%, -50%) scale(var(--mqm-inv, 1));
+  animation: mqm-pulse 1.6s ease-out infinite; pointer-events: none;
+}
+.mqm-ime-label {
+  position: absolute; transform-origin: 50% 0;
+  transform: translate(-50%, 12px) scale(var(--mqm-inv, 1));
+  padding: 3px 8px; border-radius: 7px; background: #1E6FD9; color: #FFFFFF;
+  font-size: 11px; font-weight: 700; white-space: nowrap; pointer-events: none;
+}
+
+.mqm-ipath-casing { fill: none; stroke: #FFFFFF; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
+.mqm-ipath { fill: none; stroke: #1E6FD9; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 12 7; animation: mqm-dash 1s linear infinite; }
+.mqm-ipath-alt { fill: none; stroke: #E05545; stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 6 7; opacity: .85; }
+@keyframes mqm-dash { to { stroke-dashoffset: -19; } }
+
+.mqm-imgerr {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  padding: 24px; text-align: center; color: #DCE6E0; font-size: 15px;
+}
+.mqm-debug-dot {
+  position: absolute; transform: translate(-50%, -50%); padding: 2px 6px; border-radius: 6px;
+  background: #E91E63; color: #FFFFFF; font: 700 11px/1.3 monospace; pointer-events: none;
+}
+
+.mqm-btn:focus-visible,
+.mqm-heat:focus-visible,
+.mqm-label:focus-visible { outline: 3px solid #C8892B; outline-offset: 2px; }

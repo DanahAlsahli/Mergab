@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="../assets/img/favicon.png">
+<title data-i18n="o.t.admin">مرقاب</title>
+<script src="../assets/js/i18n.js"></script>
+<script src="../assets/js/i18n-staff.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@500;600;700&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/mergab.css">
+</head>
+<body data-area="admin" data-page="dashboard">
+<header id="vHeader"></header>
+
+<main>
+  <section class="page-band o-band" id="band">
+    <div class="geo" aria-hidden="true"></div>
+    <div class="o-wrap">
+      <div><span class="eyebrow" data-i18n="motto"></span>
+        <h1 id="bandH"></h1>
+        <p id="bandP" data-i18n="o.adm.sub"></p></div>
+      <div class="acts"><a class="btn btn-gold" href="users.html#add" id="actAdd"></a></div>
+    </div>
+  </section>
+  <div class="sadu" aria-hidden="true"></div>
+
+  <div class="o-wrap o-body">
+    <section class="kpis" aria-label="Users by role">
+      <div class="card kpi"><span class="kpi-icon" style="background:#E6F0EC;color:var(--green-600)" data-icon="users"></span><span class="meta"><span data-i18n="o.adm.users"></span><b id="kUsers">—</b></span></div>
+      <div class="card kpi"><span class="kpi-icon" style="background:var(--gold-soft);color:#7A5A1E" data-icon="organizer"></span><span class="meta"><span data-i18n="o.adm.orgs"></span><b id="kOrgs">—</b></span></div>
+      <div class="card kpi"><span class="kpi-icon" style="background:#F7E3E0;color:#8E2A20" data-icon="shield"></span><span class="meta"><span data-i18n="o.adm.admins"></span><b id="kAdmins">—</b></span></div>
+      <div class="card kpi"><span class="kpi-icon" style="background:#E4ECE9;color:var(--green-900)" data-icon="visitor"></span><span class="meta"><span data-i18n="o.adm.visitors"></span><b id="kVisitors">—</b><small id="kVisSub" style="color:var(--muted)"></small></span></div>
+    </section>
+
+    <div class="split">
+      <section class="card card-pad" aria-labelledby="recentT">
+        <div class="card-head"><h2 id="recentT" data-i18n="o.adm.newest"></h2><a class="v-link" href="users.html" data-i18n="o.adm.manage"></a></div>
+        <div id="recent"><div class="empty" data-i18n="loading"></div></div>
+      </section>
+      <section class="card card-pad" aria-labelledby="sysT">
+        <div class="card-head"><h2 id="sysT" data-i18n="o.adm.expo"></h2><small style="color:var(--muted)" data-i18n="o.adm.byOrg"></small></div>
+        <div id="sys" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px"></div>
+        <div class="note" style="margin-top:16px" data-i18n="o.adm.note"></div>
+      </section>
+    </div>
+
+    <section class="card card-pad" aria-labelledby="permT">
+      <div class="card-head"><h2 id="permT" data-i18n="o.adm.perm"></h2></div>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th scope="col" data-i18n="o.adm.action"></th><th scope="col" data-i18n="o.role.VISITOR"></th><th scope="col" data-i18n="o.role.ORGANIZER"></th><th scope="col" data-i18n="o.role.ADMIN"></th></tr></thead>
+        <tbody id="perm"></tbody>
+      </table></div>
+    </section>
+  </div>
+</main>
+
+<footer id="vFooter"></footer>
+
+<script src="../assets/js/site-config.js"></script>
+<script src="../assets/js/mock-server.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/organizer.js"></script>
+<script>
+  const { api, esc, num, roleBadge } = Mergab;
+  const I = Org.icon;
+  const me = Org.shell();
+  if (me) {
+    document.getElementById('bandH').textContent = t('o.hello', { n: me.fullName.split(' ')[0] });
+    document.getElementById('actAdd').innerHTML = I('plus', 18) + ' ' + esc(t('o.adm.addOrg'));
+    Promise.all([api.get('/user/get-all'), api.get('/zone/get'), api.get('/expo-event/get')]).then(([users, zones, events]) => {
+      const count = r => users.filter(u => u.role === r).length;
+      const vis = users.filter(u => u.role === 'VISITOR');
+      const pr = vis.filter(u => u.visitor && u.visitor.showPrayerTimes).length;
+      document.getElementById('kUsers').textContent = num(users.length);
+      document.getElementById('kAdmins').textContent = num(count('ADMIN'));
+      document.getElementById('kOrgs').textContent = num(count('ORGANIZER'));
+      document.getElementById('kVisitors').textContent = num(vis.length);
+      document.getElementById('kVisSub').textContent = t('o.adm.prayerShare', { n: pr });
+      document.getElementById('recent').innerHTML = users.slice().sort((a, b) => b.id - a.id).slice(0, 6).map(u => `
+        <div class="ev-row"><span class="avatar" aria-hidden="true" style="width:36px;height:36px;font-size:12px">${esc(Mergab.initials(u.fullName))}</span>
+          <span class="meta"><b>${esc(u.fullName)}</b><small dir="ltr" style="text-align:start">${esc(u.email)}</small></span>${roleBadge(u.role)}</div>`).join('');
+      const stat = (ic, label, val) => `<div style="background:#FAF8F3;border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;gap:10px;align-items:center">
+        <span style="color:var(--green-600)">${I(ic, 22)}</span><span><span style="display:block;font-size:13px;color:var(--muted)">${esc(label)}</span><b style="font-family:var(--display);font-size:22px">${val}</b></span></div>`;
+      document.getElementById('sys').innerHTML =
+        stat('zones', t('o.nav.zones'), num(zones.length)) + stat('events', t('o.nav.events'), num(events.length)) +
+        stat('users', t('o.col.capacity'), num(zones.reduce((s, z) => s + z.capacity, 0))) +
+        stat('visitor', t('o.k.inside'), num(zones.reduce((s, z) => s + z.initialVisitors, 0)));
+    });
+    const Y = `<span class="badge st-COMPLETED">${I('check', 14)}${esc(t('o.yes'))}</span>`, N = '<span style="color:var(--muted)">—</span>';
+    document.getElementById('perm').innerHTML = [
+      ['o.p.browse', Y, Y, Y], ['o.p.signup', Y, N, N], ['o.p.card', Y, N, N], ['o.p.prayer', Y, N, N],
+      ['o.p.zones', N, Y, N], ['o.p.sims', N, Y, N], ['o.p.reports', N, Y, N], ['o.p.accounts', N, N, Y], ['o.p.delete', N, N, Y]
+    ].map(r => `<tr><td><b>${esc(t(r[0]))}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('');
+  }
+</script>
+</body>
+</html>
