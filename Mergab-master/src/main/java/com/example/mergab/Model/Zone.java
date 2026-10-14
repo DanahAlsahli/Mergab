@@ -1,6 +1,4 @@
 package com.example.mergab.Model;
-
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;

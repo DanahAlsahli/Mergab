@@ -28,3 +28,41 @@ def test_high_congestion():
 
 def test_zero_occupancy():
     assert classify_congestion(0, 1000) == "LOW"
+
+
+
+def test_single_snapshot():
+    snapshot = SnapshotInput(minute=5, occupancy=200, queueLength=10)
+    assert predict_occupancy([snapshot], horizon_minutes=10) == 200
+
+
+def test_empty_snapshots():
+    import pytest
+
+    with pytest.raises(ValueError):
+        predict_occupancy([], horizon_minutes=10)
+
+
+def test_prediction_decreases():
+    snapshots = [
+        SnapshotInput(minute=4, occupancy=200, queueLength=20),
+        SnapshotInput(minute=5, occupancy=150, queueLength=15),
+    ]
+
+    assert predict_occupancy(snapshots, horizon_minutes=10) == 0
+
+
+def test_invalid_capacity():
+    import pytest
+
+    with pytest.raises(ValueError):
+        classify_congestion(100, 0)
+
+
+def test_congestion_at_capacity():
+    assert classify_congestion(1000, 1000) == "HIGH"
+
+
+def test_congestion_above_capacity():
+    assert classify_congestion(1200, 1000) == "HIGH"
+

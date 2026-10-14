@@ -80,6 +80,15 @@ public class AdviceController {
         return ResponseEntity.status(400).body(new ApiResponse(e.getMessage()));
     }
 
+    @ExceptionHandler(value = org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<ApiResponse> handleResponseStatusException(
+            org.springframework.web.server.ResponseStatusException e) {
+
+        return ResponseEntity
+                .status(e.getStatusCode())
+                .body(new ApiResponse(e.getReason()));
+    }
+
     @ExceptionHandler(value = RuntimeException.class)
     public ResponseEntity<ApiResponse> RuntimeException(RuntimeException e) {
         return ResponseEntity.status(400).body(new ApiResponse(e.getMessage()));
