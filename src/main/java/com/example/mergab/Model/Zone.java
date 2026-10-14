@@ -36,6 +36,12 @@ public class Zone {
     @Column(columnDefinition = "int not null")
     private Integer initialVisitors;
 
+    private Boolean hasPrayerArea = false;
+
+    @Column(columnDefinition = "boolean not null default false")
+    private Boolean indoor = false;
+
+
     @OneToMany(mappedBy = "fromZone")
     @JsonIgnore
     private Set<ZoneConnection> outgoingConnections;
