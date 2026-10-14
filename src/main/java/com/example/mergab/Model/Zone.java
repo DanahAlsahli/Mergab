@@ -1,6 +1,4 @@
-package com.example.mergab.Model;
-
-
+﻿package com.example.mergab.Model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -35,12 +33,6 @@ public class Zone {
     @PositiveOrZero(message = "Initial visitors cannot be negative")
     @Column(columnDefinition = "int not null")
     private Integer initialVisitors;
-
-    private Boolean hasPrayerArea = false;
-
-    @Column(columnDefinition = "boolean not null default false")
-    private Boolean indoor = false;
-
 
     @OneToMany(mappedBy = "fromZone")
     @JsonIgnore
