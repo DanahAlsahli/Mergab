@@ -41,6 +41,12 @@ public class Zone {
     @Column(columnDefinition = "boolean not null default false")
     private Boolean indoor = false;
 
+    @Column(nullable = true)
+    private Double mapX;
+
+    @Column(nullable = true)
+    private Double mapY;
+
 
     @OneToMany(mappedBy = "fromZone")
     @JsonIgnore
@@ -62,4 +68,8 @@ public class Zone {
     @OneToMany(mappedBy = "zone")
     @JsonIgnore
     private Set<ZoneVisit> zoneVisits;
+
+    @OneToMany(mappedBy = "zone", cascade = CascadeType.REMOVE)
+    @JsonIgnore
+    private Set<Facility> facilities;
 }

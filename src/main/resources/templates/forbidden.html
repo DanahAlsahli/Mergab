@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" type="image/png" href="assets/img/favicon.png">
+<link rel="icon" type="image/png" href="../static/img/favicon.png">
 <title data-i18n="fb.title">مرقاب</title>
-<script src="assets/js/i18n.js"></script>
+<script src="../static/js/i18n.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@500;600;700&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/mergab.css">
+<link rel="stylesheet" href="../static/css/mergab.css">
 </head>
 <body style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px">
 <main class="card card-pad" style="width:min(460px,100%);text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;padding:0 28px 36px;overflow:hidden">
@@ -25,9 +25,9 @@
     <button type="button" class="btn btn-ghost" id="switchBtn" data-i18n="fb.switch"></button>
   </div>
 </main>
-<script src="assets/js/site-config.js"></script>
-<script src="assets/js/mock-server.js"></script>
-<script src="assets/js/api.js"></script>
+<script src="../static/js/site-config.js"></script>
+<script src="../static/js/mock-server.js"></script>
+<script src="../static/js/api.js"></script>
 <script>
   const { auth, roleBadge } = Mergab;
   const me = auth.get();
