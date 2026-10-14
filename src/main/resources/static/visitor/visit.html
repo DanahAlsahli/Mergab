@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="../assets/img/favicon.png">
+<title data-i18n="visit.title">مرقاب</title>
+<script src="../assets/js/i18n.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@500;600;700&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/mergab.css">
+</head>
+<body>
+<header id="vHeader"></header>
+
+<main>
+  <section class="page-band">
+    <div class="geo" aria-hidden="true"></div>
+    <div class="v-wrap" style="position:relative">
+      <span class="eyebrow" data-i18n="motto"></span>
+      <h1 data-i18n="visit.h1" style="margin-top:8px"></h1>
+      <p data-i18n="visit.sub"></p>
+    </div>
+  </section>
+  <div class="sadu" aria-hidden="true"></div>
+
+  <div class="v-wrap">
+    <section class="v-section" aria-labelledby="beforeT">
+      <div class="v-section-head"><h2 id="beforeT" class="section-title-sa" data-i18n="visit.before"></h2></div>
+      <div class="info-grid" id="before"></div>
+    </section>
+
+    <section class="v-section" id="prayer" aria-labelledby="prT" hidden>
+      <div class="prayer-wrap">
+        <div>
+          <h2 id="prT" class="section-title-sa" data-i18n="visit.prayerT"></h2>
+          <p style="color:var(--muted);margin:6px 0 16px" data-i18n="visit.prayerSub"></p>
+          <div class="pr-next" id="prNext"></div>
+          <b style="display:block;font-size:15px;margin:18px 0 10px" data-i18n="visit.prayerRooms"></b>
+          <div class="chips" id="prRooms"></div>
+          <small style="display:block;margin-top:14px;color:var(--muted)" data-i18n="visit.src"></small>
+        </div>
+        <ol class="pr-list" id="prList" aria-labelledby="prT"></ol>
+      </div>
+    </section>
+
+    <section class="v-section" aria-labelledby="nowT">
+      <div class="card card-pad" style="display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between">
+        <div style="flex:1 1 360px;display:flex;flex-direction:column;gap:10px">
+          <h2 id="nowT" style="font-size:22px" data-i18n="visit.now"></h2>
+          <p style="margin:0;color:var(--muted)" data-i18n="visit.nowSub"></p>
+          <div class="meter" style="height:12px;border-radius:6px"><i id="nowBar" style="width:0;background:var(--green-600)"></i></div>
+          <b id="nowAll" style="font-size:15px"></b>
+          <div style="display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--ink-2)"><span id="quiet"></span><span id="busy"></span></div>
+        </div>
+        <a class="btn btn-primary" href="map.html" id="openMap"></a>
+      </div>
+    </section>
+
+    <section class="v-section" id="facilities" aria-labelledby="facT">
+      <div class="v-section-head"><div><h2 id="facT" class="section-title-sa" data-i18n="visit.facilities"></h2><p data-i18n="visit.facilitiesSub"></p></div></div>
+      <div class="fac-grid" id="facList"></div>
+    </section>
+
+    <section class="v-section faq" id="faq" aria-labelledby="faqT">
+      <div class="v-section-head"><h2 id="faqT" class="section-title-sa" data-i18n="visit.faq"></h2></div>
+      <div id="faqList"></div>
+    </section>
+  </div>
+</main>
+
+<footer id="vFooter"></footer>
+
+<script src="../assets/js/site-config.js"></script>
+<script src="../assets/js/mock-server.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/visitor.js"></script>
+<script>
+  const { api, esc, num, zoneName, level } = Mergab;
+  const I = Visitor.icon;
+  const V = window.MERGAB_CONFIG.visit || {};
+  const L = I18n.lang;
+  const tr = o => (o && (o[L] || o.ar)) || '';
+
+  document.getElementById('before').innerHTML = [
+    ['clock', 'visit.hours', V.hours], ['ticket', 'visit.tickets', V.tickets],
+    ['bus', 'visit.transport', V.transport], ['wheel', 'visit.access', V.accessibility]
+  ].map(c => `<div class="card info-card"><span class="ic">${I(c[0], 24)}</span><h3>${esc(t(c[1]))}</h3><p>${esc(tr(c[2]))}</p></div>`).join('');
+
+  document.getElementById('openMap').innerHTML = I('map', 18) + ' ' + esc(t('visit.openMap'));
+
+  document.getElementById('facList').innerHTML = (V.facilities || []).map(f =>
+    `<a class="fac" href="map.html?zone=${encodeURIComponent(f.zone)}"><span class="ic">${I(f.icon, 20)}</span>
+      <span><b>${esc(tr(f.name))}</b><small>${esc(t('visit.in', { z: zoneName({ name: f.zone }) }))}</small></span></a>`).join('');
+
+  document.getElementById('faqList').innerHTML = [1, 2, 3, 4, 5].map(i =>
+    `<details${i === 1 ? ' open' : ''}><summary>${esc(t('faq.q' + i))}</summary><p>${esc(t('faq.a' + i))}</p></details>`).join('');
+
+  // أوقات الصلاة (GET /prayer/today) — بس للزائر اللي فعّلها
+  if (Visitor.prayerOn()) Visitor.prayer().then(c => {
+    if (!c || !c.prayers) return;
+    document.getElementById('prayer').hidden = false;
+    const order = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+    const nextKey = c.nextPrayer && c.nextPrayer.key;
+    document.getElementById('prList').innerHTML = order.map(k => `
+      <li class="pr-row${k === nextKey ? ' is-next' : ''}${k === c.currentPrayer ? ' is-now' : ''}">
+        <span class="nm">${I('pray', 20)}${esc(Visitor.prayerName(k))}</span>
+        ${k === nextKey ? `<span class="tag">${esc(t('visit.nextBadge'))}</span>` : ''}
+        <b dir="ltr">${esc(c.prayers[k])}</b></li>`).join('');
+    document.getElementById('prNext').innerHTML = c.currentPrayer
+      ? `<b>${esc(t('ctx.now', { p: Visitor.prayerName(c.currentPrayer) }))}</b>`
+      : `<span>${esc(t('visit.nextIs'))}</span><b>${esc(Visitor.untilText(c.nextPrayer))}</b><small>${esc(t('ctx.at', { t: c.nextPrayer.time }))}</small>`;
+    document.getElementById('prRooms').innerHTML = (c.prayerZones || []).map(z =>
+      `<a class="chip" href="map.html?zone=${encodeURIComponent(z.name)}" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none">${I('pray', 16)}${esc(zoneName(z))}</a>`).join('');
+    if (location.hash === '#prayer') document.getElementById('prayer').scrollIntoView();
+  });
+
+  // وضع المعرض الآن (من بيانات المناطق)
+  api.get('/zone/get').then(zones => {
+    if (!zones.length) return;
+    const cap = zones.reduce((s, z) => s + z.capacity, 0), vis = zones.reduce((s, z) => s + z.initialVisitors, 0);
+    const p = cap ? Math.round(vis / cap * 100) : 0;
+    const lv = level(vis, cap);
+    const bar = document.getElementById('nowBar');
+    bar.style.width = Math.min(100, p) + '%'; bar.style.background = lv.color;
+    document.getElementById('nowAll').textContent = t('visit.nowAll', { p, v: num(vis) });
+    const r = z => z.initialVisitors / z.capacity;
+    const inner = zones.filter(z => !/gate/i.test(z.name));
+    const q = inner.slice().sort((a, b) => r(a) - r(b))[0], b = inner.slice().sort((a, b) => r(b) - r(a))[0];
+    document.getElementById('quiet').innerHTML = `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#7FC49B"></span> ` + esc(t('visit.quietest', { z: zoneName(q) }));
+    document.getElementById('busy').innerHTML = `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#C0392B"></span> ` + esc(t('visit.busiest', { z: zoneName(b) }));
+  });
+</script>
+</body>
+</html>
