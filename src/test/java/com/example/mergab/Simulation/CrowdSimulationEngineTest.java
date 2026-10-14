@@ -926,12 +926,7 @@ public class CrowdSimulationEngineTest {
                 .orElseThrow()
                 .queueLength();
 
-        System.out.println(
-                "Zone C occupancy: " + destinationOccupancy
-                        + ", queue: " + destinationQueue
-        );
-
-        assertEquals(8, destinationOccupancy);
+        assertEquals(6, destinationOccupancy);
         assertEquals(0, destinationQueue);
 
     }
