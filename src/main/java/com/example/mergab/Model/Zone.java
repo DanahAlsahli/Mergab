@@ -1,4 +1,4 @@
-package com.example.mergab.Model;
+﻿package com.example.mergab.Model;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -46,7 +46,6 @@ public class Zone {
 
     @Column(nullable = true)
     private Double mapY;
-
 
     @OneToMany(mappedBy = "fromZone")
     @JsonIgnore
