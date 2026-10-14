@@ -28,4 +28,6 @@ public class VisitorDTO {
     @NotEmpty(message = "Phone number is required")
     @Pattern(regexp = "^05\\d{8}$", message = "Phone number must start with 05 and be 10 digits")
     private String phoneNumber;
+
+    private Boolean showPrayerTimes = false;
 }

@@ -39,7 +39,9 @@ public class VisitorService {
         User user = new User(null, dto.getFullName(), dto.getEmail(), dto.getPassword(), "VISITOR", null, null);
         userRepository.save(user);
 
-        Visitor visitor = new Visitor(null, dto.getPhoneNumber(), UUID.randomUUID().toString(), user, null);        user.setVisitor(visitor);
+        Visitor visitor = new Visitor(null, dto.getPhoneNumber(), UUID.randomUUID().toString(), user, null,
+                Boolean.TRUE.equals(dto.getShowPrayerTimes()));
+        user.setVisitor(visitor);
         visitorRepository.save(visitor);
 
 
@@ -66,6 +68,7 @@ public class VisitorService {
         user.setEmail(dto.getEmail());
         user.setPassword(dto.getPassword());
         visitor.setPhoneNumber(dto.getPhoneNumber());
+        visitor.setShowPrayerTimes(Boolean.TRUE.equals(dto.getShowPrayerTimes()));
 
         userRepository.save(user);
         visitorRepository.save(visitor);

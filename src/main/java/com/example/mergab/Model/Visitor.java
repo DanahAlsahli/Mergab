@@ -33,4 +33,8 @@ public class Visitor {
     @OneToMany(mappedBy = "visitor")
     @JsonIgnore
     private Set<ZoneVisit> zoneVisits;
+
+    // الزائر يختار يشوف أوقات الصلاة أو لا
+    @Column(columnDefinition = "boolean not null default false")
+    private Boolean showPrayerTimes = false;
 }

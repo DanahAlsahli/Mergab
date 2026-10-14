@@ -63,6 +63,8 @@ public class ZoneService {
         oldZone.setName(zone.getName());
         oldZone.setCapacity(zone.getCapacity());
         oldZone.setInitialVisitors(zone.getInitialVisitors());
+        oldZone.setHasPrayerArea(Boolean.TRUE.equals(zone.getHasPrayerArea()));
+        oldZone.setIndoor(Boolean.TRUE.equals(zone.getIndoor()));
         zoneRepository.save(oldZone);
     }
 
