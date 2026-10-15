@@ -1,128 +1,177 @@
-<!doctype html>
-<html>
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" type="image/png" href="../static/img/favicon.png">
-<title data-i18n="login.title">مرقاب</title>
-<script src="../static/js/i18n.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@500;600;700&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" rel="stylesheet">
-<link rel="stylesheet" href="../static/css/mergab.css">
-<style>
-  .demo-acc { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 42px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: #FBFAF6; cursor: pointer; }
-  .demo-acc:hover { background: var(--cream-2); }
-  .auth-art { overflow: hidden; }
-  .auth-art > * { position: relative; }
-  .auth-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول | مِرقاب</title>
+
+  <link rel="icon" href="/img/favicon.png">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/login.css">
+
+  <script defer src="/js/base.js"></script>
+  <script defer src="/js/auth.js"></script>
+  <script defer src="/js/login.js"></script>
 </head>
-<body>
-<div class="auth-wrap">
-  <section class="auth-art" aria-hidden="true" style="justify-content:space-between">
-    <div class="geo" style="position:absolute"></div>
-    <div id="artLogo" class="v-logo"></div>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <h2 style="font-weight:600;font-size:36px;line-height:1.35" data-i18n="login.artTitle"></h2>
-      <p data-i18n="login.artText"></p>
-      <div class="sadu" style="margin-top:14px;max-width:320px"></div>
+
+<body class="auth-page">
+
+<main class="auth-layout">
+
+  <!-- Brand Experience -->
+  <section class="auth-showcase" aria-label="مِرقاب">
+    <div class="auth-showcase-overlay"></div>
+
+    <div class="auth-showcase-content">
+      <a href="/" class="auth-brand">
+        <img src="/img/logo-white.png"
+             alt="مِرقاب | Mergab">
+      </a>
+
+      <div class="auth-showcase-message">
+                <span class="auth-eyebrow"
+                      data-auth-t="eyebrow">
+                    رحلتك داخل إكسبو تبدأ هنا
+                </span>
+
+        <h1 data-auth-t="showcaseTitle">
+          استكشف إكسبو
+          <span>بذكاء وسهولة.</span>
+        </h1>
+
+        <p data-auth-t="showcaseDescription">
+          خطط لزيارتك، اكتشف المناطق والفعاليات،
+          وتنقل بثقة مع مِرقاب.
+        </p>
+      </div>
+
+      <div class="auth-showcase-footer">
+        <span class="auth-showcase-line"></span>
+        <span data-auth-t="showcaseFooter">
+                    مِرقاب — كل خطوة أذكى
+                </span>
+      </div>
     </div>
   </section>
 
-  <main class="auth-form">
-    <div class="auth-box">
-      <div class="auth-top"><a class="v-logo" href="visitor/index.html" id="formLogo"></a><span id="langSlot"></span></div>
-      <div>
-        <h1 style="font-size:28px" data-i18n="login.h1"></h1>
-        <p style="margin:6px 0 0;color:var(--muted)" data-i18n="login.sub"></p>
+  <!-- Login Form -->
+  <section class="auth-panel">
+    <div class="auth-panel-top">
+      <a href="/" class="auth-back">
+        <span aria-hidden="true">←</span>
+        <span data-auth-t="backHome">
+                    العودة للرئيسية
+                </span>
+      </a>
+
+      <button type="button"
+              class="auth-language"
+              id="authLangSwitch"
+              aria-label="Change language">
+        EN
+      </button>
+    </div>
+
+    <div class="auth-form-container">
+
+      <div class="auth-mobile-brand">
+        <img src="/img/logo.png" alt="مِرقاب">
       </div>
 
-      <div class="note" id="expired" hidden data-i18n="login.expired"></div>
+      <div class="auth-heading">
+                <span class="auth-welcome"
+                      data-auth-t="welcome">
+                    أهلًا بعودتك
+                </span>
 
-      <form id="loginForm" style="display:flex;flex-direction:column;gap:14px" novalidate>
-        <label class="field"><span data-i18n="f.email"></span><input type="email" name="email" required autocomplete="email" dir="ltr" placeholder="name@example.com"></label>
-        <label class="field"><span data-i18n="f.password"></span><input type="password" name="password" required autocomplete="current-password"></label>
-        <div id="err" role="alert" hidden style="padding:10px 12px;border-radius:10px;background:#FBECEA;color:#8E2A20;font-size:14px"></div>
-        <button type="submit" class="btn btn-primary" data-i18n="login.submit"></button>
+        <h2 data-auth-t="loginTitle">
+          تسجيل الدخول
+        </h2>
+
+        <p data-auth-t="loginDescription">
+          سجّل دخولك لمتابعة تجربتك مع مِرقاب.
+        </p>
+      </div>
+
+      <form id="loginForm" novalidate>
+
+        <div class="auth-field">
+          <label for="email"
+                 data-auth-t="emailLabel">
+            البريد الإلكتروني
+          </label>
+
+          <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  autocomplete="username"
+                  placeholder="name@example.com"
+                  required>
+        </div>
+
+        <div class="auth-field">
+          <label for="password"
+                 data-auth-t="passwordLabel">
+            كلمة المرور
+          </label>
+
+          <div class="auth-password-wrap">
+            <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    autocomplete="current-password"
+                    required>
+
+            <button
+                    type="button"
+                    id="togglePassword"
+                    class="auth-password-toggle"
+                    aria-label="إظهار كلمة المرور">
+              <span aria-hidden="true">◉</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="loginError"
+             class="auth-error"
+             role="alert"
+             aria-live="polite"
+             hidden></div>
+
+        <button type="submit"
+                id="loginButton"
+                class="auth-submit">
+                    <span data-auth-t="loginButton">
+                        تسجيل الدخول
+                    </span>
+          <span aria-hidden="true">←</span>
+        </button>
       </form>
 
-      <p style="margin:0;text-align:center;color:var(--muted);font-size:14.5px"><span data-i18n="login.noAccount"></span> <a href="visitor/register.html" style="font-weight:700" data-i18n="login.createVisitor"></a></p>
-      <p style="margin:0;text-align:center;color:var(--muted);font-size:13px" data-i18n="login.orgNote"></p>
+      <div class="auth-register-prompt">
+                <span data-auth-t="noAccount">
+                    ما عندك حساب؟
+                </span>
 
-      <section id="demoBox" hidden class="card" style="padding:14px;display:flex;flex-direction:column;gap:8px;border-style:dashed" aria-labelledby="demoT">
-        <b id="demoT" style="font-size:13.5px;color:var(--ink-2)" data-i18n="login.demo"></b>
-        <div id="demoList" style="display:flex;flex-direction:column;gap:8px"></div>
-        <button type="button" id="resetDemo" class="v-link" style="background:none;border:0;padding:4px 0;cursor:pointer;font:inherit;font-size:13px;align-self:flex-start" data-i18n="login.demoReset"></button>
-      </section>
+        <a href="/register"
+           data-auth-t="createAccount">
+          أنشئ حسابك الآن
+        </a>
+      </div>
 
-      <a class="v-link" href="visitor/index.html" id="browse"></a>
     </div>
-  </main>
-</div>
 
-<script src="../static/js/site-config.js"></script>
-<script src="../static/js/mock-server.js"></script>
-<script src="../static/js/api.js"></script>
-<script src="../static/js/visitor.js"></script>
-<script>
-  const { auth, roleBadge, toast, esc } = Mergab;
-  const params = new URLSearchParams(location.search);
-  const emailInput = document.querySelector('[name=email]');
-  if (I18n.isAr) emailInput.style.textAlign = 'right';
+    <div class="auth-panel-footer">
+            <span data-auth-t="footer">
+                © مِرقاب — تجربة إكسبو أذكى
+            </span>
+    </div>
+  </section>
 
-  // اللوقو + زر اللغة
-  document.getElementById('formLogo').innerHTML = Visitor.logoHtml(false);
-  document.getElementById('artLogo').innerHTML = Visitor.logoHtml(true);
-  Visitor.wireLogos(document);
-  document.getElementById('langSlot').innerHTML = Visitor.langButton();
-  document.getElementById('browse').innerHTML = esc(t('login.browse')) + ' ' + Visitor.next(16);
+</main>
 
-  if (params.get('expired')) document.getElementById('expired').hidden = false;
-  const current = auth.get();
-  if (current) location.replace(auth.home(current.role));
-
-  // يرجع للصفحة اللي كان يبيها لو دوره يسمح، غير كذا لصفحة دوره
-  function destination(user) {
-    const next = params.get('next');
-    const allowed = { VISITOR: '/visitor/', ORGANIZER: '/organizer/', ADMIN: '/admin/' }[user.role];
-    if (next && next.startsWith('/') && !next.startsWith('//') && next.includes(allowed)) return next;
-    return auth.home(user.role);
-  }
-
-  async function doLogin(email, password) {
-    const err = document.getElementById('err');
-    err.hidden = true;
-    try {
-      const user = await auth.login(email, password);
-      location.href = destination(user);
-    } catch (e) {
-      err.textContent = e.status === 401 ? t('login.errInvalid') : (e.message || t('login.errGeneric'));
-      err.hidden = false;
-    }
-  }
-
-  document.getElementById('loginForm').addEventListener('submit', e => {
-    e.preventDefault();
-    const f = e.target;
-    if (!f.checkValidity()) { f.reportValidity(); return; }
-    doLogin(f.email.value.trim(), f.password.value);
-  });
-
-  if (Mergab.MODE === 'mock') {
-    document.getElementById('demoBox').hidden = false;
-    document.getElementById('demoList').innerHTML = MockServer.demoAccounts.map((a, i) =>
-      `<button type="button" class="demo-acc" data-i="${i}"><span dir="ltr" style="font-size:14px">${a.email}</span>${roleBadge(a.role)}</button>`).join('');
-    document.getElementById('demoList').addEventListener('click', e => {
-      const b = e.target.closest('[data-i]');
-      if (!b) return;
-      const a = MockServer.demoAccounts[b.dataset.i];
-      const f = document.getElementById('loginForm');
-      f.email.value = a.email; f.password.value = a.password;
-      doLogin(a.email, a.password);
-    });
-    document.getElementById('resetDemo').addEventListener('click', () => { MockServer.reset(); toast(t('login.demoResetDone'), 'success'); });
-  }
-</script>
 </body>
 </html>

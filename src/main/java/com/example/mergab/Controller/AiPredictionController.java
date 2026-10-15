@@ -1,4 +1,4 @@
-﻿package com.example.mergab.Controller;
+package com.example.mergab.Controller;
 import com.example.mergab.DTO.AiPredictionResponseDTO;
 import com.example.mergab.Model.SimulationSnapshot;
 import com.example.mergab.Model.Zone;

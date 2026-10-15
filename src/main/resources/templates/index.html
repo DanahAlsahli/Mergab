@@ -1,13 +1,181 @@
+
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>مرقاب</title>
-<meta http-equiv="refresh" content="0; url=visitor/index.html">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#0E3D32">
+    <title>مِرقاب | استكشف إكسبو بذكاء</title>
+
+    <link rel="icon" href="/img/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/index.css">
+    <script defer src="/js/base.js"></script>
+    <script defer src="/js/index.js"></script>
 </head>
+
 <body>
-<!-- الصفحة الرئيسية للموقع = موقع الزائر. المنظم والأدمن يدخلون من login.html -->
-<p><a href="visitor/index.html">مرقاب — موقع الزائر</a> · <a href="login.html">تسجيل الدخول</a></p>
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main>
+    <section class="home-hero" id="homeHero">
+        <div class="home-container hero-content">
+        <span class="hero-eyebrow">
+          <span class="material-symbols-rounded">explore</span>
+          <span data-t="eyebrow">تجربتك الذكية في إكسبو</span>
+        </span>
+
+            <h1 data-t="heroTitle">استكشف إكسبو<br>على راحتك</h1>
+            <p class="hero-lead" data-t="heroLead">
+                اعرف وين الزحمة، اكتشف الفعاليات، واختر طريقك بكل سهولة.
+            </p>
+
+            <form id="heroSearch" class="hero-search" role="search">
+                <span class="material-symbols-rounded">search</span>
+                <label for="searchText" class="sr-only" data-t="searchLabel">ابحث عن منطقة أو فعالية</label>
+                <input id="searchText" name="q" type="search"
+                       data-placeholder="searchPlaceholder" placeholder="وين ودك تروح؟">
+                <button type="submit" class="btn btn-primary" data-t="search">استكشف</button>
+            </form>
+
+            <div class="hero-shortcuts">
+                <a href="/visitor/map">
+                    <span class="material-symbols-rounded">map</span>
+                    <span data-t="shortcutMap">الخريطة التفاعلية</span>
+                </a>
+                <a href="/visitor/events">
+                    <span class="material-symbols-rounded">event</span>
+                    <span data-t="shortcutEvents">فعاليات اليوم</span>
+                </a>
+                <a href="/visitor/map#planner">
+                    <span class="material-symbols-rounded">route</span>
+                    <span data-t="shortcutPlan">خطط مسارك</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <div class="sadu-divider" aria-hidden="true"></div>
+
+    <div class="home-container">
+        <section class="home-section" id="features">
+            <div class="section-heading centered">
+                <span class="section-kicker" data-t="discover">اكتشف مِرقاب</span>
+                <h2 data-t="featuresTitle">كل اللي تحتاجه لزيارة أذكى</h2>
+                <p data-t="featuresDesc">معلومات تساعدك تستمتع بوقتك وتتجنب الزحام.</p>
+            </div>
+
+            <div class="feature-grid">
+                <a class="feature-card" href="/visitor/map">
+                    <span class="feature-icon green"><span class="material-symbols-rounded">map</span></span>
+                    <h3 data-t="f1Title">خريطة تفاعلية</h3>
+                    <p data-t="f1Desc">تعرّف على مناطق إكسبو ومواقعها.</p>
+                </a>
+
+                <a class="feature-card" href="/visitor/map">
+                    <span class="feature-icon amber"><span class="material-symbols-rounded">monitoring</span></span>
+                    <h3 data-t="f2Title">حالة الازدحام</h3>
+                    <p data-t="f2Desc">شوف مستوى الإشغال قبل ما تتوجه لأي منطقة.</p>
+                </a>
+
+                <a class="feature-card" href="/visitor/map#planner">
+                    <span class="feature-icon purple"><span class="material-symbols-rounded">route</span></span>
+                    <h3 data-t="f3Title">تخطيط المسار</h3>
+                    <p data-t="f3Desc">رتّب زيارتك واختر مسارًا يتجنب الزحام.</p>
+                </a>
+
+                <a class="feature-card" href="/visitor/events">
+                    <span class="feature-icon blue"><span class="material-symbols-rounded">event_available</span></span>
+                    <h3 data-t="f4Title">الفعاليات</h3>
+                    <p data-t="f4Desc">اكتشف الفعاليات ومواعيدها ومواقعها.</p>
+                </a>
+            </div>
+        </section>
+
+        <section class="home-section" id="zonesSection">
+            <div class="section-heading split">
+                <div>
+                    <span class="section-kicker" data-t="exploreZones">جولة في إكسبو</span>
+                    <h2 data-t="zonesTitle">استكشف المناطق</h2>
+                    <p data-t="zonesDesc">تعرّف على المناطق ونسب الإشغال الحالية.</p>
+                </div>
+                <a class="section-link" href="/visitor/map">
+                    <span data-t="allZones">كل المناطق</span>
+                    <span class="material-symbols-rounded">arrow_outward</span>
+                </a>
+            </div>
+            <div id="zonesGrid" class="zone-grid" aria-live="polite">
+                <p class="loading" data-t="loading">جاري تحميل البيانات...</p>
+            </div>
+        </section>
+
+        <section class="home-section" id="eventsSection">
+            <div class="section-heading split">
+                <div>
+                    <span class="section-kicker" data-t="whatsOn">وش يصير في إكسبو؟</span>
+                    <h2 data-t="eventsTitle">الفعاليات القادمة</h2>
+                </div>
+                <a class="section-link" href="/visitor/events">
+                    <span data-t="allEvents">كل الفعاليات</span>
+                    <span class="material-symbols-rounded">arrow_outward</span>
+                </a>
+            </div>
+
+            <div class="filter-row" id="eventFilters" role="group" aria-label="تصفية الفعاليات">
+                <button type="button" data-filter="all" aria-pressed="true" data-t="filterAll">الكل</button>
+                <button type="button" data-filter="today" aria-pressed="false" data-t="filterToday">اليوم</button>
+                <button type="button" data-filter="tomorrow" aria-pressed="false" data-t="filterTomorrow">بكرة</button>
+                <button type="button" data-filter="quiet" aria-pressed="false" data-t="filterQuiet">الأقل ازدحامًا</button>
+            </div>
+
+            <div id="eventsGrid" class="event-grid" aria-live="polite">
+                <p class="loading" data-t="loading">جاري تحميل البيانات...</p>
+            </div>
+        </section>
+
+        <section class="home-cta" aria-labelledby="mapCtaTitle">
+
+            <div class="cta-content">
+        <span class="section-kicker" data-t="ctaKicker">
+            اكتشف طريقك داخل إكسبو
+        </span>
+
+                <h2 id="mapCtaTitle" data-t="ctaTitle">
+                    وجهتك أقرب مع مِرقاب
+                </h2>
+
+                <p data-t="ctaDesc">
+                    استكشف المناطق على الخريطة التفاعلية،
+                    وتعرّف على الازدحام واختر المسار الأنسب لوجهتك.
+                </p>
+
+                <a class="btn btn-gold" href="/visitor/map">
+                    <span class="material-symbols-rounded">map</span>
+                    <span data-t="ctaButton">افتح خريطة إكسبو</span>
+                    <span class="material-symbols-rounded">arrow_outward</span>
+                </a>
+            </div>
+
+            <div class="cta-visual" aria-hidden="true">
+                <div class="cta-map-preview">
+                    <span class="material-symbols-rounded cta-map-icon">map</span>
+                    <span class="cta-map-route"></span>
+                    <span class="material-symbols-rounded cta-map-pin pin-one">location_on</span>
+                    <span class="material-symbols-rounded cta-map-pin pin-two">location_on</span>
+                    <span class="material-symbols-rounded cta-map-pin pin-three">location_on</span>
+                </div>
+            </div>
+
+        </section>
+
+
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
 </body>
 </html>

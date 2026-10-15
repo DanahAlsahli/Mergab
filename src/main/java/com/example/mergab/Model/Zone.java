@@ -1,4 +1,4 @@
-﻿package com.example.mergab.Model;
+package com.example.mergab.Model;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

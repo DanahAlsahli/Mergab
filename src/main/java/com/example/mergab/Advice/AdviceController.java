@@ -1,4 +1,4 @@
-﻿package com.example.mergab.Advice;
+package com.example.mergab.Advice;
 
 import com.example.mergab.Api.ApiException;
 import com.example.mergab.Api.ApiResponse;
