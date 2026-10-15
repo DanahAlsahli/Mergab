@@ -57,4 +57,32 @@ public class EmailService {
         }
     }
 
+    // Send password reset code (runs in background)
+    @Async
+    public void sendResetCode(String toEmail, String fullName, String code) {
+        try {
+            Context context = new Context();
+            context.setVariable("fullName", fullName);
+            context.setVariable("code", code);
+
+            String html = templateEngine.process("email/reset-code", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(from, "Mirqab | مرقاب");
+            helper.setTo(toEmail);
+            helper.setSubject("رمز استعادة كلمة المرور | Password reset code");
+            helper.setText(html, true);
+
+            // Mirqab logo from static/img - must be after setText
+            helper.addInline("logo", new ClassPathResource("static/img/logo-white.png"), "image/png");
+
+            mailSender.send(message);
+            log.info("Password reset code sent to {}", toEmail);
+
+        } catch (Exception e) {
+            log.error("Failed to send password reset code to {}", toEmail, e);
+        }
+    }
+
 }
