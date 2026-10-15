@@ -16,7 +16,7 @@ public class FacilityDTO {
     private String name;
 
     @NotBlank(message = "Facility type is required")
-    @Pattern(regexp = "RESTROOM|PRAYER_ROOM|EXIT",
+    @Pattern(regexp = "RESTROOM|PRAYER_ROOM|EXIT|ENTRANCE",
             message = "Invalid facility type")
     private String type;
 
