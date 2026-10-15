@@ -27,6 +27,8 @@ public class Configuration {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/visitor/register", "/api/v1/prayer/today",
+                                "/api/v1/auth/forgot-password",
+                                "/api/v1/auth/reset-password",
 
                                 // Public read-only APIs
                                 "/api/v1/zone/get",
