@@ -319,4 +319,94 @@ class EventDrivenSimulationRunnerTest {
 
 
 
+
+
+    @Test
+    void shouldMoveEventArrivalsFromEntranceTowardEventAcrossMinutes() {
+        Zone entrance = new Zone();
+        entrance.setId(1);
+        entrance.setName("Entrance");
+        entrance.setCapacity(100);
+        entrance.setInitialVisitors(0);
+        entrance.setFacilities(new java.util.HashSet<>());
+
+        Zone corridor = new Zone();
+        corridor.setId(2);
+        corridor.setName("Corridor");
+        corridor.setCapacity(100);
+        corridor.setInitialVisitors(0);
+        corridor.setFacilities(new java.util.HashSet<>());
+
+        Zone eventZone = new Zone();
+        eventZone.setId(3);
+        eventZone.setName("Event Hall");
+        eventZone.setCapacity(100);
+        eventZone.setInitialVisitors(0);
+        eventZone.setFacilities(new java.util.HashSet<>());
+
+        com.example.mergab.Model.Facility entranceFacility =
+                new com.example.mergab.Model.Facility();
+        entranceFacility.setType("ENTRANCE");
+        entranceFacility.setZone(entrance);
+        entrance.getFacilities().add(entranceFacility);
+
+        com.example.mergab.Model.ZoneConnection first =
+                new com.example.mergab.Model.ZoneConnection();
+        first.setId(1);
+        first.setFromZone(entrance);
+        first.setToZone(corridor);
+        first.setMaxVisitorsPerMinute(10);
+
+        com.example.mergab.Model.ZoneConnection second =
+                new com.example.mergab.Model.ZoneConnection();
+        second.setId(2);
+        second.setFromZone(corridor);
+        second.setToZone(eventZone);
+        second.setMaxVisitorsPerMinute(10);
+
+        LocalDateTime start = LocalDateTime.of(2026, 10, 16, 10, 0);
+        ExpoEvent event = new ExpoEvent();
+        event.setId(1);
+        event.setName("Route Test Event");
+        event.setZone(eventZone);
+        event.setExpectedDemand(10);
+        event.setStartDateTime(start.plusMinutes(5));
+        event.setEndDateTime(start.plusMinutes(30));
+
+        EventDrivenSimulationRunner runner = new EventDrivenSimulationRunner(
+                new CrowdSimulationEngine(),
+                new EventDrivenSimulationEngine()
+        );
+
+        List<SimulationSnapshotRecord> snapshots = runner.runSimulation(
+                List.of(entrance, corridor, eventZone),
+                List.of(first, second),
+                List.of(event),
+                start,
+                5,
+                5
+        );
+
+        int finalEventOccupancy = snapshots.stream()
+                .filter(snapshot -> snapshot.minute() == 5
+                        && snapshot.zoneId() == 3)
+                .findFirst()
+                .orElseThrow()
+                .occupancy();
+
+        int finalEntranceOccupancy = snapshots.stream()
+                .filter(snapshot -> snapshot.minute() == 5
+                        && snapshot.zoneId() == 1)
+                .findFirst()
+                .orElseThrow()
+                .occupancy();
+
+        assertTrue(finalEventOccupancy > 0,
+                "Some event arrivals should reach the event zone");
+        assertTrue(snapshots.stream().allMatch(snapshot ->
+                        snapshot.occupancy() <= 100),
+                "No zone may exceed its capacity");
+        assertTrue(finalEntranceOccupancy < 10,
+                "Visitors should not all remain at the entrance");
+    }
 }

@@ -329,6 +329,29 @@ public class CrowdSimulationEngine {
             int durationMinutes,
             SimulationState initialState) {
 
+        return runSimulationWithMultipleConnections(
+                zones, connections, durationMinutes, initialState, Map.of()
+        );
+    }
+
+    /**
+     * Runs normal crowd movement while reserving visitors that are following
+     * event-specific routes. Reserved visitors remain in occupancy but cannot
+     * be selected as ordinary source visitors during this minute.
+     */
+    public List<SimulationSnapshotRecord> runSimulationWithMultipleConnections(
+            List<Zone> zones,
+            List<ZoneConnection> connections,
+            int durationMinutes,
+            SimulationState initialState,
+            Map<Integer, Integer> reservedSourceVisitors) {
+
+        if (reservedSourceVisitors == null) {
+            throw new IllegalArgumentException(
+                    "Reserved visitor counts cannot be null"
+            );
+        }
+
         SimulationState currentState = initialState;
         List<SimulationSnapshotRecord> history = new ArrayList<>();
         recordSnapshot(history, currentState, 0);
@@ -338,6 +361,21 @@ public class CrowdSimulationEngine {
 
             Map<Integer, Integer> remainingSourceVisitors =
                     new HashMap<>(startOfMinute.occupancy());
+
+            // Keep event-routed visitors in their intended route cohort.
+            for (Map.Entry<Integer, Integer> reserved
+                    : reservedSourceVisitors.entrySet()) {
+                int zoneId = reserved.getKey();
+                int reservedCount = Math.max(0, reserved.getValue());
+                remainingSourceVisitors.put(
+                        zoneId,
+                        Math.max(
+                                0,
+                                remainingSourceVisitors.getOrDefault(zoneId, 0)
+                                        - reservedCount
+                        )
+                );
+            }
             Map<Integer, Integer> remainingDestinationSpace =
                     new HashMap<>();
             Map<Integer, Integer> nextOccupancy =
