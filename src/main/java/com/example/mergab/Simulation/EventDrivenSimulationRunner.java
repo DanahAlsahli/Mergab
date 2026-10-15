@@ -4,6 +4,7 @@ import com.example.mergab.Model.ExpoEvent;
 import com.example.mergab.Model.Facility;
 import com.example.mergab.Model.Zone;
 import com.example.mergab.Model.ZoneConnection;
+import com.example.mergab.Service.PrayerTimesService;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -13,6 +14,7 @@ public class EventDrivenSimulationRunner {
     private final CrowdSimulationEngine crowdSimulationEngine;
     private final EventDrivenSimulationEngine eventDrivenSimulationEngine;
     private final EventRouteFinder eventRouteFinder;
+    private final PrayerTimesService prayerTimesService;
 
     public EventDrivenSimulationRunner(
             CrowdSimulationEngine crowdSimulationEngine,
@@ -20,6 +22,17 @@ public class EventDrivenSimulationRunner {
         this.crowdSimulationEngine = Objects.requireNonNull(crowdSimulationEngine);
         this.eventDrivenSimulationEngine = Objects.requireNonNull(eventDrivenSimulationEngine);
         this.eventRouteFinder = new EventRouteFinder();
+        this.prayerTimesService = null;
+    }
+
+    public EventDrivenSimulationRunner(
+            CrowdSimulationEngine crowdSimulationEngine,
+            EventDrivenSimulationEngine eventDrivenSimulationEngine,
+            PrayerTimesService prayerTimesService) {
+        this.crowdSimulationEngine = Objects.requireNonNull(crowdSimulationEngine);
+        this.eventDrivenSimulationEngine = Objects.requireNonNull(eventDrivenSimulationEngine);
+        this.eventRouteFinder = new EventRouteFinder();
+        this.prayerTimesService = Objects.requireNonNull(prayerTimesService);
     }
 
     public List<SimulationSnapshotRecord> runSimulation(
@@ -101,14 +114,30 @@ public class EventDrivenSimulationRunner {
 
         // In route mode, pending arrivals are grouped by their event destination.
         Map<Integer, Integer> pendingByTarget = new HashMap<>();
+        PrayerMovementCoordinator prayerCoordinator = new PrayerMovementCoordinator();
+        Map<String, String> prayerTimes = prayerTimesService == null
+                ? Map.of() : prayerTimesService.getTodayTimes();
         SimulationState currentState = initialState;
+
+        // Process the simulation start instant too. The minute loop below begins
+        // at 1, so without this call a prayer whose 10-minute preparation window
+        // begins exactly at simulationStart would never be triggered.
+        if (!prayerTimes.isEmpty()) {
+            currentState = prayerCoordinator.advanceMinute(
+                    currentState, zones, connections, capacities, prayerTimes,
+                    simulationStart.getHour() * 60 + simulationStart.getMinute(),
+                    simulationStart.toLocalDate().toString(), Map.of());
+        }
+
         List<SimulationSnapshotRecord> history = new ArrayList<>();
         addSnapshots(history, currentState, waitingArrivals, 0);
 
         for (int minute = 1; minute <= durationMinutes; minute++) {
             Map<Integer, Integer> protectedVisitors = routeModeEnabled
                     ? getProtectedVisitors(routePlans)
-                    : Map.of();
+                    : new HashMap<>();
+            prayerCoordinator.getProtectedVisitors().forEach((zoneId, count) ->
+                    protectedVisitors.merge(zoneId, count, Integer::sum));
 
             List<SimulationSnapshotRecord> movementRecords =
                     crowdSimulationEngine.runSimulationWithMultipleConnections(
@@ -179,6 +208,13 @@ public class EventDrivenSimulationRunner {
             if (routeModeEnabled) {
                 waitingArrivals = routePendingQueuesByEntrance(
                         pendingByTarget, routePlans);
+            }
+            if (!prayerTimes.isEmpty()) {
+                LocalDateTime simulatedTime = simulationStart.plusMinutes(minute);
+                currentState = prayerCoordinator.advanceMinute(
+                        currentState, zones, connections, capacities, prayerTimes,
+                        simulatedTime.getHour() * 60 + simulatedTime.getMinute(),
+                        simulatedTime.toLocalDate().toString(), protectedVisitors);
             }
             addSnapshots(history, currentState, waitingArrivals, minute);
         }

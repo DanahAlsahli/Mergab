@@ -37,12 +37,14 @@ public class SimulationService {
     private final ZoneRepository zoneRepository;
     private final ZoneConnectionRepository zoneConnectionRepository;
     private final ExpoEventRepository expoEventRepository;
+    private final PrayerTimesService prayerTimesService = new PrayerTimesService();
 
     private final CrowdSimulationEngine crowdSimulationEngine = new CrowdSimulationEngine();
     private final EventDrivenSimulationRunner eventDrivenSimulationRunner =
             new EventDrivenSimulationRunner(
                     crowdSimulationEngine,
-                    new EventDrivenSimulationEngine()
+                    new EventDrivenSimulationEngine(),
+                    prayerTimesService
             );
 
     // كل المحاكاة (للأدمن)
