@@ -17,6 +17,10 @@ import com.example.mergab.Repository.SimulationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.mergab.Model.ExpoEvent;
+import com.example.mergab.Repository.ExpoEventRepository;
+import com.example.mergab.Simulation.EventDrivenSimulationEngine;
+import com.example.mergab.Simulation.EventDrivenSimulationRunner;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -35,8 +39,14 @@ public class SimulationService {
     private final SimulationSnapshotRepository simulationSnapshotRepository;
     private final ZoneRepository zoneRepository;
     private final ZoneConnectionRepository zoneConnectionRepository;
+    private final ExpoEventRepository expoEventRepository;
 
     private final CrowdSimulationEngine crowdSimulationEngine = new CrowdSimulationEngine();
+    private final EventDrivenSimulationRunner eventDrivenSimulationRunner =
+            new EventDrivenSimulationRunner(
+                    crowdSimulationEngine,
+                    new EventDrivenSimulationEngine()
+            );
 
     // كل المحاكاة (للأدمن)
     public List<Simulation> getAllSimulations() {
@@ -103,11 +113,30 @@ public class SimulationService {
         simulation.setStartDateTime(LocalDateTime.now());
         simulationRepository.save(simulation);
 
+        LocalDateTime simulationStart = simulation.getStartDateTime();
+        LocalDateTime simulationEnd = simulationStart.plusMinutes(
+                simulation.getDurationMinutes()
+        );
+
+        List<ExpoEvent> events = expoEventRepository
+                .findExpoEventsByOrganizer_Id(
+                        simulation.getOrganizer().getId()
+                )
+                .stream()
+                .filter(event ->
+                        event.getStartDateTime().isBefore(simulationEnd)
+                                && event.getEndDateTime().isAfter(simulationStart)
+                )
+                .toList();
+
         List<SimulationSnapshotRecord> records =
-                crowdSimulationEngine.runSimulationWithMultipleConnections(
+                eventDrivenSimulationRunner.runSimulation(
                         zones,
                         zoneConnectionRepository.findAll(),
-                        simulation.getDurationMinutes()
+                        events,
+                        simulationStart,
+                        simulation.getDurationMinutes(),
+                        30
                 );
 
         Map<Integer, Zone> zonesById = zones.stream().collect(
