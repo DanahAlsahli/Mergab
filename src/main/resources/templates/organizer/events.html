@@ -1,0 +1,350 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+
+  <title>إدارة الفعاليات | مِرقاب</title>
+
+  <link rel="icon" href="/img/favicon.png">
+
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap"
+        rel="stylesheet">
+
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/organizer.css">
+  <link rel="stylesheet" href="/css/organizer-zones.css">
+  <link rel="stylesheet" href="/css/organizer-events.css">
+
+  <script defer src="/js/auth.js"></script>
+  <script defer src="/js/organizer-events.js"></script>
+</head>
+
+<body class="organizer-page">
+
+<div class="organizer-layout">
+
+  <!-- SHARED ORGANIZER SIDEBAR -->
+  <div th:replace="~{organizer/fragments/sidebar :: sidebar('events')}"></div>
+
+  <div class="organizer-content">
+
+    <!-- HEADER -->
+    <header class="organizer-topbar">
+
+      <div class="organizer-topbar-title">
+        <span class="material-symbols-rounded">event</span>
+        <span>إدارة الفعاليات</span>
+      </div>
+
+      <div class="organizer-topbar-actions">
+
+        <a href="/account"
+           class="organizer-user-link"
+           id="organizerAccountLink">
+          حسابي
+        </a>
+
+        <button type="button"
+                id="organizerLogoutButton"
+                class="organizer-icon-button"
+                title="تسجيل الخروج"
+                aria-label="تسجيل الخروج">
+          <span class="material-symbols-rounded">logout</span>
+        </button>
+
+      </div>
+    </header>
+
+    <main class="organizer-main">
+
+      <!-- PAGE TITLE -->
+      <div class="zones-page-heading">
+
+        <div>
+                    <span class="organizer-eyebrow">
+                        MERGAB / EVENTS
+                    </span>
+
+          <h1>إدارة الفعاليات</h1>
+
+          <p>
+            نظّمي فعاليات إكسبو وتابعي مواعيدها
+            والطلب المتوقع في كل منطقة.
+          </p>
+        </div>
+
+        <button type="button"
+                id="addEventButton"
+                class="zones-primary-btn">
+
+          <span class="material-symbols-rounded">add</span>
+          إضافة فعالية
+        </button>
+
+      </div>
+
+      <!-- SUMMARY CARDS -->
+      <section class="events-stats-grid"
+               aria-label="ملخص الفعاليات">
+
+        <div class="organizer-panel events-stat-card">
+                    <span class="material-symbols-rounded">
+                        calendar_month
+                    </span>
+
+          <div>
+            <span>إجمالي الفعاليات</span>
+            <strong id="totalEventsCount">—</strong>
+          </div>
+        </div>
+
+        <div class="organizer-panel events-stat-card">
+                    <span class="material-symbols-rounded">
+                        today
+                    </span>
+
+          <div>
+            <span>فعاليات اليوم</span>
+            <strong id="todayEventsCount">—</strong>
+          </div>
+        </div>
+
+        <div class="organizer-panel events-stat-card">
+                    <span class="material-symbols-rounded">
+                        upcoming
+                    </span>
+
+          <div>
+            <span>الفعاليات القادمة</span>
+            <strong id="upcomingEventsCount">—</strong>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- EVENT EDITOR -->
+      <section id="eventEditor"
+               class="organizer-panel zones-editor"
+               hidden>
+
+        <div class="organizer-panel-heading">
+
+          <div>
+            <h2 id="eventEditorTitle">
+              إضافة فعالية جديدة
+            </h2>
+
+            <p>
+              حددي المنطقة ووقت الفعالية
+              وعدد الزوار المتوقع.
+            </p>
+          </div>
+
+          <button type="button"
+                  id="closeEventEditor"
+                  class="zones-icon-btn"
+                  aria-label="إغلاق النموذج">
+                        <span class="material-symbols-rounded">
+                            close
+                        </span>
+          </button>
+
+        </div>
+
+        <form id="eventForm">
+
+          <input type="hidden" id="eventId">
+
+          <div class="zones-form-grid">
+
+            <div class="zones-field">
+
+              <label for="eventName">
+                اسم الفعالية
+              </label>
+
+              <input type="text"
+                     id="eventName"
+                     maxlength="100"
+                     placeholder="مثال: معرض الابتكار"
+                     required>
+            </div>
+
+            <div class="zones-field">
+
+              <label for="eventZone">
+                المنطقة
+              </label>
+
+              <select id="eventZone" required>
+                <option value="">
+                  جارٍ تحميل المناطق...
+                </option>
+              </select>
+            </div>
+
+            <div class="zones-field">
+
+              <label for="eventStartDateTime">
+                بداية الفعالية
+              </label>
+
+              <input type="datetime-local"
+                     id="eventStartDateTime"
+                     required>
+            </div>
+
+            <div class="zones-field">
+
+              <label for="eventEndDateTime">
+                نهاية الفعالية
+              </label>
+
+              <input type="datetime-local"
+                     id="eventEndDateTime"
+                     required>
+            </div>
+
+            <div class="zones-field">
+
+              <label for="eventExpectedDemand">
+                عدد الزوار المتوقع
+              </label>
+
+              <input type="number"
+                     id="eventExpectedDemand"
+                     min="0"
+                     step="1"
+                     placeholder="مثال: 500"
+                     required>
+
+              <small>
+                العدد المتوقع للفعالية،
+                وليس إشغال المنطقة الحالي.
+              </small>
+            </div>
+
+          </div>
+
+          <div id="eventFormMessage"
+               class="zones-form-message"
+               role="status"
+               aria-live="polite"
+               hidden></div>
+
+          <div class="zones-form-actions">
+
+            <button type="submit"
+                    id="saveEventButton"
+                    class="zones-primary-btn">
+              <span class="material-symbols-rounded">save</span>
+              حفظ الفعالية
+            </button>
+
+            <button type="button"
+                    id="cancelEventButton"
+                    class="zones-secondary-btn">
+              إلغاء
+            </button>
+
+          </div>
+
+        </form>
+
+      </section>
+
+      <!-- FILTERS -->
+      <section class="organizer-panel events-list-panel">
+
+        <div class="organizer-panel-heading">
+
+          <div>
+            <h2>الفعاليات المسجلة</h2>
+            <p>استعرضي الفعاليات وأديري بياناتها.</p>
+          </div>
+
+          <span id="eventsCount"
+                class="zones-count">—</span>
+
+        </div>
+
+        <div class="events-toolbar">
+
+          <div class="events-filter-tabs"
+               role="group"
+               aria-label="تصفية الفعاليات">
+
+            <button type="button"
+                    class="events-filter active"
+                    data-filter="all">
+              جميع الفعاليات
+            </button>
+
+            <button type="button"
+                    class="events-filter"
+                    data-filter="today">
+              اليوم
+            </button>
+
+            <button type="button"
+                    class="events-filter"
+                    data-filter="upcoming">
+              القادمة
+            </button>
+
+          </div>
+
+          <input type="search"
+                 id="eventSearchInput"
+                 class="events-search"
+                 placeholder="ابحثي عن فعالية..."
+                 aria-label="البحث في الفعاليات">
+
+        </div>
+
+        <!-- EVENTS TABLE -->
+        <div class="zones-table-wrap">
+
+          <table class="zones-table events-table">
+
+            <thead>
+            <tr>
+              <th>الفعالية</th>
+              <th>المنطقة</th>
+              <th>البداية</th>
+              <th>النهاية</th>
+              <th>الزوار المتوقعون</th>
+              <th>الحالة</th>
+              <th>الإجراءات</th>
+            </tr>
+            </thead>
+
+            <tbody id="eventsTableBody">
+            <tr>
+              <td colspan="7">
+                جارٍ تحميل الفعاليات...
+              </td>
+            </tr>
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+</div>
+
+</body>
+</html>

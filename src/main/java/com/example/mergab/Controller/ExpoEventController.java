@@ -2,10 +2,12 @@ package com.example.mergab.Controller;
 
 import com.example.mergab.Api.ApiResponse;
 import com.example.mergab.Model.ExpoEvent;
+import com.example.mergab.Model.User;
 import com.example.mergab.Service.ExpoEventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 // TODO (Security): في add بدّلي {organizerId} بـ @AuthenticationPrincipal User user
@@ -29,9 +31,11 @@ public class ExpoEventController {
     }
 
     // Add event
-    @PostMapping("/add/{organizerId}/{zoneId}")
-    public ResponseEntity<?> addExpoEvent(@PathVariable Integer organizerId, @PathVariable Integer zoneId, @RequestBody @Valid ExpoEvent expoEvent) {
-        expoEventService.addExpoEvent(organizerId, zoneId, expoEvent);
+    @PostMapping("/add/{zoneId}")
+    public ResponseEntity<?> addExpoEvent(@AuthenticationPrincipal User user, @PathVariable Integer zoneId, @RequestBody @Valid ExpoEvent expoEvent) {
+
+        expoEventService.addExpoEvent(user.getId(), zoneId, expoEvent);
+
         return ResponseEntity.status(201).body(new ApiResponse("Event added successfully"));
     }
 
@@ -76,5 +80,11 @@ public class ExpoEventController {
     @GetMapping("/get-today")
     public ResponseEntity<?> getTodayEvents() {
         return ResponseEntity.status(200).body(expoEventService.getTodayEvents());
+    }
+
+    @GetMapping("/route-to-event/{eventId}/{fromZoneId}")
+    public ResponseEntity<?> getRouteToEvent(@PathVariable Integer eventId, @PathVariable Integer fromZoneId) {
+
+        return ResponseEntity.status(200).body(expoEventService.getRouteToEvent(eventId, fromZoneId));
     }
 }

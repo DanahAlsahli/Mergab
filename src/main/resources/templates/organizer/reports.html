@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="../../static/img/favicon.png">
+<title data-i18n="o.t.reports">مرقاب</title>
+<script src="../../static/js/i18n.js"></script>
+<script src="../../static/js/i18n-staff.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@500;600;700&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" rel="stylesheet">
+<link rel="stylesheet" href="../../static/css/mergab.css">
+</head>
+<body data-area="organizer" data-page="reports">
+<header id="vHeader"></header>
+
+<main>
+  <section class="page-band o-band" id="band">
+    <div class="geo" aria-hidden="true"></div>
+    <div class="o-wrap">
+      <div><span class="eyebrow" data-i18n="motto"></span>
+        <h1 id="bandH" data-i18n="o.nav.reports"></h1>
+        <p id="bandP" data-i18n="o.rep.sub"></p></div>
+    </div>
+  </section>
+  <div class="sadu" aria-hidden="true"></div>
+
+  <div class="o-wrap o-body">
+    <section class="kpis" aria-label="Summary">
+      <div class="card kpi"><span class="kpi-icon" style="background:#E6F0EC;color:var(--green-600)" data-icon="reports"></span><span class="meta"><span data-i18n="o.rep.records"></span><b id="rCount">—</b></span></div>
+      <div class="card kpi"><span class="kpi-icon" style="background:var(--gold-soft);color:#7A5A1E" data-icon="users"></span><span class="meta"><span data-i18n="o.rep.total"></span><b id="rTotal">—</b></span></div>
+      <div class="card kpi"><span class="kpi-icon" style="background:#F7E3E0;color:#8E2A20" data-icon="trend"></span><span class="meta"><span data-i18n="o.rep.avg"></span><b id="rAvg">—</b></span></div>
+      <div class="card kpi"><span class="kpi-icon" style="background:#E4ECE9;color:var(--green-900)" data-icon="calendar"></span><span class="meta"><span data-i18n="o.rep.peak"></span><b id="rPeak" style="font-size:20px">—</b><small id="rPeakSub" style="color:var(--muted)"></small></span></div>
+    </section>
+
+    <section class="card card-pad" aria-labelledby="chartTitle">
+      <div class="card-head"><h2 id="chartTitle" data-i18n="o.rep.byDay"></h2><small style="color:var(--muted)" data-i18n="o.rep.last14"></small></div>
+      <div class="bars" id="aBars" role="img"></div>
+      <div class="bar-labels" id="aLabels"></div>
+    </section>
+
+    <section id="attTable"></section>
+  </div>
+</main>
+
+<footer id="vFooter"></footer>
+
+<script src="../../static/js/site-config.js"></script>
+<script src="../../static/js/mock-server.js"></script>
+<script src="../../static/js/api.js"></script>
+<script src="../../static/js/organizer.js"></script>
+<script>
+  const { api, esc, num, fmtDate, toDate } = Mergab;
+  const today = () => new Date().toISOString().slice(0, 10);
+  function summarize(rows) {
+    const sorted = rows.slice().sort((a, b) => toDate(a.attendanceDate) - toDate(b.attendanceDate));
+    const total = rows.reduce((s, r) => s + (r.totalAttendance || 0), 0);
+    const peak = rows.reduce((a, b) => (b.totalAttendance > (a ? a.totalAttendance : -1) ? b : a), null);
+    document.getElementById('rCount').textContent = num(rows.length);
+    document.getElementById('rTotal').textContent = num(total);
+    document.getElementById('rAvg').textContent = rows.length ? num(Math.round(total / rows.length)) : '—';
+    document.getElementById('rPeak').textContent = peak ? fmtDate(peak.attendanceDate) : '—';
+    document.getElementById('rPeakSub').textContent = peak ? t('o.rep.peakSub', { n: num(peak.totalAttendance), e: peak.expoName }) : '';
+    const last = sorted.slice(-14);
+    const max = Math.max(1, ...last.map(r => r.totalAttendance || 0));
+    document.getElementById('aBars').setAttribute('aria-label', t('o.rep.byDay'));
+    document.getElementById('aBars').innerHTML = last.map(r => {
+      const isPeak = peak && r.id === peak.id;
+      return `<div class="bar-col"><span class="val" dir="ltr">${num(Math.round(r.totalAttendance / 1000))}k</span>
+        <div class="bar" style="height:${Math.max(3, r.totalAttendance / max * 100)}%;background:${isPeak ? 'var(--gold)' : 'var(--green-600)'}" title="${esc(fmtDate(r.attendanceDate))}: ${num(r.totalAttendance)}"></div></div>`;
+    }).join('') || `<div class="empty" style="width:100%">${esc(t('o.rep.empty'))}</div>`;
+    document.getElementById('aLabels').innerHTML = last.map(r => {
+      const d = toDate(r.attendanceDate);
+      return `<span>${d ? d.toLocaleDateString(I18n.isAr ? 'ar-SA-u-ca-gregory-nu-latn' : 'en-US', { month: 'short', day: 'numeric' }) : ''}</span>`;
+    }).join('');
+  }
+  if (Org.shell()) {
+    Org.mount({
+      el: '#attTable',
+      title: t('o.rep.hist'), addLabel: t('o.rep.add'), editTitle: t('o.rep.edit'), emptyText: t('o.rep.empty'),
+      load: () => api.get('/attendance/get-all'),
+      sort: (a, b) => toDate(b.attendanceDate) - toDate(a.attendanceDate),
+      searchText: r => r.expoName + ' ' + r.attendanceDate,
+      afterLoad: summarize,
+      columns: [
+        { label: t('o.rep.expo'), render: r => `<b>${esc(r.expoName)}</b>` },
+        { label: t('o.rep.date'), render: r => fmtDate(r.attendanceDate) },
+        { label: t('o.rep.total'), render: r => num(r.totalAttendance) },
+        { label: t('o.rep.source'), render: r => r.sourceUrl ? `<a href="${esc(r.sourceUrl)}" target="_blank" rel="noopener">${esc(t('o.rep.open'))}</a>` : '—' }
+      ],
+      fields: [
+        { name: 'expoName', label: t('o.rep.expo'), required: true, full: true },
+        { name: 'attendanceDate', label: t('o.rep.date'), type: 'date', required: true, max: today, help: t('o.rep.dateHelp') },
+        { name: 'totalAttendance', label: t('o.rep.total'), type: 'number', required: true, min: 0 },
+        { name: 'sourceUrl', label: t('o.rep.url'), type: 'url', required: true, full: true, placeholder: 'https://…', dir: 'ltr', help: t('o.rep.urlHelp') }
+      ],
+      create: d => api.post('/attendance/add', d),
+      update: (r, d) => api.put('/attendance/update/' + r.id, d),
+      remove: r => api.del('/attendance/delete/' + r.id),
+      deleteText: () => t('o.rep.del')
+    });
+  }
+</script>
+</body>
+</html>

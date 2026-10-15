@@ -1,0 +1,590 @@
+
+/* ========================================
+   MERGAB | ACCOUNT PAGE
+   ======================================== */
+
+.account-page {
+    min-height: 100vh;
+    background: #faf9f5;
+    color: var(--ink, #20332b);
+}
+
+.account-main {
+    width: min(1160px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 48px 0 90px;
+}
+
+/* Page heading */
+
+.account-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-bottom: 34px;
+}
+
+.account-eyebrow {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: #2c8064;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.account-heading h1 {
+    margin: 0 0 10px;
+    font-family: var(--display, 'Readex Pro', sans-serif);
+    font-size: clamp(28px, 3.2vw, 39px);
+    color: #0e3d32;
+}
+
+.account-heading p {
+    margin: 0;
+    color: #6b7d72;
+    font-size: 14px;
+    line-height: 1.9;
+}
+
+.account-dashboard-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 46px;
+    padding: 11px 18px;
+    border-radius: 13px;
+    background: #0e3d32;
+    color: white;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+    transition: background .2s, transform .2s;
+}
+
+.account-dashboard-btn:hover {
+    background: #2c8064;
+    transform: translateY(-2px);
+}
+
+/* Main layout */
+
+.account-layout {
+    display: grid;
+    grid-template-columns: 290px minmax(0, 1fr);
+    align-items: start;
+    gap: 25px;
+}
+
+/* Profile card */
+
+.account-profile-card {
+    background: #fff;
+    border: 1px solid #e1e8e1;
+    border-radius: 22px;
+    padding: 34px 22px 25px;
+    text-align: center;
+    box-shadow: 0 8px 26px rgba(16, 35, 29, .05);
+}
+
+.account-avatar {
+    width: 90px;
+    height: 90px;
+    margin: 0 auto 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #e8f3ed;
+    color: #0e3d32;
+}
+
+.account-avatar .material-symbols-rounded {
+    font-size: 49px;
+}
+
+.account-profile-card h2 {
+    margin: 0 0 8px;
+    font-family: var(--display, 'Readex Pro', sans-serif);
+    font-size: 19px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.account-profile-card > p {
+    margin: 0 0 18px;
+    color: #6b7d72;
+    font-size: 13px;
+    direction: ltr;
+    overflow-wrap: anywhere;
+}
+
+.account-role {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: #e8f3ed;
+    color: #216b50;
+    border-radius: 30px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.account-role .material-symbols-rounded {
+    font-size: 18px;
+}
+
+.account-profile-divider {
+    height: 1px;
+    background: #e1e8e1;
+    margin: 26px 0 18px;
+}
+
+.account-side-link,
+.account-logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 13px 14px;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    text-align: start;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s;
+}
+
+.account-side-link {
+    color: #0e3d32;
+}
+
+.account-side-link:hover {
+    background: #edf5ef;
+}
+
+.account-logout-btn {
+    margin-top: 6px;
+    color: #ba4848;
+}
+
+.account-logout-btn:hover {
+    background: #fff0f0;
+}
+
+.account-side-link .material-symbols-rounded,
+.account-logout-btn .material-symbols-rounded {
+    font-size: 21px;
+}
+
+/* Settings cards */
+
+.account-content {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    min-width: 0;
+}
+
+.account-card {
+    background: white;
+    border: 1px solid #e1e8e1;
+    border-radius: 22px;
+    padding: 30px;
+    box-shadow: 0 8px 26px rgba(16, 35, 29, .05);
+}
+
+.account-card-heading {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding-bottom: 23px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid #edf0eb;
+}
+
+.account-section-icon {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #e8f3ed;
+    color: #0e3d32;
+    border-radius: 14px;
+}
+
+.account-section-icon .material-symbols-rounded {
+    font-size: 26px;
+}
+
+.account-card-heading h2 {
+    margin: 0 0 5px;
+    color: #0e3d32;
+    font-family: var(--display, 'Readex Pro', sans-serif);
+    font-size: 18px;
+}
+
+.account-card-heading p {
+    margin: 0;
+    color: #6b7d72;
+    font-size: 12px;
+    line-height: 1.8;
+}
+
+/* Forms */
+
+.account-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.account-field {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    min-width: 0;
+}
+
+.account-field label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #34483d;
+}
+
+.account-field input {
+    width: 100%;
+    min-height: 48px;
+    padding: 11px 14px;
+    border: 1px solid #dce5de;
+    border-radius: 12px;
+    background: #fff;
+    color: #20332b;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+.account-field input:focus {
+    border-color: #2c8064;
+    box-shadow: 0 0 0 3px rgba(44, 128, 100, .12);
+}
+
+.account-field input[readonly] {
+    background: #f5f7f4;
+    color: #6b7d72;
+    cursor: not-allowed;
+}
+
+.account-field input[type="email"],
+.account-field input[type="password"] {
+    text-align: left;
+    direction: ltr;
+}
+
+/* Buttons and feedback */
+
+.account-form-actions {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 26px;
+}
+
+.account-primary-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 46px;
+    padding: 11px 22px;
+    border: none;
+    border-radius: 12px;
+    background: #0e3d32;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s, transform .2s;
+}
+
+.account-primary-btn:hover:not(:disabled) {
+    background: #2c8064;
+    transform: translateY(-1px);
+}
+
+.account-primary-btn:disabled {
+    opacity: .65;
+    cursor: wait;
+}
+
+.account-primary-btn .material-symbols-rounded {
+    font-size: 20px;
+}
+
+.account-message {
+    margin-top: 20px;
+    padding: 13px 16px;
+    border-radius: 11px;
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.account-message[hidden] {
+    display: none;
+}
+
+.account-message.success {
+    color: #216b50;
+    background: #edf7ef;
+    border: 1px solid #c9e4d0;
+}
+
+.account-message.error {
+    color: #a63232;
+    background: #fff0f0;
+    border: 1px solid #f1d1d1;
+}
+
+/* Responsive */
+
+@media (max-width: 900px) {
+    .account-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .account-profile-card {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .account-main {
+        width: calc(100% - 28px);
+        padding: 30px 0 60px;
+    }
+
+    .account-heading {
+        align-items: stretch;
+        gap: 20px;
+    }
+
+    .account-dashboard-btn {
+        width: 100%;
+    }
+
+    .account-card {
+        padding: 22px 18px;
+        border-radius: 18px;
+    }
+
+    .account-card-heading {
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .account-card-heading h2 {
+        font-size: 16px;
+    }
+
+    .account-fields {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .account-primary-btn {
+        width: 100%;
+    }
+
+    .account-profile-card {
+        padding: 27px 18px;
+    }
+}
+
+
+
+/* ========================================
+   ACCOUNT | VIEW & EDIT MODES
+   ======================================== */
+
+/* Edit icon */
+.account-edit-btn {
+    margin-inline-start: auto;
+    width: 43px;
+    height: 43px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #dce8df;
+    border-radius: 12px;
+    background: #f0f6f1;
+    color: #174d3c;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.account-edit-btn:hover {
+    background: #174d3c;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.account-edit-btn .material-symbols-rounded {
+    font-size: 21px;
+}
+
+/* Profile information */
+.account-info-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.account-info-item {
+    min-width: 0;
+    padding: 20px;
+    background: #f8faf7;
+    border: 1px solid #e4ebe5;
+    border-radius: 15px;
+}
+
+.account-info-label {
+    margin-bottom: 12px;
+    color: #77867b;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.account-info-value {
+    color: #193d31;
+    font-size: 15px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+/* Keep the third item aligned */
+.account-info-item:last-child {
+    grid-column: 1 / -1;
+}
+
+/* Cancel button */
+.account-cancel-btn {
+    min-height: 46px;
+    padding: 11px 22px;
+    border: 1px solid #dce5de;
+    border-radius: 12px;
+    background: white;
+    color: #53665a;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.account-cancel-btn:hover {
+    background: #f3f6f2;
+    border-color: #b8c9bb;
+}
+
+/* Respect hidden states */
+.account-info-list[hidden],
+#profileForm[hidden] {
+    display: none !important;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .account-info-list {
+        grid-template-columns: 1fr;
+    }
+
+    .account-info-item:last-child {
+        grid-column: auto;
+    }
+
+    .account-info-item {
+        padding: 17px;
+    }
+
+    .account-edit-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .account-form-actions {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .account-cancel-btn {
+        flex: 1;
+    }
+}
+
+
+/* Password settings option */
+
+.account-password-option {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 18px;
+    border: 1px solid #e1e8e1;
+    border-radius: 14px;
+    background: #f8faf7;
+    color: #174d3c;
+    text-align: start;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.account-password-option:hover {
+    background: #edf5ef;
+    border-color: #b8d5c3;
+}
+
+.account-password-option > .material-symbols-rounded {
+    font-size: 25px;
+}
+
+.account-password-option-text {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+}
+
+.account-password-option-text strong {
+    font-size: 14px;
+    color: #193d31;
+}
+
+.account-password-option-text small {
+    font-size: 12px;
+    color: #77867b;
+}
+
+#passwordChevron {
+    transition: transform 0.2s ease;
+}
+
+.account-password-option[aria-expanded="true"] #passwordChevron {
+    transform: rotate(180deg);
+}
+
+#passwordPanel {
+    padding-top: 25px;
+}
+
+#passwordPanel[hidden] {
+    display: none !important;
+}

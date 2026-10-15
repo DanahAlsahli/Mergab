@@ -9,8 +9,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.example.mergab.Model.User;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
-// TODO (Security): في add بدّلي {organizerId} بـ @AuthenticationPrincipal User user
 @RestController
 @RequestMapping("/api/v1/simulation")
 @RequiredArgsConstructor
@@ -28,9 +29,12 @@ public class SimulationController {
         return ResponseEntity.status(200).body(simulationService.getSimulationsByOrganizer(organizerId));
     }
 
-    @PostMapping("/add/{organizerId}/{historicalAttendanceId}")
-    public ResponseEntity<?> addSimulation(@PathVariable Integer organizerId, @PathVariable Integer historicalAttendanceId, @RequestBody @Valid Simulation simulation) {
-        simulationService.addSimulation(organizerId, historicalAttendanceId, simulation);
+    // Add a simulation for the authenticated organizer
+    @PostMapping("/add/{historicalAttendanceId}")
+    public ResponseEntity<?> addSimulation(@AuthenticationPrincipal User user, @PathVariable Integer historicalAttendanceId, @RequestBody @Valid Simulation simulation) {
+
+        simulationService.addSimulation(user.getId(), historicalAttendanceId, simulation);
+
         return ResponseEntity.status(201).body(new ApiResponse("Simulation added successfully"));
     }
 

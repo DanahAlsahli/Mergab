@@ -13,6 +13,7 @@ import com.example.mergab.Repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class OrganizerService {
     private final UserRepository userRepository;
     private final ExpoEventRepository expoEventRepository;
     private final SimulationRepository simulationRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public List<User> getAllOrganizers() {
         return userRepository.findUsersByRole("ORGANIZER");
@@ -38,7 +40,7 @@ public class OrganizerService {
             throw new ApiException("Phone number already exists");
         }
 
-        User user = new User(null, dto.getFullName(), dto.getEmail(), dto.getPassword(), "ORGANIZER", null, null);
+        User user = new User(null, dto.getFullName(), dto.getEmail(), passwordEncoder.encode(dto.getPassword()), "ORGANIZER", null, null);
         userRepository.save(user);
 
         Organizer organizer = new Organizer(null, dto.getPhoneNumber(), user, null, null);
@@ -46,29 +48,27 @@ public class OrganizerService {
         organizerRepository.save(organizer);
     }
 
+
+
     @Transactional
-    public void updateOrganizer(Integer organizerId, OrganizerDTO dto) {
-        Organizer organizer = organizerRepository.findOrganizerById(organizerId);
+    public void updateMyPhone(Integer userId, String phoneNumber) {
+        Organizer organizer = organizerRepository.findOrganizerById(userId);
+
         if (organizer == null) {
             throw new ApiException("Organizer not found");
         }
 
-        User emailOwner = userRepository.findUserByEmail(dto.getEmail());
-        if (emailOwner != null && !emailOwner.getId().equals(organizerId)) {
-            throw new ApiException("Email already exists");
+        if (phoneNumber == null || !phoneNumber.matches("^05\\d{8}$")) {
+            throw new ApiException("Invalid phone number");
         }
-        Organizer phoneOwner = organizerRepository.findOrganizerByPhoneNumber(dto.getPhoneNumber());
-        if (phoneOwner != null && !phoneOwner.getId().equals(organizerId)) {
+
+        Organizer existing = organizerRepository.findOrganizerByPhoneNumber(phoneNumber);
+
+        if (existing != null && !existing.getId().equals(organizer.getId())) {
             throw new ApiException("Phone number already exists");
         }
 
-        User user = organizer.getUser();
-        user.setFullName(dto.getFullName());
-        user.setEmail(dto.getEmail());
-        user.setPassword(dto.getPassword());
-        organizer.setPhoneNumber(dto.getPhoneNumber());
-
-        userRepository.save(user);
+        organizer.setPhoneNumber(phoneNumber);
         organizerRepository.save(organizer);
     }
 

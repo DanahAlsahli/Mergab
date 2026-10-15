@@ -34,6 +34,21 @@ public class Zone {
     @Column(columnDefinition = "int not null")
     private Integer initialVisitors;
 
+    @Column(nullable = false)
+    private Boolean hasPrayerArea = false;
+
+    @Column(columnDefinition = "boolean not null default false")
+    private Boolean indoor = false;
+
+    @Column(nullable = true)
+    private Double mapX;
+
+    @Column(nullable = true)
+    private Double mapY;
+
+    @Column(columnDefinition = "TEXT")
+    private String boundaryPoints;
+
     @OneToMany(mappedBy = "fromZone")
     @JsonIgnore
     private Set<ZoneConnection> outgoingConnections;
@@ -55,9 +70,10 @@ public class Zone {
     @JsonIgnore
     private Set<ZoneVisit> zoneVisits;
 
-    @Column(nullable = false)
-    private Boolean hasPrayerArea = false;
 
-    @Column(nullable = false)
-    private Boolean indoor = true;
+
+
+    @OneToMany(mappedBy = "zone", cascade = CascadeType.REMOVE)
+    @JsonIgnore
+    private Set<Facility> facilities;
 }

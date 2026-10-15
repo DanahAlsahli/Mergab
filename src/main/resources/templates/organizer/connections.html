@@ -1,0 +1,381 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+
+  <title>ربط المناطق | مِرقاب</title>
+
+  <link rel="icon" href="/img/favicon.png">
+
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap"
+        rel="stylesheet">
+
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/organizer.css">
+  <link rel="stylesheet" href="/css/organizer-zones.css">
+  <link rel="stylesheet" href="/css/organizer-connections.css">
+  <link rel="stylesheet" href="/map/mirqab-map.css">
+
+  <script defer src="/js/auth.js"></script>
+  <script defer src="/map/mirqab-map.js"></script>
+  <script defer src="/js/organizer-connections.js"></script>
+</head>
+
+<body class="organizer-page">
+
+<div class="organizer-layout">
+
+  <!-- SIDEBAR -->
+  <div th:replace="~{organizer/fragments/sidebar :: sidebar('connections')}"></div>
+
+
+  <!-- MAIN CONTENT -->
+  <div class="organizer-content">
+
+    <header class="organizer-topbar">
+
+      <div class="organizer-topbar-title">
+        <span class="material-symbols-rounded">route</span>
+        <span>ربط المناطق</span>
+      </div>
+
+      <div class="organizer-topbar-actions">
+
+        <a href="/account"
+           class="organizer-user-link"
+           id="organizerAccountLink">
+          حسابي
+        </a>
+
+        <button type="button"
+                id="organizerLogoutButton"
+                class="organizer-icon-button"
+                title="تسجيل الخروج"
+                aria-label="تسجيل الخروج">
+          <span class="material-symbols-rounded">logout</span>
+        </button>
+
+      </div>
+
+    </header>
+
+    <main class="organizer-main">
+
+      <!-- PAGE HEADING -->
+      <div class="zones-page-heading">
+
+        <div>
+                    <span class="organizer-eyebrow">
+                        MERGAB / CONNECTIONS
+                    </span>
+
+          <h1>ربط المناطق</h1>
+
+          <p>
+            اربطي مناطق إكسبو وارْسمي مسارات الحركة
+            على الممرات الفعلية.
+          </p>
+        </div>
+
+        <button type="button"
+                id="addConnectionButton"
+                class="zones-primary-btn">
+
+          <span class="material-symbols-rounded">add</span>
+          إضافة مسار
+        </button>
+
+      </div>
+
+      <!-- INTERACTIVE MAP -->
+      <section class="organizer-panel zones-map-panel">
+
+        <div class="organizer-panel-heading">
+
+          <div>
+            <h2>خريطة مسارات إكسبو</h2>
+
+            <p>
+              استعرضي الاتصالات المحفوظة وحددي
+              مسارات جديدة بين المناطق.
+            </p>
+          </div>
+
+          <span id="connectionMapStatus"
+                class="zones-map-status">
+                        خريطة تفاعلية
+                    </span>
+
+        </div>
+
+        <div id="connectionMap"
+             class="organizer-map-container zones-map">
+        </div>
+
+        <!-- DRAWING TOOLS -->
+        <div id="connectionDrawingTools"
+             class="zones-drawing-tools"
+             hidden>
+
+                    <span class="zones-drawing-label">
+                        <span class="material-symbols-rounded">
+                            edit_road
+                        </span>
+                        ارسمي المسار على الممرات
+                    </span>
+
+          <div class="zones-drawing-actions">
+
+            <button type="button"
+                    id="undoPathPoint"
+                    class="zones-secondary-btn">
+
+                            <span class="material-symbols-rounded">
+                                undo
+                            </span>
+              تراجع
+            </button>
+
+            <button type="button"
+                    id="clearPath"
+                    class="zones-secondary-btn">
+
+                            <span class="material-symbols-rounded">
+                                delete_outline
+                            </span>
+              مسح المسار
+            </button>
+
+            <button type="button"
+                    id="finishPath"
+                    class="zones-primary-btn">
+
+                            <span class="material-symbols-rounded">
+                                check
+                            </span>
+              إنهاء المسار
+            </button>
+
+          </div>
+
+          <small id="pathDrawingStatus">
+            حددي نقاط الطريق من منطقة البداية
+            حتى منطقة النهاية.
+          </small>
+
+        </div>
+
+        <p class="zones-map-hint">
+
+          <span class="material-symbols-rounded">info</span>
+
+          اضغطي على إضافة مسار، واختاري منطقتين،
+          ثم حددي نقاط الطريق على الخريطة.
+        </p>
+
+      </section>
+
+      <!-- CONNECTION EDITOR -->
+      <section id="connectionEditor"
+               class="organizer-panel zones-editor"
+               hidden>
+
+        <div class="organizer-panel-heading">
+
+          <div>
+            <h2 id="connectionEditorTitle">
+              إضافة مسار جديد
+            </h2>
+
+            <p>
+              اختاري المنطقتين وسعة الممر،
+              ثم ارسمي المسار بينهما.
+            </p>
+          </div>
+
+          <button type="button"
+                  id="closeConnectionEditor"
+                  class="zones-icon-btn"
+                  aria-label="إغلاق">
+
+                        <span class="material-symbols-rounded">
+                            close
+                        </span>
+          </button>
+
+        </div>
+
+        <form id="connectionForm">
+
+          <input type="hidden" id="connectionId">
+          <input type="hidden" id="connectionPathPoints">
+
+          <div class="zones-form-grid">
+
+            <!-- FROM ZONE -->
+            <div class="zones-field">
+
+              <label for="fromZoneId">
+                منطقة البداية
+              </label>
+
+              <select id="fromZoneId" required>
+
+                <option value="">
+                  اختاري منطقة البداية
+                </option>
+
+              </select>
+
+            </div>
+
+            <!-- TO ZONE -->
+            <div class="zones-field">
+
+              <label for="toZoneId">
+                منطقة النهاية
+              </label>
+
+              <select id="toZoneId" required>
+
+                <option value="">
+                  اختاري منطقة النهاية
+                </option>
+
+              </select>
+
+            </div>
+
+            <!-- PATH CAPACITY -->
+            <div class="zones-field">
+
+              <label for="maxVisitorsPerMinute">
+                سعة الممر (زائر / دقيقة)
+              </label>
+
+              <input type="number"
+                     id="maxVisitorsPerMinute"
+                     min="1"
+                     step="1"
+                     required
+                     placeholder="أدخلي السعة القصوى">
+
+            </div>
+
+            <!-- PATH STATUS -->
+            <div class="zones-field">
+
+              <label>حالة تحديد المسار</label>
+
+              <div id="pathSelectionStatus"
+                   class="connection-path-status"
+                   role="status">
+                لم يتم تحديد المسار بعد
+              </div>
+
+              <small>
+                يجب إنهاء رسم المسار قبل الحفظ.
+              </small>
+
+            </div>
+
+          </div>
+
+          <div id="connectionFormMessage"
+               class="zones-form-message"
+               role="status"
+               aria-live="polite"
+               hidden>
+          </div>
+
+          <div class="zones-form-actions">
+
+            <button type="submit"
+                    id="saveConnectionButton"
+                    class="zones-primary-btn">
+
+                            <span class="material-symbols-rounded">
+                                save
+                            </span>
+              حفظ المسار
+            </button>
+
+            <button type="button"
+                    id="cancelConnectionButton"
+                    class="zones-secondary-btn">
+              إلغاء
+            </button>
+
+          </div>
+
+        </form>
+
+      </section>
+
+      <!-- CONNECTIONS LIST -->
+      <section class="organizer-panel zones-table-panel">
+
+        <div class="organizer-panel-heading">
+
+          <div>
+            <h2>المسارات المسجلة</h2>
+
+            <p>
+              إدارة مسارات الربط وسعة الحركة
+              بين مناطق إكسبو.
+            </p>
+          </div>
+
+          <span id="connectionsCount"
+                class="zones-count">
+                        —
+                    </span>
+
+        </div>
+
+        <div class="zones-table-wrap">
+
+          <table class="zones-table">
+
+            <thead>
+            <tr>
+              <th>منطقة البداية</th>
+              <th>منطقة النهاية</th>
+              <th>السعة / دقيقة</th>
+              <th>المسار</th>
+              <th>الإجراءات</th>
+            </tr>
+            </thead>
+
+            <tbody id="connectionsTableBody">
+
+            <tr>
+              <td colspan="5">
+                جارٍ تحميل الاتصالات...
+              </td>
+            </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+</div>
+
+</body>
+</html>

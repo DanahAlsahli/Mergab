@@ -22,8 +22,15 @@ public class Visitor {
     @Column(columnDefinition = "varchar(10) not null unique")
     private String phoneNumber;
 
+    @Column(columnDefinition = "varchar(7) not null")
+    private String gender;
+
     @Column(nullable = false, unique = true, updatable = false)
     private String qrToken;
+
+    // الزائر يختار يشوف أوقات الصلاة أو لا
+    @Column(columnDefinition = "boolean not null default false")
+    private Boolean showPrayerTimes = false;
 
     @OneToOne
     @MapsId
@@ -34,7 +41,5 @@ public class Visitor {
     @JsonIgnore
     private Set<ZoneVisit> zoneVisits;
 
-    // الزائر يختار يشوف أوقات الصلاة أو لا
-    @Column(columnDefinition = "boolean not null default false")
-    private Boolean showPrayerTimes = false;
+
 }

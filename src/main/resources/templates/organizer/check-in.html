@@ -1,0 +1,292 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
+    <title>مسح QR الزوار | مِرقاب</title>
+
+    <link rel="icon" href="/img/favicon.png">
+
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap"
+          rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
+          rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/organizer.css">
+    <link rel="stylesheet" href="/css/organizer-zones.css">
+    <link rel="stylesheet" href="/css/organizer-check-in.css">
+
+    <script defer src="/js/auth.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script defer src="/js/organizer-check-in.js"></script>
+</head>
+
+<body class="organizer-page">
+
+<div class="organizer-layout">
+
+    <!-- SIDEBAR -->
+    <div th:replace="~{organizer/fragments/sidebar :: sidebar('connections')}"></div>
+    <!-- MAIN -->
+    <div class="organizer-content">
+
+        <header class="organizer-topbar">
+
+            <div class="organizer-topbar-title">
+                <span class="material-symbols-rounded">qr_code_scanner</span>
+                <span>مسح QR الزوار</span>
+            </div>
+
+            <div class="organizer-topbar-actions">
+
+                <a href="/account"
+                   class="organizer-user-link"
+                   id="organizerAccountLink">
+                    حسابي
+                </a>
+
+                <button type="button"
+                        id="organizerLogoutButton"
+                        class="organizer-icon-button"
+                        title="تسجيل الخروج"
+                        aria-label="تسجيل الخروج">
+                    <span class="material-symbols-rounded">logout</span>
+                </button>
+
+            </div>
+
+        </header>
+
+        <main class="organizer-main">
+
+            <!-- PAGE HEADER -->
+            <div class="zones-page-heading">
+
+                <div>
+                    <span class="organizer-eyebrow">
+                        MERGAB / QR CHECK-IN
+                    </span>
+
+                    <h1>تسجيل دخول وخروج الزوار</h1>
+
+                    <p>
+                        امسحي رمز QR الخاص بالزائر لتسجيل
+                        دخوله أو خروجه من المنطقة.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="checkin-layout">
+
+                <!-- SCANNER PANEL -->
+                <section class="organizer-panel checkin-scanner-panel">
+
+                    <div class="organizer-panel-heading">
+                        <div>
+                            <h2>ماسح QR</h2>
+                            <p>وجّهي الكاميرا نحو رمز الزائر.</p>
+                        </div>
+
+                        <span id="cameraStatus"
+                              class="zones-map-status"
+                              aria-live="polite">
+                            الكاميرا متوقفة
+                        </span>
+                    </div>
+
+                    <div id="scannerViewport"
+                         class="checkin-scanner-viewport">
+
+                        <video id="qrVideo"
+                               autoplay
+                               muted
+                               playsinline>
+                        </video>
+
+                        <div id="scannerPlaceholder"
+                             class="checkin-scanner-placeholder">
+
+                            <span class="material-symbols-rounded">
+                                qr_code_scanner
+                            </span>
+
+                            <strong>جاهز لمسح رمز الزائر</strong>
+
+                            <p>
+                                اضغطي تشغيل الكاميرا لبدء المسح.
+                            </p>
+
+                        </div>
+
+                        <div class="checkin-scan-frame"
+                             aria-hidden="true">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+
+                    </div>
+
+                    <div class="checkin-camera-actions">
+
+                        <button type="button"
+                                id="startCameraButton"
+                                class="zones-primary-btn">
+
+                            <span class="material-symbols-rounded">
+                                videocam
+                            </span>
+
+                            تشغيل الكاميرا
+                        </button>
+
+                        <button type="button"
+                                id="stopCameraButton"
+                                class="zones-secondary-btn"
+                                disabled>
+
+                            <span class="material-symbols-rounded">
+                                videocam_off
+                            </span>
+
+                            إيقاف الكاميرا
+                        </button>
+
+                    </div>
+
+                    <p class="zones-map-hint">
+                        <span class="material-symbols-rounded">info</span>
+                        يمكن استخدام الإدخال اليدوي إذا
+                        كانت الكاميرا غير متاحة.
+                    </p>
+
+                </section>
+
+                <!-- CHECK-IN FORM -->
+                <section class="organizer-panel checkin-form-panel">
+
+                    <div class="organizer-panel-heading">
+                        <div>
+                            <h2>بيانات الزيارة</h2>
+                            <p>حددي المنطقة ونوع العملية.</p>
+                        </div>
+                    </div>
+
+                    <form id="checkInForm">
+
+                        <div class="checkin-fields">
+
+                            <div class="zones-field">
+
+                                <label for="checkInZone">
+                                    المنطقة
+                                </label>
+
+                                <select id="checkInZone" required>
+                                    <option value="">
+                                        جارٍ تحميل المناطق...
+                                    </option>
+                                </select>
+
+                            </div>
+
+                            <div class="zones-field">
+
+                                <label for="qrTokenInput">
+                                    رمز QR الخاص بالزائر
+                                </label>
+
+                                <input type="text"
+                                       id="qrTokenInput"
+                                       placeholder="امسحي الرمز أو أدخليه يدويًا"
+                                       autocomplete="off"
+                                       required>
+
+                                <small id="qrInputHint">
+                                    سيتم إدخال الرمز هنا بعد نجاح المسح.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div class="checkin-operation-heading">
+                            نوع العملية
+                        </div>
+
+                        <div class="checkin-operation-options">
+
+                            <label class="checkin-operation-option">
+                                <input type="radio"
+                                       name="visitAction"
+                                       value="check-in"
+                                       checked>
+
+                                <span class="material-symbols-rounded">
+                                    login
+                                </span>
+
+                                <span>
+                                    <strong>تسجيل دخول</strong>
+                                    <small>دخول الزائر إلى المنطقة</small>
+                                </span>
+                            </label>
+
+                            <label class="checkin-operation-option">
+                                <input type="radio"
+                                       name="visitAction"
+                                       value="check-out">
+
+                                <span class="material-symbols-rounded">
+                                    logout
+                                </span>
+
+                                <span>
+                                    <strong>تسجيل خروج</strong>
+                                    <small>مغادرة الزائر للمنطقة</small>
+                                </span>
+                            </label>
+
+                        </div>
+
+                        <button type="submit"
+                                id="submitVisitButton"
+                                class="zones-primary-btn checkin-submit-btn">
+
+                            <span class="material-symbols-rounded">
+                                check_circle
+                            </span>
+
+                            تأكيد العملية
+                        </button>
+
+                        <div id="checkInResult"
+                             class="checkin-result"
+                             role="status"
+                             aria-live="polite"
+                             hidden>
+                        </div>
+
+                    </form>
+
+                </section>
+
+            </div>
+
+        </main>
+
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -2,10 +2,12 @@ package com.example.mergab.Controller;
 
 import com.example.mergab.Api.ApiResponse;
 import com.example.mergab.DTO.OrganizerDTO;
+import com.example.mergab.Model.User;
 import com.example.mergab.Service.OrganizerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,15 +28,19 @@ public class OrganizerController {
         return ResponseEntity.status(201).body(new ApiResponse("Organizer registered successfully"));
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateOrganizer(@PathVariable Integer id, @RequestBody @Valid OrganizerDTO dto) {
-        organizerService.updateOrganizer(id, dto);
-        return ResponseEntity.status(200).body(new ApiResponse("Organizer updated successfully"));
-    }
+
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteOrganizer(@PathVariable Integer id) {
         organizerService.deleteOrganizer(id);
         return ResponseEntity.status(200).body(new ApiResponse("Organizer deleted successfully"));
+    }
+
+    @PutMapping("/update-my-phone")
+    public ResponseEntity<?> updateMyPhone(@AuthenticationPrincipal User user, @RequestParam String phoneNumber) {
+
+        organizerService.updateMyPhone(user.getId(), phoneNumber);
+
+        return ResponseEntity.status(200).body(new ApiResponse("Phone number updated successfully"));
     }
 }

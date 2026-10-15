@@ -1,0 +1,270 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>إنشاء حساب | مِرقاب</title>
+
+  <link rel="icon" href="/img/favicon.png">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/register.css">
+
+  <script defer src="/js/base.js"></script>
+  <script defer src="/js/auth.js"></script>
+  <script defer src="/js/register.js"></script>
+</head>
+
+<body class="register-page">
+
+<main class="register-layout">
+
+  <!-- Brand Side -->
+  <section class="register-showcase" aria-label="مِرقاب">
+    <div class="register-showcase-content">
+
+      <a href="/" class="register-brand">
+        <img src="/img/logo-white.png" alt="مِرقاب">
+      </a>
+
+      <div class="register-showcase-message">
+                <span class="register-eyebrow" data-reg-t="eyebrow">
+                    أهلًا بك في مِرقاب
+                </span>
+
+        <h1 data-reg-t="showcaseTitle">
+          إكسبو أقرب لك
+          <span>من أول خطوة.</span>
+        </h1>
+
+        <p data-reg-t="showcaseDescription">
+          أنشئ حسابك واكتشف المناطق والفعاليات،
+          وتابع رحلتك داخل إكسبو بسهولة وذكاء.
+        </p>
+
+        <div class="register-highlights">
+          <div class="register-highlight">
+            <span class="material-symbols-rounded" aria-hidden="true">map</span>
+            <span data-reg-t="highlightMap">استكشف المناطق</span>
+          </div>
+
+          <div class="register-highlight">
+            <span class="material-symbols-rounded" aria-hidden="true">route</span>
+            <span data-reg-t="highlightRoute">تنقّل بذكاء</span>
+          </div>
+
+          <div class="register-highlight">
+            <span class="material-symbols-rounded" aria-hidden="true">event</span>
+            <span data-reg-t="highlightEvents">اكتشف الفعاليات</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="register-showcase-footer" data-reg-t="brandFooter">
+        مِرقاب — كل خطوة أذكى
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Registration Side -->
+  <section class="register-panel">
+
+    <div class="register-panel-top">
+      <a href="/" class="register-back">
+        <span aria-hidden="true">←</span>
+        <span data-reg-t="backHome">العودة للرئيسية</span>
+      </a>
+
+      <button
+              type="button"
+              id="registerLangSwitch"
+              class="register-language"
+              aria-label="Change language">
+        EN
+      </button>
+    </div>
+
+    <div class="register-form-container">
+
+      <div class="register-mobile-brand">
+        <img src="/img/logo.png" alt="مِرقاب">
+      </div>
+
+      <div class="register-heading">
+                <span class="register-welcome" data-reg-t="welcome">
+                    انضم إلى مِرقاب
+                </span>
+
+        <h2 data-reg-t="registerTitle">أنشئ حسابك</h2>
+
+        <p data-reg-t="registerDescription">
+          بيانات بسيطة، وتبدأ تجربتك الذكية داخل إكسبو.
+        </p>
+      </div>
+
+      <form id="registerForm" novalidate>
+
+        <div class="register-field">
+          <label for="fullName" data-reg-t="fullNameLabel">
+            الاسم الكامل
+          </label>
+          <input
+                  type="text"
+                  id="fullName"
+                  name="fullName"
+                  minlength="3"
+                  maxlength="50"
+                  autocomplete="name"
+                  required>
+        </div>
+
+        <div class="register-field">
+          <label for="email" data-reg-t="emailLabel">
+            البريد الإلكتروني
+          </label>
+          <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  placeholder="name@example.com"
+                  autocomplete="email"
+                  required>
+        </div>
+
+        <div class="register-field">
+          <label for="phoneNumber" data-reg-t="phoneLabel">
+            رقم الجوال
+          </label>
+          <input
+                  type="tel"
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  pattern="05[0-9]{8}"
+                  maxlength="10"
+                  inputmode="numeric"
+                  placeholder="05XXXXXXXX"
+                  autocomplete="tel"
+                  required>
+          <small data-reg-t="phoneHelp">
+            يبدأ بـ 05 ويتكوّن من 10 أرقام
+          </small>
+        </div>
+
+        <fieldset class="register-gender">
+          <legend data-reg-t="genderLabel">الجنس</legend>
+
+          <div class="register-gender-options">
+            <label class="register-gender-option">
+              <input
+                      type="radio"
+                      name="gender"
+                      value="MALE"
+                      required>
+              <span data-reg-t="male">ذكر</span>
+            </label>
+
+            <label class="register-gender-option">
+              <input
+                      type="radio"
+                      name="gender"
+                      value="FEMALE"
+                      required>
+              <span data-reg-t="female">أنثى</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="register-field">
+          <label for="password" data-reg-t="passwordLabel">
+            كلمة المرور
+          </label>
+
+          <div class="register-password-wrap">
+            <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    minlength="6"
+                    autocomplete="new-password"
+                    required>
+
+            <button
+                    type="button"
+                    id="registerTogglePassword"
+                    class="register-password-toggle"
+                    aria-label="إظهار كلمة المرور">
+                            <span class="material-symbols-rounded" aria-hidden="true">
+                                visibility
+                            </span>
+            </button>
+          </div>
+
+          <small data-reg-t="passwordHelp">
+            6 أحرف على الأقل
+          </small>
+        </div>
+
+        <label class="register-preference">
+          <input
+                  type="checkbox"
+                  id="showPrayerTimes"
+                  name="showPrayerTimes">
+
+          <span class="register-preference-icon">
+                        <span class="material-symbols-rounded" aria-hidden="true">
+                            mosque
+                        </span>
+                    </span>
+
+          <span class="register-preference-text">
+                        <strong data-reg-t="prayerTitle">
+                            إظهار أوقات الصلاة
+                        </strong>
+                        <small data-reg-t="prayerDescription">
+                            اعرض أوقات الصلاة أثناء زيارتك لإكسبو.
+                        </small>
+                    </span>
+        </label>
+
+        <div
+                id="registerError"
+                class="register-error"
+                role="alert"
+                aria-live="polite"
+                hidden></div>
+
+        <button
+                type="submit"
+                id="registerButton"
+                class="register-submit">
+          <span data-reg-t="registerButton">إنشاء الحساب</span>
+          <span aria-hidden="true">←</span>
+        </button>
+
+      </form>
+
+      <div class="register-login-prompt">
+        <span data-reg-t="haveAccount">عندك حساب بالفعل؟</span>
+        <a href="/login" data-reg-t="loginLink">
+          تسجيل الدخول
+        </a>
+      </div>
+
+    </div>
+
+    <div class="register-panel-footer" data-reg-t="footer">
+      © مِرقاب — تجربة إكسبو أذكى
+    </div>
+
+  </section>
+
+</main>
+
+<link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded&display=swap">
+
+</body>
+</html>

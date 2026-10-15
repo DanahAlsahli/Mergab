@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="ar" dir="rtl" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0E3D32">
+
+  <title>مِرقاب | إدارة المستخدمين</title>
+
+  <link rel="icon" href="/img/favicon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/admin.css">
+
+  <script defer src="/js/auth.js"></script>
+  <script defer src="/js/base.js"></script>
+  <script defer src="/js/admin-users.js"></script>
+</head>
+
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main class="admin-page" id="adminUsersPage" hidden>
+
+  <div class="home-container">
+
+    <!-- Page Header -->
+    <section class="admin-heading">
+
+      <div>
+                <span class="admin-eyebrow" data-a="eyebrow">
+                    لوحة الإدارة
+                </span>
+
+        <h1 data-a="pageTitle">إدارة المستخدمين</h1>
+
+        <p data-a="pageDesc">
+          إدارة حسابات مِرقاب وإضافة المنظّمين والمسؤولين.
+        </p>
+      </div>
+
+      <div class="admin-header-actions">
+
+        <a href="/admin" class="admin-outline-btn">
+          <span class="material-symbols-rounded">dashboard</span>
+          <span data-a="dashboard">لوحة التحكم</span>
+        </a>
+
+        <button type="button"
+                class="admin-primary-btn"
+                id="openAddUser">
+
+          <span class="material-symbols-rounded">person_add</span>
+          <span data-a="addUser">إضافة حساب</span>
+
+        </button>
+
+      </div>
+    </section>
+
+    <!-- Summary -->
+    <section class="admin-stats" aria-label="إحصائيات الحسابات">
+
+      <article class="admin-stat-card">
+                <span class="admin-stat-icon green">
+                    <span class="material-symbols-rounded">groups</span>
+                </span>
+
+        <span data-a="allUsers">إجمالي المستخدمين</span>
+        <strong id="totalUsers">—</strong>
+      </article>
+
+      <article class="admin-stat-card">
+                <span class="admin-stat-icon blue">
+                    <span class="material-symbols-rounded">badge</span>
+                </span>
+
+        <span data-a="organizers">المنظّمون</span>
+        <strong id="totalOrganizers">—</strong>
+      </article>
+
+      <article class="admin-stat-card">
+                <span class="admin-stat-icon gold">
+                    <span class="material-symbols-rounded">person</span>
+                </span>
+
+        <span data-a="visitors">الزوار</span>
+        <strong id="totalVisitors">—</strong>
+      </article>
+
+      <article class="admin-stat-card">
+                <span class="admin-stat-icon purple">
+                    <span class="material-symbols-rounded">admin_panel_settings</span>
+                </span>
+
+        <span data-a="admins">المسؤولون</span>
+        <strong id="totalAdmins">—</strong>
+      </article>
+
+    </section>
+
+    <!-- Users Management -->
+    <section class="admin-panel" aria-labelledby="usersTitle">
+
+      <div class="admin-panel-heading">
+
+        <div>
+          <h2 id="usersTitle" data-a="accountsTitle">
+            الحسابات المسجلة
+          </h2>
+
+          <p data-a="accountsDesc">
+            ابحث عن المستخدمين وصفِّ الحسابات حسب الدور.
+          </p>
+        </div>
+
+        <button type="button"
+                id="refreshUsers"
+                class="admin-icon-btn"
+                aria-label="تحديث المستخدمين">
+
+          <span class="material-symbols-rounded">refresh</span>
+
+        </button>
+
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="admin-toolbar">
+
+        <div class="admin-search">
+
+          <span class="material-symbols-rounded">search</span>
+
+          <label for="userSearch" class="sr-only">
+            البحث عن مستخدم
+          </label>
+
+          <input type="search"
+                 id="userSearch"
+                 data-a-placeholder="searchPlaceholder"
+                 placeholder="ابحث بالاسم أو البريد الإلكتروني">
+
+        </div>
+
+        <div class="admin-filter">
+
+          <label for="roleFilter" class="sr-only">
+            تصفية حسب الدور
+          </label>
+
+          <select id="roleFilter">
+            <option value="ALL" data-a="filterAll">جميع الأدوار</option>
+            <option value="ADMIN" data-a="admins">المسؤولون</option>
+            <option value="ORGANIZER" data-a="organizers">المنظّمون</option>
+            <option value="VISITOR" data-a="visitors">الزوار</option>
+          </select>
+
+        </div>
+
+      </div>
+
+      <!-- Feedback -->
+      <div id="usersMessage"
+           class="admin-message"
+           role="status"
+           aria-live="polite"></div>
+
+      <!-- Users Table -->
+      <div class="admin-table-wrap">
+
+        <table class="admin-table">
+
+          <thead>
+          <tr>
+            <th scope="col" data-a="name">الاسم</th>
+            <th scope="col" data-a="email">البريد الإلكتروني</th>
+            <th scope="col" data-a="role">الدور</th>
+            <th scope="col" data-a="phone">رقم الجوال</th>
+            <th scope="col" data-a="actions">الإجراءات</th>
+          </tr>
+          </thead>
+
+          <tbody id="usersTableBody"></tbody>
+
+        </table>
+
+      </div>
+
+      <p id="usersCount"
+         class="admin-table-count"
+         aria-live="polite"></p>
+
+    </section>
+
+  </div>
+
+</main>
+
+<!-- Add Account Dialog -->
+<dialog class="admin-dialog" id="addUserDialog"
+        aria-labelledby="addUserTitle">
+
+  <div class="admin-dialog-header">
+
+    <div>
+            <span class="admin-eyebrow" data-a="newAccount">
+                حساب جديد
+            </span>
+
+      <h2 id="addUserTitle" data-a="addUser">
+        إضافة حساب
+      </h2>
+
+      <p data-a="addUserDesc">
+        أنشئ حساب منظّم أو مسؤول جديد في مِرقاب.
+      </p>
+    </div>
+
+    <button type="button"
+            class="admin-icon-btn"
+            id="closeAddUser"
+            aria-label="إغلاق">
+
+      <span class="material-symbols-rounded">close</span>
+
+    </button>
+
+  </div>
+
+  <form id="addUserForm" class="admin-form">
+
+    <div class="admin-form-field">
+
+      <label for="newUserRole" data-a="role">
+        الدور
+      </label>
+
+      <select id="newUserRole" name="role" required>
+        <option value="ORGANIZER" data-a="organizer">
+          منظّم
+        </option>
+        <option value="ADMIN" data-a="admin">
+          مسؤول
+        </option>
+      </select>
+
+    </div>
+
+    <div class="admin-form-field">
+
+      <label for="newUserName" data-a="fullName">
+        الاسم الكامل
+      </label>
+
+      <input type="text"
+             id="newUserName"
+             name="fullName"
+             minlength="3"
+             maxlength="50"
+             autocomplete="name"
+             required>
+
+    </div>
+
+    <div class="admin-form-field">
+
+      <label for="newUserEmail" data-a="email">
+        البريد الإلكتروني
+      </label>
+
+      <input type="email"
+             id="newUserEmail"
+             name="email"
+             dir="ltr"
+             autocomplete="off"
+             required>
+
+    </div>
+
+    <div class="admin-form-field"
+         id="organizerPhoneField">
+
+      <label for="newUserPhone" data-a="phone">
+        رقم الجوال
+      </label>
+
+      <input type="tel"
+             id="newUserPhone"
+             name="phoneNumber"
+             dir="ltr"
+             placeholder="05XXXXXXXX"
+             pattern="05[0-9]{8}"
+             maxlength="10"
+             inputmode="tel"
+             required>
+
+      <small data-a="phoneHint">
+        مطلوب للمنظّم، ويبدأ بـ 05 ويتكوّن من 10 أرقام.
+      </small>
+
+    </div>
+
+    <div class="admin-form-field">
+
+      <label for="newUserPassword" data-a="password">
+        كلمة المرور
+      </label>
+
+      <input type="password"
+             id="newUserPassword"
+             name="password"
+             minlength="6"
+             autocomplete="new-password"
+             required>
+
+      <small data-a="passwordHint">
+        ستُستخدم كلمة المرور لتسجيل دخول الحساب الجديد.
+      </small>
+
+    </div>
+
+    <p class="admin-form-error"
+       id="addUserError"
+       role="alert"
+       hidden></p>
+
+    <div class="admin-dialog-actions">
+
+      <button type="button"
+              class="admin-outline-btn"
+              id="cancelAddUser"
+              data-a="cancel">
+        إلغاء
+      </button>
+
+      <button type="submit"
+              class="admin-primary-btn"
+              id="submitAddUser">
+
+        <span class="material-symbols-rounded">check</span>
+        <span data-a="createAccount">إنشاء الحساب</span>
+
+      </button>
+
+    </div>
+
+  </form>
+
+</dialog>
+
+<!-- Delete Confirmation -->
+<dialog class="admin-dialog admin-delete-dialog"
+        id="deleteUserDialog"
+        aria-labelledby="deleteUserTitle">
+
+  <div class="admin-delete-icon">
+    <span class="material-symbols-rounded">delete_forever</span>
+  </div>
+
+  <h2 id="deleteUserTitle" data-a="confirmDelete">
+    تأكيد حذف الحساب
+  </h2>
+
+  <p data-a="deleteWarning">
+    هل أنت متأكد من حذف هذا الحساب؟ لا يمكن التراجع عن العملية.
+  </p>
+
+  <strong id="deleteUserName"></strong>
+
+  <p class="admin-form-error"
+     id="deleteUserError"
+     role="alert"
+     hidden></p>
+
+  <div class="admin-dialog-actions">
+
+    <button type="button"
+            class="admin-outline-btn"
+            id="cancelDeleteUser"
+            data-a="cancel">
+      إلغاء
+    </button>
+
+    <button type="button"
+            class="admin-danger-btn"
+            id="confirmDeleteUser"
+            data-a="deleteAccount">
+      حذف الحساب
+    </button>
+
+  </div>
+
+</dialog>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

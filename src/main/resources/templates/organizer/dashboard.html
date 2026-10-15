@@ -1,0 +1,232 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+
+  <title>لوحة المنظّم | مِرقاب</title>
+
+  <link rel="icon" href="/img/favicon.png">
+
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap"
+        rel="stylesheet">
+
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/organizer.css">
+  <link rel="stylesheet" href="/map/mirqab-map.css">
+
+  <script defer src="/js/auth.js"></script>
+  <script defer src="/map/mirqab-map.js"></script>
+  <script defer src="/js/organizer-dashboard.js"></script>
+</head>
+
+<body class="organizer-page">
+
+<div class="organizer-layout">
+
+  <!-- SIDEBAR -->
+  <div th:replace="~{organizer/fragments/sidebar :: sidebar('dashboard')}"></div>
+
+  <!-- MAIN CONTENT -->
+  <div class="organizer-content">
+
+    <!-- TOPBAR -->
+    <header class="organizer-topbar">
+
+      <div class="organizer-topbar-title">
+        <span class="material-symbols-rounded">space_dashboard</span>
+        <span>لوحة المنظّم</span>
+      </div>
+
+      <div class="organizer-topbar-actions">
+
+        <a href="/account" id="organizerAccountLink"
+           class="organizer-user-link">
+          <span id="organizerUserName">حسابي</span>
+        </a>
+
+        <button type="button"
+                id="organizerLogoutButton"
+                class="organizer-icon-button"
+                aria-label="تسجيل الخروج"
+                title="تسجيل الخروج">
+          <span class="material-symbols-rounded">logout</span>
+        </button>
+
+      </div>
+
+    </header>
+
+    <main class="organizer-main">
+
+      <!-- WELCOME BANNER -->
+      <section class="organizer-hero">
+        <div class="organizer-hero-content">
+                    <span class="organizer-eyebrow">
+                        MERGAB CONTROL CENTER
+                    </span>
+
+          <h1 id="organizerWelcome">مرحبًا بك في مِرقاب</h1>
+
+          <p>
+            راقب الحشود، أدر مناطق إكسبو،
+            وخطط لتجربة أكثر أمانًا وذكاءً.
+          </p>
+        </div>
+      </section>
+
+      <!-- KPI CARDS -->
+      <section class="organizer-stats"
+               aria-label="مؤشرات إكسبو">
+
+        <article class="organizer-stat-card">
+                    <span class="material-symbols-rounded stat-icon">
+                        location_on
+                    </span>
+          <div>
+            <p>إجمالي المناطق</p>
+            <strong id="totalZones">—</strong>
+          </div>
+        </article>
+
+        <article class="organizer-stat-card">
+                    <span class="material-symbols-rounded stat-icon">
+                        groups
+                    </span>
+          <div>
+            <p>الزوار داخل المناطق</p>
+            <strong id="totalVisitors">—</strong>
+          </div>
+        </article>
+
+        <article class="organizer-stat-card">
+                    <span class="material-symbols-rounded stat-icon">
+                        event
+                    </span>
+          <div>
+            <p>الفعاليات القادمة</p>
+            <strong id="totalEvents">—</strong>
+          </div>
+        </article>
+
+        <article class="organizer-stat-card">
+                    <span class="material-symbols-rounded stat-icon">
+                        monitoring
+                    </span>
+          <div>
+            <p>المحاكاة</p>
+            <strong id="totalSimulations">—</strong>
+          </div>
+        </article>
+
+      </section>
+
+      <!-- MAP & OVERVIEW -->
+      <div class="organizer-overview-grid">
+
+        <section class="organizer-panel organizer-map-panel">
+
+          <div class="organizer-panel-heading">
+            <div>
+              <h2>خريطة إكسبو التفاعلية</h2>
+              <p>المناطق ونسب الإشغال الحالية</p>
+            </div>
+
+            <a href="/organizer/zones"
+               class="organizer-panel-link">
+              إدارة المناطق
+              <span class="material-symbols-rounded">
+                                arrow_outward
+                            </span>
+            </a>
+          </div>
+
+          <!-- Existing Mergab map component -->
+          <div id="organizerExpoMap"
+               class="organizer-map-container"></div>
+
+        </section>
+
+        <div class="organizer-side-panels">
+
+          <section class="organizer-panel">
+
+            <div class="organizer-panel-heading">
+              <h2>إشغال المناطق</h2>
+            </div>
+
+            <div id="zoneOccupancy"
+                 class="organizer-occupancy-list">
+              <p class="organizer-empty">
+                جارٍ تحميل بيانات الإشغال...
+              </p>
+            </div>
+
+          </section>
+
+          <section class="organizer-panel">
+
+            <div class="organizer-panel-heading">
+              <h2>الفعاليات القادمة</h2>
+
+              <a href="/organizer/events"
+                 class="organizer-panel-link">
+                عرض الكل
+              </a>
+            </div>
+
+            <div id="upcomingEvents"
+                 class="organizer-events-list">
+              <p class="organizer-empty">
+                جارٍ تحميل الفعاليات...
+              </p>
+            </div>
+
+          </section>
+
+        </div>
+      </div>
+
+      <!-- QUICK ACTIONS -->
+      <section class="organizer-quick-actions">
+
+        <a href="/organizer/zones"
+           class="organizer-action-card">
+          <span class="material-symbols-rounded">add_location_alt</span>
+          <span>إدارة المناطق</span>
+        </a>
+
+        <a href="/organizer/connections"
+           class="organizer-action-card">
+          <span class="material-symbols-rounded">alt_route</span>
+          <span>إدارة المسارات</span>
+        </a>
+
+        <a href="/organizer/events"
+           class="organizer-action-card">
+          <span class="material-symbols-rounded">edit_calendar</span>
+          <span>إدارة الفعاليات</span>
+        </a>
+
+        <a href="/organizer/simulations"
+           class="organizer-action-card">
+          <span class="material-symbols-rounded">model_training</span>
+          <span>المحاكاة الذكية</span>
+        </a>
+
+      </section>
+
+    </main>
+  </div>
+
+</div>
+
+</body>
+</html>

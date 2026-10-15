@@ -1,0 +1,177 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول | مِرقاب</title>
+
+  <link rel="icon" href="/img/favicon.png">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/login.css">
+
+  <script defer src="/js/base.js"></script>
+  <script defer src="/js/auth.js"></script>
+  <script defer src="/js/login.js"></script>
+</head>
+
+<body class="auth-page">
+
+<main class="auth-layout">
+
+  <!-- Brand Experience -->
+  <section class="auth-showcase" aria-label="مِرقاب">
+    <div class="auth-showcase-overlay"></div>
+
+    <div class="auth-showcase-content">
+      <a href="/" class="auth-brand">
+        <img src="/img/logo-white.png"
+             alt="مِرقاب | Mergab">
+      </a>
+
+      <div class="auth-showcase-message">
+                <span class="auth-eyebrow"
+                      data-auth-t="eyebrow">
+                    رحلتك داخل إكسبو تبدأ هنا
+                </span>
+
+        <h1 data-auth-t="showcaseTitle">
+          استكشف إكسبو
+          <span>بذكاء وسهولة.</span>
+        </h1>
+
+        <p data-auth-t="showcaseDescription">
+          خطط لزيارتك، اكتشف المناطق والفعاليات،
+          وتنقل بثقة مع مِرقاب.
+        </p>
+      </div>
+
+      <div class="auth-showcase-footer">
+        <span class="auth-showcase-line"></span>
+        <span data-auth-t="showcaseFooter">
+                    مِرقاب — كل خطوة أذكى
+                </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Login Form -->
+  <section class="auth-panel">
+    <div class="auth-panel-top">
+      <a href="/" class="auth-back">
+        <span aria-hidden="true">←</span>
+        <span data-auth-t="backHome">
+                    العودة للرئيسية
+                </span>
+      </a>
+
+      <button type="button"
+              class="auth-language"
+              id="authLangSwitch"
+              aria-label="Change language">
+        EN
+      </button>
+    </div>
+
+    <div class="auth-form-container">
+
+      <div class="auth-mobile-brand">
+        <img src="/img/logo.png" alt="مِرقاب">
+      </div>
+
+      <div class="auth-heading">
+                <span class="auth-welcome"
+                      data-auth-t="welcome">
+                    أهلًا بعودتك
+                </span>
+
+        <h2 data-auth-t="loginTitle">
+          تسجيل الدخول
+        </h2>
+
+        <p data-auth-t="loginDescription">
+          سجّل دخولك لمتابعة تجربتك مع مِرقاب.
+        </p>
+      </div>
+
+      <form id="loginForm" novalidate>
+
+        <div class="auth-field">
+          <label for="email"
+                 data-auth-t="emailLabel">
+            البريد الإلكتروني
+          </label>
+
+          <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  autocomplete="username"
+                  placeholder="name@example.com"
+                  required>
+        </div>
+
+        <div class="auth-field">
+          <label for="password"
+                 data-auth-t="passwordLabel">
+            كلمة المرور
+          </label>
+
+          <div class="auth-password-wrap">
+            <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    autocomplete="current-password"
+                    required>
+
+            <button
+                    type="button"
+                    id="togglePassword"
+                    class="auth-password-toggle"
+                    aria-label="إظهار كلمة المرور">
+              <span aria-hidden="true">◉</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="loginError"
+             class="auth-error"
+             role="alert"
+             aria-live="polite"
+             hidden></div>
+
+        <button type="submit"
+                id="loginButton"
+                class="auth-submit">
+                    <span data-auth-t="loginButton">
+                        تسجيل الدخول
+                    </span>
+          <span aria-hidden="true">←</span>
+        </button>
+      </form>
+
+      <div class="auth-register-prompt">
+                <span data-auth-t="noAccount">
+                    ما عندك حساب؟
+                </span>
+
+        <a href="/register"
+           data-auth-t="createAccount">
+          أنشئ حسابك الآن
+        </a>
+      </div>
+
+    </div>
+
+    <div class="auth-panel-footer">
+            <span data-auth-t="footer">
+                © مِرقاب — تجربة إكسبو أذكى
+            </span>
+    </div>
+  </section>
+
+</main>
+
+</body>
+</html>

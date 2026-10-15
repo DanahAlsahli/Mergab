@@ -1,0 +1,304 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0E3D32">
+
+    <title>مِرقاب | لوحة الإدارة</title>
+
+    <link rel="icon" href="/img/favicon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/admin.css">
+
+    <script defer src="/js/auth.js"></script>
+    <script defer src="/js/base.js"></script>
+    <script defer src="/js/admin-dashboard.js"></script>
+</head>
+
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main class="admin-page" id="adminDashboardPage" hidden>
+
+    <div class="home-container">
+
+        <!-- Welcome -->
+        <section class="admin-heading">
+
+            <div>
+                <span class="admin-eyebrow" data-a="eyebrow">
+                    إدارة مِرقاب
+                </span>
+
+                <h1 id="adminWelcome">
+                    أهلًا بك في لوحة الإدارة
+                </h1>
+
+                <p data-a="welcomeDesc">
+                    تابع حسابات المستخدمين وأدر المنظّمين المسؤولين عن مناطق إكسبو.
+                </p>
+            </div>
+
+            <div class="admin-header-actions">
+
+                <button type="button"
+                        id="refreshDashboard"
+                        class="admin-outline-btn">
+
+                    <span class="material-symbols-rounded">refresh</span>
+                    <span data-a="refresh">تحديث البيانات</span>
+                </button>
+
+                <a href="/admin/users#add"
+                   class="admin-primary-btn">
+
+                    <span class="material-symbols-rounded">person_add</span>
+                    <span data-a="addOrganizer">إضافة منظّم</span>
+                </a>
+
+            </div>
+        </section>
+
+        <!-- Feedback -->
+        <div id="dashboardMessage"
+             class="admin-message"
+             role="status"
+             aria-live="polite"></div>
+
+        <!-- Account Statistics -->
+        <section class="admin-stats" aria-label="إحصائيات المستخدمين">
+
+            <article class="admin-stat-card">
+
+                <span class="admin-stat-icon green">
+                    <span class="material-symbols-rounded">groups</span>
+                </span>
+
+                <span data-a="totalUsers">إجمالي المستخدمين</span>
+
+                <strong id="dashTotalUsers">—</strong>
+
+            </article>
+
+            <article class="admin-stat-card">
+
+                <span class="admin-stat-icon blue">
+                    <span class="material-symbols-rounded">badge</span>
+                </span>
+
+                <span data-a="totalOrganizers">المنظّمون</span>
+
+                <strong id="dashTotalOrganizers">—</strong>
+
+            </article>
+
+            <article class="admin-stat-card">
+
+                <span class="admin-stat-icon gold">
+                    <span class="material-symbols-rounded">person</span>
+                </span>
+
+                <span data-a="totalVisitors">الزوار</span>
+
+                <strong id="dashTotalVisitors">—</strong>
+
+            </article>
+
+            <article class="admin-stat-card">
+
+                <span class="admin-stat-icon purple">
+                    <span class="material-symbols-rounded">
+                        admin_panel_settings
+                    </span>
+                </span>
+
+                <span data-a="totalAdmins">المسؤولون</span>
+
+                <strong id="dashTotalAdmins">—</strong>
+
+            </article>
+
+        </section>
+
+        <!-- Main Dashboard -->
+        <div class="admin-dashboard-grid">
+
+            <!-- Recent Accounts -->
+            <section class="admin-panel"
+                     aria-labelledby="recentUsersTitle">
+
+                <div class="admin-panel-heading">
+
+                    <div>
+                        <h2 id="recentUsersTitle"
+                            data-a="recentUsers">
+                            أحدث الحسابات
+                        </h2>
+
+                        <p data-a="recentDesc">
+                            آخر الحسابات المسجلة في مِرقاب.
+                        </p>
+                    </div>
+
+                    <a href="/admin/users"
+                       class="admin-outline-btn">
+
+                        <span data-a="viewAll">عرض الكل</span>
+
+                        <span class="material-symbols-rounded">
+                            arrow_outward
+                        </span>
+                    </a>
+
+                </div>
+
+                <div id="recentUsersList"
+                     class="admin-recent-list"
+                     aria-live="polite">
+
+                    <p data-a="loading">
+                        جاري تحميل البيانات...
+                    </p>
+
+                </div>
+
+            </section>
+
+            <!-- Expo Overview -->
+            <section class="admin-panel"
+                     aria-labelledby="expoOverviewTitle">
+
+                <div class="admin-panel-heading">
+
+                    <div>
+                        <h2 id="expoOverviewTitle"
+                            data-a="expoOverview">
+                            نظرة عامة على إكسبو
+                        </h2>
+
+                        <p data-a="expoDesc">
+                            معلومات عن المناطق والفعاليات المسجلة.
+                        </p>
+                    </div>
+
+                    <span class="admin-stat-icon green">
+                        <span class="material-symbols-rounded">
+                            monitoring
+                        </span>
+                    </span>
+
+                </div>
+
+                <div class="admin-stats"
+                     style="grid-template-columns:repeat(2,minmax(0,1fr)); margin-bottom:0">
+
+                    <article class="admin-stat-card">
+
+                        <span class="admin-stat-icon green">
+                            <span class="material-symbols-rounded">
+                                location_on
+                            </span>
+                        </span>
+
+                        <span data-a="totalZones">
+                            المناطق المسجلة
+                        </span>
+
+                        <strong id="dashTotalZones">—</strong>
+
+                    </article>
+
+                    <article class="admin-stat-card">
+
+                        <span class="admin-stat-icon gold">
+                            <span class="material-symbols-rounded">
+                                event
+                            </span>
+                        </span>
+
+                        <span data-a="totalEvents">
+                            الفعاليات المسجلة
+                        </span>
+
+                        <strong id="dashTotalEvents">—</strong>
+
+                    </article>
+
+                </div>
+
+            </section>
+
+        </div>
+
+        <!-- Account Management -->
+        <section class="admin-panel" style="margin-top:24px"
+                 aria-labelledby="managementTitle">
+
+            <div class="admin-panel-heading">
+
+                <div>
+                    <h2 id="managementTitle"
+                        data-a="managementTitle">
+                        إدارة الحسابات والصلاحيات
+                    </h2>
+
+                    <p data-a="managementDesc">
+                        أنشئ حسابات المنظّمين والمسؤولين وتابع المستخدمين.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="admin-quick-actions">
+
+                <a href="/admin/users"
+                   class="admin-outline-btn">
+
+                    <span class="material-symbols-rounded">
+                        manage_accounts
+                    </span>
+
+                    <span data-a="manageUsers">
+                        إدارة جميع المستخدمين
+                    </span>
+
+                </a>
+
+                <a href="/admin/users#add"
+                   class="admin-primary-btn">
+
+                    <span class="material-symbols-rounded">
+                        person_add
+                    </span>
+
+                    <span data-a="createAccount">
+                        إنشاء حساب جديد
+                    </span>
+
+                </a>
+
+            </div>
+
+        </section>
+
+        <p id="dashboardUpdated"
+           class="admin-table-count"
+           aria-live="polite"></p>
+
+    </div>
+
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

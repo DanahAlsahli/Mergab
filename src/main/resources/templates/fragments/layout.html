@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ar" dir="rtl">
+
+<body>
+
+<header th:fragment="navbar" class="site-header">
+    <div class="home-container header-inner">
+
+
+        <a href="/" class="brand" aria-label="Mergab Home">
+            <img src="/img/logo.png" alt="مِرقاب">
+        </a>
+
+        <button class="nav-menu-toggle"
+                id="navMenuToggle"
+                type="button"
+                aria-label="فتح القائمة"
+                aria-expanded="false"
+                aria-controls="mainNavigation">
+            <span class="material-symbols-rounded">menu</span>
+        </button>
+
+        <nav class="header-nav" id="mainNavigation" aria-label="القائمة الرئيسية">
+            <a href="/" data-t="navHome">الرئيسية</a>
+            <a href="/visitor/map" data-t="navMap">الخريطة</a>
+            <a href="/visitor/events" data-t="navEvents">الفعاليات</a>
+            <a href="/#features" data-t="navFeatures">المميزات</a>
+
+            <a href="#"
+               id="dashboardNavLink"
+               data-t="dashboard"
+               hidden>
+                لوحة التحكم
+            </a>
+        </nav>
+
+
+        <div class="header-actions">
+
+            <!-- Language -->
+            <button type="button"
+                    id="langSwitch"
+                    class="lang-btn"
+                    aria-label="تغيير اللغة">
+                English
+            </button>
+
+            <!-- Login: Visible before signing in -->
+            <a href="/login"
+               id="accountLink"
+               class="btn btn-primary"
+               data-t="login">
+                تسجيل الدخول
+            </a>
+
+            <!-- My Account: Icon only -->
+            <a href="/account"
+               id="navProfileLink"
+               class="nav-profile-link"
+               aria-label="حسابي"
+               title="حسابي"
+               hidden>
+                <span id="navProfileName">المستخدم</span>
+            </a>
+
+
+
+            <!-- Logout: Icon only -->
+            <button type="button"
+                    id="navLogoutButton"
+                    class="nav-logout-btn"
+                    aria-label="تسجيل الخروج"
+                    title="تسجيل الخروج"
+                    hidden>
+
+        <span class="material-symbols-rounded">
+            logout
+        </span>
+            </button>
+
+        </div>
+
+
+
+
+
+    </div>
+</header>
+
+<footer th:fragment="footer" class="site-footer">
+    <div class="home-container footer-inner">
+
+
+        <div class="footer-brand">
+            <img src="/img/logo-white.png" alt="مِرقاب">
+        </div>
+
+        <p data-t="footerTag">
+            استكشف بذكاء، واستمتع بكل لحظة.
+        </p>
+
+        <nav aria-label="روابط التذييل">
+            <a href="/visitor/map" data-t="navMap">الخريطة</a>
+            <a href="/visitor/events" data-t="navEvents">الفعاليات</a>
+            <a href="/login" data-t="login">تسجيل الدخول</a>
+        </nav>
+
+    </div>
+</footer>
+
+</body>
+</html>

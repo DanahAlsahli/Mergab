@@ -1,0 +1,460 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+
+  <title>المحاكاة | مِرقاب</title>
+
+  <link rel="icon" href="/img/favicon.png">
+
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap"
+        rel="stylesheet">
+
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/organizer.css">
+  <link rel="stylesheet" href="/css/organizer-zones.css">
+  <link rel="stylesheet" href="/css/organizer-simulations.css">
+  <link rel="stylesheet" href="/map/mirqab-map.css">
+
+  <script defer src="/js/auth.js"></script>
+  <script defer src="/map/mirqab-map.js"></script>
+  <script defer src="/js/organizer-simulations.js"></script>
+</head>
+
+<body class="organizer-page">
+
+<div class="organizer-layout">
+
+  <!-- SHARED SIDEBAR -->
+  <div th:replace="~{organizer/fragments/sidebar :: sidebar('simulations')}"></div>
+
+  <div class="organizer-content">
+
+    <!-- TOP BAR -->
+    <header class="organizer-topbar">
+
+      <div class="organizer-topbar-title">
+        <span class="material-symbols-rounded">model_training</span>
+        <span>المحاكاة</span>
+      </div>
+
+      <div class="organizer-topbar-actions">
+
+        <a href="/account"
+           id="organizerAccountLink"
+           class="organizer-user-link">
+          حسابي
+        </a>
+
+        <button type="button"
+                id="organizerLogoutButton"
+                class="organizer-icon-button"
+                aria-label="تسجيل الخروج">
+          <span class="material-symbols-rounded">logout</span>
+        </button>
+
+      </div>
+    </header>
+
+    <main class="organizer-main">
+
+      <!-- PAGE HEADER -->
+      <div class="zones-page-heading">
+
+        <div>
+                    <span class="organizer-eyebrow">
+                        MERGAB / SIMULATIONS
+                    </span>
+
+          <h1>محاكاة حركة الحشود</h1>
+
+          <p>
+            شغّلي سيناريوهات حركة الزوار واستعرضي
+            تغير الإشغال والطوابير على خريطة إكسبو.
+          </p>
+        </div>
+
+        <button type="button"
+                id="addSimulationButton"
+                class="zones-primary-btn">
+
+          <span class="material-symbols-rounded">add</span>
+          محاكاة جديدة
+        </button>
+
+      </div>
+
+      <!-- STATISTICS -->
+      <section class="simulation-stats">
+
+        <div class="organizer-panel simulation-stat">
+                    <span class="material-symbols-rounded">
+                        model_training
+                    </span>
+          <div>
+            <small>إجمالي المحاكاة</small>
+            <strong id="totalSimulationsCount">—</strong>
+          </div>
+        </div>
+
+        <div class="organizer-panel simulation-stat">
+                    <span class="material-symbols-rounded">
+                        task_alt
+                    </span>
+          <div>
+            <small>المحاكاة المكتملة</small>
+            <strong id="completedSimulationsCount">—</strong>
+          </div>
+        </div>
+
+        <div class="organizer-panel simulation-stat">
+                    <span class="material-symbols-rounded">
+                        pending_actions
+                    </span>
+          <div>
+            <small>بانتظار التشغيل</small>
+            <strong id="pendingSimulationsCount">—</strong>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- CREATE / EDIT -->
+      <section id="simulationEditor"
+               class="organizer-panel zones-editor"
+               hidden>
+
+        <div class="organizer-panel-heading">
+
+          <div>
+            <h2 id="simulationEditorTitle">
+              إنشاء محاكاة جديدة
+            </h2>
+            <p>
+              حددي بيانات السيناريو قبل التشغيل.
+            </p>
+          </div>
+
+          <button type="button"
+                  id="closeSimulationEditor"
+                  class="zones-icon-btn"
+                  aria-label="إغلاق">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+
+        </div>
+
+        <form id="simulationForm">
+
+          <input type="hidden" id="simulationId">
+
+          <div class="zones-form-grid">
+
+            <div class="zones-field">
+              <label for="simulationAttendance">
+                سجل الحضور التاريخي
+              </label>
+
+              <select id="simulationAttendance" required>
+                <option value="">
+                  جارٍ تحميل السجلات...
+                </option>
+              </select>
+
+              <small>
+                سجل مرتبط بالمحاكاة وفق المودل الحالي.
+              </small>
+            </div>
+
+            <div class="zones-field">
+              <label for="simulationDuration">
+                مدة المحاكاة بالدقائق
+              </label>
+
+              <input type="number"
+                     id="simulationDuration"
+                     min="1"
+                     max="600"
+                     step="1"
+                     value="30"
+                     required>
+            </div>
+
+            <div class="zones-field">
+              <label for="simulationSeed">
+                Random Seed
+              </label>
+
+              <input type="number"
+                     id="simulationSeed"
+                     step="1"
+                     placeholder="مثال: 20261015"
+                     required>
+
+              <small>
+                يُحفظ مع السيناريو، ولا يؤثر
+                في محرك الحساب الحالي.
+              </small>
+            </div>
+
+          </div>
+
+          <div id="simulationFormMessage"
+               class="zones-form-message"
+               role="status"
+               aria-live="polite"
+               hidden></div>
+
+          <div class="zones-form-actions">
+
+            <button type="submit"
+                    id="saveSimulationButton"
+                    class="zones-primary-btn">
+
+              <span class="material-symbols-rounded">save</span>
+              حفظ المحاكاة
+            </button>
+
+            <button type="button"
+                    id="cancelSimulationButton"
+                    class="zones-secondary-btn">
+              إلغاء
+            </button>
+
+          </div>
+
+        </form>
+
+      </section>
+
+      <!-- SIMULATION MAP -->
+      <section class="organizer-panel simulation-map-panel">
+
+        <div class="organizer-panel-heading">
+
+          <div>
+            <h2>خريطة المحاكاة التفاعلية</h2>
+            <p>
+              استعراض نتائج الإشغال والطوابير
+              حسب الدقيقة المختارة.
+            </p>
+          </div>
+
+          <span id="simulationMapStatus"
+                class="zones-map-status">
+                        بانتظار اختيار محاكاة
+                    </span>
+
+        </div>
+
+        <div id="simulationMap"
+             class="organizer-map-container zones-map">
+        </div>
+
+        <!-- PLAYBACK CONTROLS -->
+        <div class="simulation-playback">
+
+          <div class="simulation-playback-heading">
+            <div>
+              <strong id="selectedSimulationLabel">
+                لم يتم اختيار محاكاة
+              </strong>
+              <small id="simulationPlaybackHint">
+                شغّلي محاكاة أو اختاري نتائج محفوظة.
+              </small>
+            </div>
+
+            <span id="simulationMinuteLabel"
+                  class="simulation-minute">
+                            الدقيقة 0
+                        </span>
+          </div>
+
+          <div class="simulation-timeline">
+
+            <input type="range"
+                   id="simulationTimeline"
+                   min="0"
+                   max="0"
+                   value="0"
+                   step="1"
+                   disabled
+                   aria-label="دقيقة المحاكاة">
+
+            <div class="simulation-timeline-labels">
+              <span>البداية</span>
+              <span id="simulationEndMinute">—</span>
+            </div>
+
+          </div>
+
+          <div class="simulation-playback-actions">
+
+            <button type="button"
+                    id="playSimulationButton"
+                    class="zones-primary-btn"
+                    disabled>
+
+              <span class="material-symbols-rounded">play_arrow</span>
+              تشغيل العرض
+            </button>
+
+            <button type="button"
+                    id="pauseSimulationButton"
+                    class="zones-secondary-btn"
+                    disabled>
+
+              <span class="material-symbols-rounded">pause</span>
+              إيقاف مؤقت
+            </button>
+
+            <button type="button"
+                    id="resetSimulationButton"
+                    class="zones-secondary-btn"
+                    disabled>
+
+              <span class="material-symbols-rounded">replay</span>
+              من البداية
+            </button>
+
+            <div class="simulation-speed">
+              <label for="simulationPlaybackSpeed">
+                سرعة العرض
+              </label>
+
+              <select id="simulationPlaybackSpeed">
+                <option value="1">1×</option>
+                <option value="2">2×</option>
+                <option value="4">4×</option>
+              </select>
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- MINUTE RESULTS -->
+      <section class="simulation-results">
+
+        <div class="organizer-panel">
+          <div class="organizer-panel-heading">
+            <div>
+              <h2>نتائج الدقيقة المحددة</h2>
+              <p>
+                القيم الفعلية المحفوظة في
+                SimulationSnapshot.
+              </p>
+            </div>
+          </div>
+
+          <div class="simulation-result-stats">
+
+            <div>
+              <small>الزوار داخل المناطق</small>
+              <strong id="simulationTotalOccupancy">—</strong>
+            </div>
+
+            <div>
+              <small>إجمالي المنتظرين</small>
+              <strong id="simulationTotalQueue">—</strong>
+            </div>
+
+            <div>
+              <small>مناطق لديها طوابير</small>
+              <strong id="simulationQueuedZones">—</strong>
+            </div>
+
+          </div>
+
+          <div class="zones-table-wrap">
+
+            <table class="zones-table">
+
+              <thead>
+              <tr>
+                <th>المنطقة</th>
+                <th>الإشغال</th>
+                <th>نسبة السعة</th>
+                <th>الطابور</th>
+              </tr>
+              </thead>
+
+              <tbody id="simulationSnapshotsBody">
+              <tr>
+                <td colspan="4">
+                  اختاري محاكاة لعرض النتائج.
+                </td>
+              </tr>
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- SAVED SIMULATIONS -->
+      <section class="organizer-panel simulation-list-panel">
+
+        <div class="organizer-panel-heading">
+
+          <div>
+            <h2>المحاكاة المسجلة</h2>
+            <p>
+              تشغيل السيناريوهات ومراجعة نتائجها المحفوظة.
+            </p>
+          </div>
+
+          <span id="simulationsCount"
+                class="zones-count">—</span>
+
+        </div>
+
+        <div class="zones-table-wrap">
+
+          <table class="zones-table simulation-table">
+
+            <thead>
+            <tr>
+              <th>المحاكاة</th>
+              <th>المدة</th>
+              <th>Random Seed</th>
+              <th>الحالة</th>
+              <th>تاريخ التشغيل</th>
+              <th>الإجراءات</th>
+            </tr>
+            </thead>
+
+            <tbody id="simulationsTableBody">
+            <tr>
+              <td colspan="6">
+                جارٍ تحميل المحاكاة...
+              </td>
+            </tr>
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+</div>
+
+</body>
+</html>
