@@ -1,10 +1,8 @@
-
 package com.example.mergab.Simulation;
 
 import com.example.mergab.Model.ExpoEvent;
 import com.example.mergab.Model.Zone;
 import com.example.mergab.Model.ZoneConnection;
-
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -12,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
 
 public class EventDrivenSimulationRunner {
 
@@ -30,6 +27,7 @@ public class EventDrivenSimulationRunner {
                 Objects.requireNonNull(eventDrivenSimulationEngine);
     }
 
+    // Start a new simulation using each zone's initial visitor count.
     public List<SimulationSnapshotRecord> runSimulation(
             List<Zone> zones,
             List<ZoneConnection> connections,
@@ -39,15 +37,76 @@ public class EventDrivenSimulationRunner {
             int arrivalWindowMinutes) {
 
         validateInputs(
-                zones,
-                connections,
-                events,
-                simulationStart,
-                durationMinutes,
-                arrivalWindowMinutes
+                zones, connections, events,
+                simulationStart, durationMinutes, arrivalWindowMinutes
         );
 
-        // Build the event arrival schedule before starting the simulation.
+        Map<Integer, Integer> capacities = validateZones(zones);
+
+        SimulationState initialState = new SimulationState(
+                crowdSimulationEngine.initializeOccupancy(zones),
+                createEmptyQueues(zones)
+        );
+
+        return runSimulationFromState(
+                zones, connections, events, simulationStart,
+                durationMinutes, arrivalWindowMinutes,
+                initialState, capacities
+        );
+    }
+
+    // Continue from a previously saved simulation state.
+    public List<SimulationSnapshotRecord> runSimulation(
+            List<Zone> zones,
+            List<ZoneConnection> connections,
+            List<ExpoEvent> events,
+            LocalDateTime simulationStart,
+            int durationMinutes,
+            int arrivalWindowMinutes,
+            SimulationState initialState) {
+
+        Objects.requireNonNull(initialState, "Initial state is required");
+
+        validateInputs(
+                zones, connections, events,
+                simulationStart, durationMinutes, arrivalWindowMinutes
+        );
+
+        Map<Integer, Integer> capacities = validateZones(zones);
+
+        for (Zone zone : zones) {
+            int zoneId = zone.getId();
+            int occupancy = initialState.occupancy()
+                    .getOrDefault(zoneId, 0);
+            int queue = initialState.queueLengths()
+                    .getOrDefault(zoneId, 0);
+
+            if (occupancy < 0
+                    || occupancy > capacities.get(zoneId)
+                    || queue < 0) {
+                throw new IllegalArgumentException(
+                        "Invalid initial state for zone " + zoneId
+                );
+            }
+        }
+
+        return runSimulationFromState(
+                zones, connections, events, simulationStart,
+                durationMinutes, arrivalWindowMinutes,
+                initialState, capacities
+        );
+    }
+
+    private List<SimulationSnapshotRecord> runSimulationFromState(
+            List<Zone> zones,
+            List<ZoneConnection> connections,
+            List<ExpoEvent> events,
+            LocalDateTime simulationStart,
+            int durationMinutes,
+            int arrivalWindowMinutes,
+            SimulationState initialState,
+            Map<Integer, Integer> capacities) {
+
         Map<Integer, Map<Integer, Integer>> arrivalSchedule =
                 eventDrivenSimulationEngine.scheduleArrivals(
                         events,
@@ -56,49 +115,21 @@ public class EventDrivenSimulationRunner {
                         arrivalWindowMinutes
                 );
 
-        Map<Integer, Integer> capacities = new HashMap<>();
+        // Preserve the supplied occupancy and queue lengths.
+        SimulationState currentState = initialState;
 
-        for (Zone zone : zones) {
-            if (zone.getId() == null) {
-                throw new IllegalArgumentException(
-                        "Every zone must have an ID"
-                );
-            }
-
-            if (zone.getCapacity() < 0
-                    || zone.getInitialVisitors() < 0
-                    || zone.getInitialVisitors() > zone.getCapacity()) {
-                throw new IllegalArgumentException(
-                        "Invalid initial occupancy or capacity for zone "
-                                + zone.getId()
-                );
-            }
-
-            capacities.put(zone.getId(), zone.getCapacity());
-        }
-
-        // Keep event arrivals waiting outside the zone separate from
-        // corridor queues handled by CrowdSimulationEngine.
+        // Event-arrival waiting counts are tracked separately during this run.
         Map<Integer, Integer> waitingArrivals = new HashMap<>();
-
         for (Zone zone : zones) {
             waitingArrivals.put(zone.getId(), 0);
         }
 
-        SimulationState currentState = new SimulationState(
-                crowdSimulationEngine.initializeOccupancy(zones),
-                createEmptyQueues(zones)
-        );
-
         List<SimulationSnapshotRecord> history = new ArrayList<>();
 
-        // Minute zero contains the initial state, before scheduled arrivals.
         addSnapshots(history, currentState, waitingArrivals, 0);
 
         for (int minute = 1; minute <= durationMinutes; minute++) {
 
-            // First, run one minute of the existing corridor movement.
-            // Event arrivals from this minute are not included yet.
             List<SimulationSnapshotRecord> movementRecords =
                     crowdSimulationEngine.runSimulationWithMultipleConnections(
                             zones,
@@ -107,17 +138,14 @@ public class EventDrivenSimulationRunner {
                             currentState
                     );
 
-            currentState = stateFromMinuteOne(movementRecords, zones);
-
-            // Admit previously waiting event arrivals into newly available
-            // capacity before processing new arrivals.
-            currentState = admitWaitingArrivals(
-                    currentState,
-                    waitingArrivals,
-                    capacities
+            currentState = stateFromMinuteOne(
+                    movementRecords, zones, currentState
             );
 
-            // Add this minute's scheduled arrivals exactly once.
+            currentState = admitWaitingArrivals(
+                    currentState, waitingArrivals, capacities
+            );
+
             Map<Integer, Integer> arrivalsThisMinute =
                     arrivalSchedule.getOrDefault(minute, Map.of());
 
@@ -143,8 +171,7 @@ public class EventDrivenSimulationRunner {
                         currentState.occupancy().getOrDefault(zoneId, 0);
 
                 int availableSpace = Math.max(
-                        0,
-                        capacities.get(zoneId) - currentOccupancy
+                        0, capacities.get(zoneId) - currentOccupancy
                 );
 
                 int admitted = Math.min(arrivals, availableSpace);
@@ -153,10 +180,7 @@ public class EventDrivenSimulationRunner {
                 Map<Integer, Integer> updatedOccupancy =
                         new HashMap<>(currentState.occupancy());
 
-                updatedOccupancy.put(
-                        zoneId,
-                        currentOccupancy + admitted
-                );
+                updatedOccupancy.put(zoneId, currentOccupancy + admitted);
 
                 currentState = new SimulationState(
                         updatedOccupancy,
@@ -166,23 +190,51 @@ public class EventDrivenSimulationRunner {
                 waitingArrivals.merge(zoneId, waiting, Integer::sum);
             }
 
-            // Persistable snapshot data includes both types of waiting visitors.
             addSnapshots(history, currentState, waitingArrivals, minute);
         }
 
         return history;
     }
 
-    private SimulationState stateFromMinuteOne(
-            List<SimulationSnapshotRecord> records,
-            List<Zone> zones) {
-
-        Map<Integer, Integer> occupancy = new HashMap<>();
-        Map<Integer, Integer> queues = new HashMap<>();
+    private Map<Integer, Integer> validateZones(List<Zone> zones) {
+        Map<Integer, Integer> capacities = new HashMap<>();
 
         for (Zone zone : zones) {
-            occupancy.put(zone.getId(), zone.getInitialVisitors());
-            queues.put(zone.getId(), 0);
+            if (zone.getId() == null) {
+                throw new IllegalArgumentException(
+                        "Every zone must have an ID"
+                );
+            }
+
+            if (zone.getCapacity() < 0
+                    || zone.getInitialVisitors() < 0
+                    || zone.getInitialVisitors() > zone.getCapacity()) {
+                throw new IllegalArgumentException(
+                        "Invalid initial occupancy or capacity for zone "
+                                + zone.getId()
+                );
+            }
+
+            capacities.put(zone.getId(), zone.getCapacity());
+        }
+
+        return capacities;
+    }
+
+    private SimulationState stateFromMinuteOne(
+            List<SimulationSnapshotRecord> records,
+            List<Zone> zones,
+            SimulationState previousState) {
+
+        Map<Integer, Integer> occupancy =
+                new HashMap<>(previousState.occupancy());
+
+        Map<Integer, Integer> queues =
+                new HashMap<>(previousState.queueLengths());
+
+        for (Zone zone : zones) {
+            occupancy.putIfAbsent(zone.getId(), zone.getInitialVisitors());
+            queues.putIfAbsent(zone.getId(), 0);
         }
 
         for (SimulationSnapshotRecord record : records) {
@@ -216,8 +268,7 @@ public class EventDrivenSimulationRunner {
             int currentOccupancy = occupancy.getOrDefault(zoneId, 0);
 
             int availableSpace = Math.max(
-                    0,
-                    capacities.get(zoneId) - currentOccupancy
+                    0, capacities.get(zoneId) - currentOccupancy
             );
 
             int admitted = Math.min(waiting, availableSpace);
@@ -250,7 +301,8 @@ public class EventDrivenSimulationRunner {
 
             int zoneId = entry.getKey();
 
-            int totalQueue = state.queueLengths().getOrDefault(zoneId, 0)
+            int totalQueue = state.queueLengths()
+                    .getOrDefault(zoneId, 0)
                     + waitingArrivals.getOrDefault(zoneId, 0);
 
             history.add(new SimulationSnapshotRecord(

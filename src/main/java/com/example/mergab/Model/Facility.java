@@ -24,7 +24,7 @@ public class Facility {
     private String name;
 
     @Column(columnDefinition = "varchar(20) not null")
-    private String type; // RESTROOM, PRAYER_ROOM, EXIT
+    private String type; // RESTROOM, PRAYER_ROOM, EXIT, ENTRANCE
 
     @Column(columnDefinition = "varchar(10) not null")
     private String gender; // MALE, FEMALE, BOTH
