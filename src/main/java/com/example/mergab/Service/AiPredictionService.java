@@ -1,4 +1,4 @@
-﻿package com.example.mergab.Service;
+package com.example.mergab.Service;
 
 import com.example.mergab.Model.SimulationSnapshot;
 import org.springframework.http.HttpEntity;

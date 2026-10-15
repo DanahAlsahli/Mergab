@@ -26,7 +26,46 @@ public class Configuration {
                         sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/visitor/register","/api/v1/prayer/today")
+                        .requestMatchers("/api/v1/visitor/register", "/api/v1/prayer/today",
+
+                                // Public read-only APIs
+                                "/api/v1/zone/get",
+                                "/api/v1/zone/get-by-id/{id}",
+                                "/api/v1/zone/get-available",
+                                "/api/v1/zone/get-occupancy/{id}",
+                                "/api/v1/zone-visit/occupancy/{zoneId}",
+                                "/api/v1/zone-connection/get",
+                                "/api/v1/expo-event/get",
+                                "/api/v1/expo-event/get-upcoming",
+                                "/api/v1/expo-event/get-today",
+
+                                "/api/v1/expo-event/get-by-id/{id}",
+                                "/api/v1/expo-event/get-by-zone/{zoneId}",
+                                "/api/v1/zone/get-zone-by-name/{name}",
+                                "/api/v1/zone-connection/get-by-id/{id}",
+                                "/api/v1/zone-connection/get-outgoing/{zoneId}",
+                                "/api/v1/zone-connection/get-by-zone/{zoneId}",
+                                "/api/v1/facility/get",
+                                "/api/v1/facility/get-by-id/{id}",
+                                "/api/v1/facility/get-by-zone/{zoneId}",
+
+
+                                // Public pages
+                                "/",
+                                "/login",
+                                "/register",
+                                "/forbidden",
+                                "/visitor/map",
+                                "/visitor/events",
+
+                                // Static resources
+                                "/css/**",
+                                "/js/**",
+                                "/img/**",
+                                "/images/**",
+                                "/map/**",
+                                "/assets/**"
+                           )
                         .permitAll()
 
                         // Admin only
@@ -39,7 +78,9 @@ public class Configuration {
                                 "/api/v1/organizer/get-all",
                                 "/api/v1/organizer/delete/{id}",
                                 "/api/v1/organizer/register",
-                                "/api/v1/visitor/get-all"
+                                "/api/v1/visitor/get-all",
+                                "/admin",
+                                "/admin/users"
                         ).hasAuthority("ADMIN")
 
                         .requestMatchers("/api/v1/organizer/update-my-phone",
@@ -96,7 +137,13 @@ public class Configuration {
                                 "/api/v1/facility/update/{id}",
                                 "/api/v1/facility/delete/{id}",
                                 "/api/v1/ai/predict/{simulationId}/{zoneId}",
-                                "/api/v1/ai/analyze/{simulationId}/{zoneId}")
+                                "/api/v1/ai/analyze/{simulationId}/{zoneId}",
+                                "/organizer/dashboard",
+                                "/organizer/zones",
+                                "/organizer/connections",
+                                "/organizer/events",
+                                "/organizer/simulations",
+                                "/organizer/reports")
                         .hasAuthority("ORGANIZER")
 
 
@@ -104,7 +151,10 @@ public class Configuration {
                                 "/api/v1/visitor/update-my-info",
                                 "/api/v1/visitor/my-qr-code",
                                 "/api/v1/prayer/my-alert",
-                                "/api/v1/prayer/my-alert/seen/{prayer}"
+                                "/api/v1/prayer/my-alert/seen/{prayer}",
+                                "/visitor",
+                                "/visitor/visit",
+                                "/visitor/account"
                         ).hasAuthority("VISITOR")
 
                         .requestMatchers(
@@ -112,26 +162,8 @@ public class Configuration {
                                 "/api/v1/user/update-my-account",
                                 "/api/v1/user/change-password",
                                 "/api/v1/user/delete-my-account",
-                                "/api/v1/expo-event/get",
                                 "/api/v1/expo-event/get-by-organizer/{organizerId}",
-                                "/api/v1/expo-event/get-by-id/{id}",
-                                "/api/v1/expo-event/get-by-zone/{zoneId}",
-                                "/api/v1/expo-event/get-upcoming",
-                                "/api/v1/expo-event/get-today",
                                 "/api/v1/expo-event/route-to-event/{eventId}/{fromZoneId}",
-                                "/api/v1/zone/get",
-                                "/api/v1/zone/get-zone-by-name/{name}",
-                                "/api/v1/zone/get-by-id/{id}",
-                                "/api/v1/zone/get-available",
-                                "/api/v1/zone/get-occupancy/{id}",
-                                "/api/v1/zone-connection/get",
-                                "/api/v1/zone-connection/get-by-id/{id}",
-                                "/api/v1/zone-connection/get-outgoing/{zoneId}",
-                                "/api/v1/zone-connection/get-by-zone/{zoneId}",
-                                "/api/v1/zone-visit/occupancy/{zoneId}",
-                                "/api/v1/facility/get",
-                                "/api/v1/facility/get-by-id/{id}",
-                                "/api/v1/facility/get-by-zone/{zoneId}",
                                 "/api/v1/facility/nearest",
                                 "/api/v1/facility/nearest-map"
                         ).hasAnyAuthority("ADMIN", "ORGANIZER", "VISITOR")
