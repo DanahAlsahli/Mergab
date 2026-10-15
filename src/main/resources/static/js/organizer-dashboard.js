@@ -12,7 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const $ = id => document.getElementById(id);
 
-    let expoMap = null;
 
     // Account & logout
     $("organizerUserName").textContent =
@@ -133,156 +132,65 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    // Read saved zone boundaries from the database
-    function parseBoundary(value) {
-        try {
-            const points = typeof value === "string"
-                ? JSON.parse(value)
-                : value;
 
-            if (!Array.isArray(points) || points.length < 3) {
-                return [];
-            }
+    // ======================================
+    // SHARED LIVE MAP
+    // ======================================
 
-            const valid = points.every(point =>
-                Array.isArray(point) &&
-                point.length === 2 &&
-                point.every(number =>
-                    typeof number === "number" &&
-                    Number.isFinite(number) &&
-                    number >= 0 &&
-                    number <= 100
-                )
-            );
+    function startSharedMap() {
 
-            return valid ? points : [];
-        } catch (error) {
-            return [];
-        }
-    }
+        MergabMap.mount("#organizerExpoMap", {
 
-    // Draw real saved polygons over the interactive map
-    function drawZoneBoundaries(zones) {
-        const container = $("organizerExpoMap");
-        const svg = container.querySelector(".mqm-isvg");
-
-        if (!svg) return;
-
-        svg.querySelector("#dashboardBoundaryLayer")?.remove();
-
-        const namespace = "http://www.w3.org/2000/svg";
-        const layer = document.createElementNS(namespace, "g");
-
-        layer.id = "dashboardBoundaryLayer";
-        layer.setAttribute("pointer-events", "none");
-
-        svg.prepend(layer);
-
-        zones.forEach(zone => {
-            const points = parseBoundary(zone.boundaryPoints);
-
-            if (points.length < 3) return;
-
-            const polygon = document.createElementNS(
-                namespace,
-                "polygon"
-            );
-
-            polygon.setAttribute(
-                "points",
-                points.map(point => point.join(",")).join(" ")
-            );
-
-            polygon.setAttribute("fill", "#247C59");
-            polygon.setAttribute("fill-opacity", "0.40");
-            polygon.setAttribute("stroke", "#247C59");
-            polygon.setAttribute("stroke-width", "1.2");
-            polygon.setAttribute("stroke-linejoin", "round");
-            polygon.setAttribute(
-                "vector-effect",
-                "non-scaling-stroke"
-            );
-            polygon.setAttribute("pointer-events", "none");
-
-            layer.appendChild(polygon);
-        });
-    }
-
-    // Build the map from DB coordinates, not fixed demo zones
-    function renderMap(zones, counts, liveAvailable) {
-        const container = $("organizerExpoMap");
-
-        if (expoMap) {
-            expoMap.destroy();
-            expoMap = null;
-        }
-
-        container.replaceChildren();
-
-        const positionedZones = zones.filter(zone =>
-            zone.mapX != null &&
-            zone.mapY != null &&
-            Number.isFinite(Number(zone.mapX)) &&
-            Number.isFinite(Number(zone.mapY))
-        );
-
-
-        const mapZones = positionedZones.map(zone => ({
-            key: `zone-${zone.id}`,
-            id: zone.id,
-            name: {
-                ar: zone.name,
-                en: zone.name
-            },
-            x: Number(zone.mapX),
-            y: Number(zone.mapY)
-        }));
-
-        expoMap = MirqabMap.create("#organizerExpoMap", {
-            mode: "image",
             lang: "ar",
-            demo: false,
-            heat: true,
-            matchBy: "id",
-            fields: {
-                count: "liveVisitors"
-            },
-            imageFit: "contain",
-            imageLayout: {
-                src: "/img/map/expo-map-concept.jpg",
-                zones: mapZones,
-                hub: null,
-                edges: [],
-                metersPerUnit: 8
-            },
-            onSelect: () => {
+
+            refreshMs: 30000,
+
+            hideLocation: true,
+
+            autoOccupancy: false,
+
+            controls: true,
+
+            onSelect() {
                 window.location.href = "/organizer/zones";
+            },
+
+            onData(zones, connections, mapInstance) {
+
+                $("totalZones").textContent =
+                    zones.length.toLocaleString("ar-SA");
+
+                // Preserve actual QR-based occupancy
+                loadZoneData(zones, mapInstance)
+                    .catch(error => {
+
+                        console.error(
+                            "Failed to load live occupancy:",
+                            error
+                        );
+
+                        $("totalVisitors").textContent = "—";
+
+                        showEmpty(
+                            $("zoneOccupancy"),
+                            "تعذر تحميل الإشغال الحالي."
+                        );
+                    });
+            },
+
+            onError(error) {
+                console.error(
+                    "Failed to refresh organizer map:",
+                    error
+                );
             }
         });
-
-        // Organizer location is unknown; don't show "You are here"
-        container.querySelectorAll(
-            ".mqm-ime, .mqm-ime-label"
-        ).forEach(element => {
-            element.style.display = "none";
-        });
-
-        // Only display percentages when live data was retrieved
-        if (liveAvailable) {
-            expoMap.setOccupancy(
-                positionedZones.map(zone => ({
-                    ...zone,
-                    liveVisitors:
-                        counts.get(String(zone.id)) ?? 0
-                }))
-            );
-        }
-        // Draw the saved zone areas
-        drawZoneBoundaries(zones);
     }
+
+
 
     // Load actual active QR check-ins for every zone
-    async function loadZoneData(zones) {
+    async function loadZoneData(zones, mapInstance) {
         const results = await Promise.allSettled(
             zones.map(zone =>
                 getJSON(
@@ -306,7 +214,20 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
-        renderMap(zones, counts, allAvailable);
+
+        // Update map from real active check-ins only
+        if (allAvailable && mapInstance) {
+
+            mapInstance.setOccupancy(
+                zones.map(zone => ({
+                    ...zone,
+                    currentCount:
+                        counts.get(String(zone.id)) ?? 0
+                }))
+            );
+        }
+
+
 
         if (allAvailable) {
             const total = [...counts.values()].reduce(
@@ -373,33 +294,14 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+
     async function loadDashboard() {
-        const [zoneResult, eventResult, simResult] =
+
+        const [eventResult, simResult] =
             await Promise.allSettled([
-                getJSON("/api/v1/zone/get"),
                 getJSON("/api/v1/expo-event/get-upcoming"),
                 getJSON("/api/v1/simulation/get-all", true)
             ]);
-
-        // Zones & map
-        if (zoneResult.status === "fulfilled") {
-            const zones = zoneResult.value;
-
-            $("totalZones").textContent =
-                zones.length.toLocaleString("ar-SA");
-
-            await loadZoneData(zones);
-        } else {
-            $("totalZones").textContent = "—";
-            $("totalVisitors").textContent = "—";
-
-            renderMap([], new Map(), false);
-
-            showEmpty(
-                $("zoneOccupancy"),
-                "تعذر تحميل المناطق."
-            );
-        }
 
         // Events
         if (eventResult.status === "fulfilled") {
@@ -427,8 +329,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Always display the Expo map, even with no zones
-    renderMap([], new Map(), false);
+
+    startSharedMap();
 
     loadDashboard().catch(error => {
         console.error("Organizer dashboard failed:", error);

@@ -20,11 +20,14 @@
 
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/organizer.css">
+  <link rel="stylesheet" href="/css/organizer-ai-warnings.css">
   <link rel="stylesheet" href="/map/mirqab-map.css">
 
   <script defer src="/js/auth.js"></script>
   <script defer src="/map/mirqab-map.js"></script>
+  <script defer src="/js/mergab-map-data.js"></script>
   <script defer src="/js/organizer-dashboard.js"></script>
+  <script defer src="/js/organizer-ai-warnings.js"></script>
 </head>
 
 <body class="organizer-page">
@@ -193,6 +196,164 @@
 
         </div>
       </div>
+
+
+      <!-- AI EARLY WARNINGS -->
+      <section class="organizer-panel ai-warnings-panel"
+               aria-labelledby="aiWarningsTitle">
+
+        <div class="organizer-panel-heading ai-warnings-heading">
+          <div>
+            <span class="organizer-eyebrow">
+                MERGAB INTELLIGENCE
+            </span>
+
+            <h2 id="aiWarningsTitle">
+                <span class="material-symbols-rounded">
+                    psychology
+                </span>
+              الإنذارات والتنبؤات الذكية
+            </h2>
+
+            <p>
+              توقّع ازدحام مناطق إكسبو باستخدام
+              نتائج المحاكاة والذكاء الاصطناعي.
+            </p>
+          </div>
+
+          <button type="button"
+                  id="refreshAiWarnings"
+                  class="ai-refresh-button"
+                  disabled>
+            <span class="material-symbols-rounded">
+                refresh
+            </span>
+            تحديث التحليل
+          </button>
+        </div>
+
+        <!-- SIMULATION SELECTOR -->
+        <div class="ai-warnings-toolbar">
+
+          <div class="ai-simulation-filter">
+            <label for="aiSimulationSelect">
+              المحاكاة المراد تحليلها
+            </label>
+
+            <select id="aiSimulationSelect">
+              <option value="">
+                جاري تحميل المحاكاة...
+              </option>
+            </select>
+          </div>
+
+          <div class="ai-analysis-info">
+            <span class="material-symbols-rounded">
+                schedule
+            </span>
+
+            <span id="aiPredictionHorizon">
+                التنبؤ: —
+            </span>
+          </div>
+
+        </div>
+
+        <!-- AI SUMMARY -->
+        <div class="ai-summary-grid">
+
+          <article class="ai-summary-card danger">
+            <span class="material-symbols-rounded">
+                warning
+            </span>
+
+            <div>
+              <small>ازدحام مرتفع متوقع</small>
+              <strong id="aiHighRiskCount">—</strong>
+              <span>مناطق</span>
+            </div>
+          </article>
+
+          <article class="ai-summary-card warning">
+            <span class="material-symbols-rounded">
+                notification_important
+            </span>
+
+            <div>
+              <small>ازدحام متوسط متوقع</small>
+              <strong id="aiMediumRiskCount">—</strong>
+              <span>مناطق</span>
+            </div>
+          </article>
+
+          <article class="ai-summary-card safe">
+            <span class="material-symbols-rounded">
+                verified
+            </span>
+
+            <div>
+              <small>ازدحام منخفض متوقع</small>
+              <strong id="aiLowRiskCount">—</strong>
+              <span>مناطق</span>
+            </div>
+          </article>
+
+          <article class="ai-summary-card neutral">
+            <span class="material-symbols-rounded">
+                database
+            </span>
+
+            <div>
+              <small>بيانات غير كافية أو محدودة</small>
+              <strong id="aiInsufficientCount">—</strong>
+              <span>مناطق</span>
+            </div>
+          </article>
+
+        </div>
+
+        <!-- ZONE WARNINGS -->
+        <div class="ai-warnings-list-header">
+          <div>
+            <h3>تحليل المناطق والتوصيات</h3>
+
+            <p>
+              المناطق مرتبة حسب مستوى الخطورة المتوقع.
+            </p>
+          </div>
+
+          <span id="aiAnalyzedZones"
+                class="ai-analyzed-count">
+            —
+        </span>
+        </div>
+
+        <div id="aiWarningsList"
+             class="ai-warnings-list"
+             aria-live="polite">
+
+          <p class="organizer-empty">
+            اختاري محاكاة مكتملة لعرض التنبؤات.
+          </p>
+
+        </div>
+
+        <!-- SOURCE NOTE -->
+        <div class="ai-source-note">
+        <span class="material-symbols-rounded">
+            info
+        </span>
+
+          <p>
+            هذه توقعات مبنية على نتائج المحاكاة
+            المختارة، وليست قياسات مباشرة لحشود
+            إكسبو الحالية.
+          </p>
+        </div>
+
+      </section>
+      <!-- END AI EARLY WARNINGS -->
+
 
       <!-- QUICK ACTIONS -->
       <section class="organizer-quick-actions">

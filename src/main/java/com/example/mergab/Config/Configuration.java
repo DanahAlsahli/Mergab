@@ -147,7 +147,8 @@ public class Configuration {
                                 "/api/v1/facility/update/{id}",
                                 "/api/v1/facility/delete/{id}",
                                 "/api/v1/ai/predict/{simulationId}/{zoneId}",
-                                "/api/v1/ai/analyze/{simulationId}/{zoneId}")
+                                "/api/v1/ai/analyze/{simulationId}/{zoneId}",
+                                "/api/v1/ai/early-warnings/{simulationId}")
                         .hasAuthority("ORGANIZER")
 
 
