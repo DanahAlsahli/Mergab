@@ -1328,4 +1328,34 @@ public class CrowdSimulationEngineTest {
         return zone;
     }
 
+
+    @Test
+    void shouldExposeConsumedCorridorBudgetForLaterMovementPhases() {
+        Zone source = new Zone();
+        source.setId(101);
+        source.setName("Source");
+        source.setCapacity(20);
+        source.setInitialVisitors(10);
+        Zone destination = new Zone();
+        destination.setId(102);
+        destination.setName("Destination");
+        destination.setCapacity(20);
+        destination.setInitialVisitors(0);
+
+        ZoneConnection connection = new ZoneConnection();
+        connection.setId(101);
+        connection.setFromZone(source);
+        connection.setToZone(destination);
+        connection.setMaxVisitorsPerMinute(1);
+        CrowdSimulationEngine engine = new CrowdSimulationEngine();
+        Map<ZoneConnection, Integer> sharedBudget = engine.createCorridorBudget(List.of(connection));
+
+        engine.runSimulationWithMultipleConnections(
+                List.of(source, destination), List.of(connection), 1,
+                new SimulationState(Map.of(101, 10, 102, 0), Map.of(101, 0, 102, 0)),
+                Map.of(), sharedBudget);
+
+        assertEquals(0, sharedBudget.get(connection),
+                "Later event/prayer movement must see that this corridor's minute budget was consumed");
+    }
 } // class end

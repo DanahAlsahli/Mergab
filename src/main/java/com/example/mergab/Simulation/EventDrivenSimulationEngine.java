@@ -88,45 +88,54 @@ public class EventDrivenSimulationEngine {
             LocalDateTime eventStart = event.getStartDateTime();
 
             /*
-             * Divide the FULL arrival window into minute slots.
-             * Calculate each slot's allocation from cumulative demand,
-             * so rounding never causes total scheduled demand to exceed
-             * expectedDemand.
+             * If the simulation starts after the arrival window has opened,
+             * the arrivals that would have occurred before the simulation began
+             * are redistributed over the remaining pre-event minutes. Otherwise
+             * demand was silently lost whenever a simulation started late.
+             * If the event is beyond the simulation horizon, only slots actually
+             * inside the horizon are scheduled, preserving the original share.
              */
-            for (int slot = 0; slot < arrivalWindowMinutes; slot++) {
-                LocalDateTime slotTime = windowStart.plusMinutes(slot);
-
-                // Arrivals are scheduled before event start, never at start.
-                if (slotTime.isBefore(timelineStart)
-                        || !slotTime.isBefore(timelineEnd)
-                        || !slotTime.isBefore(eventStart)) {
-                    continue;
+            LocalDateTime firstEligible = windowStart.isBefore(timelineStart)
+                    ? timelineStart : windowStart;
+            LocalDateTime lastEligibleExclusive = eventStart.isBefore(timelineEnd)
+                    ? eventStart : timelineEnd;
+            if (!firstEligible.isBefore(lastEligibleExclusive)) {
+                // If the simulation begins after the entire pre-event window and
+                // the event is already starting/active, there are no future
+                // pre-event slots left. Admit the unrepresented expected demand
+                // in the first simulated minute instead of silently dropping it.
+                if (windowStart.isBefore(timelineStart)
+                        && !eventStart.isAfter(timelineStart)
+                        && event.getEndDateTime().isAfter(timelineStart)) {
+                    arrivals.computeIfAbsent(1, key -> new HashMap<>())
+                            .merge(zoneId, demand, Integer::sum);
                 }
+                continue;
+            }
+
+            int eligibleSlots = (int) Duration.between(
+                    firstEligible, lastEligibleExclusive).toMinutes();
+            boolean windowAlreadyStarted = windowStart.isBefore(timelineStart);
+            int allocationSlots = windowAlreadyStarted
+                    ? eligibleSlots : arrivalWindowMinutes;
+
+            for (int slot = 0; slot < eligibleSlots; slot++) {
+                LocalDateTime slotTime = firstEligible.plusMinutes(slot);
+                int allocationSlot = windowAlreadyStarted
+                        ? slot
+                        : (int) Duration.between(windowStart, slotTime).toMinutes();
 
                 long previousCumulative =
-                        ((long) slot * demand) / arrivalWindowMinutes;
-
+                        ((long) allocationSlot * demand) / allocationSlots;
                 long nextCumulative =
-                        ((long) (slot + 1) * demand) / arrivalWindowMinutes;
+                        ((long) (allocationSlot + 1) * demand) / allocationSlots;
+                int visitorsThisSlot = (int) (nextCumulative - previousCumulative);
+                if (visitorsThisSlot == 0) continue;
 
-                int visitorsThisSlot =
-                        (int) (nextCumulative - previousCumulative);
-
-                if (visitorsThisSlot == 0) {
-                    continue;
-                }
-
-                /*
-                 * Minute 1 is the first interval after timelineStart.
-                 * A slot at timelineStart belongs to minute 1.
-                 */
-                int simulationMinute =
-                        (int) Duration.between(
-                                timelineStart, slotTime).toMinutes() + 1;
-
-                arrivals
-                        .computeIfAbsent(
-                                simulationMinute, key -> new HashMap<>())
+                // A slot at the simulation start belongs to minute one.
+                int simulationMinute = (int) Duration.between(
+                        timelineStart, slotTime).toMinutes() + 1;
+                arrivals.computeIfAbsent(simulationMinute, key -> new HashMap<>())
                         .merge(zoneId, visitorsThisSlot, Integer::sum);
             }
         }

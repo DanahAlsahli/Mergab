@@ -346,8 +346,29 @@ public class CrowdSimulationEngine {
             SimulationState initialState,
             Map<Integer, Integer> reservedSourceVisitors) {
 
+        return runSimulationWithMultipleConnections(
+                zones, connections, durationMinutes, initialState,
+                reservedSourceVisitors, createCorridorBudget(connections));
+    }
+
+    /**
+     * Runs ordinary movement against a shared per-minute corridor budget.
+     * The supplied budget is decremented in place so event and prayer cohorts
+     * processed later in the same minute cannot reuse throughput already spent.
+     */
+    public List<SimulationSnapshotRecord> runSimulationWithMultipleConnections(
+            List<Zone> zones,
+            List<ZoneConnection> connections,
+            int durationMinutes,
+            SimulationState initialState,
+            Map<Integer, Integer> reservedSourceVisitors,
+            Map<ZoneConnection, Integer> remainingCorridorCapacity) {
+
         validateSimulationInputs(zones, connections, durationMinutes,
                 initialState, reservedSourceVisitors);
+        if (remainingCorridorCapacity == null) {
+            throw new IllegalArgumentException("Corridor capacity budget cannot be null");
+        }
 
         SimulationState currentState = initialState;
         List<SimulationSnapshotRecord> history = new ArrayList<>();
@@ -380,9 +401,11 @@ public class CrowdSimulationEngine {
             Map<Integer, Integer> nextQueues =
                     new HashMap<>(startOfMinute.queueLengths());
 
-            // Each connection has its own throughput budget for this minute.
-            Map<ZoneConnection, Integer> remainingCorridorCapacity =
-                    new HashMap<>();
+            // The caller supplies the shared per-minute corridor budget. Reset
+            // it from connection limits for each minute, preserving the same map
+            // instance so later event/prayer phases see the remaining capacity.
+            remainingCorridorCapacity.clear();
+            remainingCorridorCapacity.putAll(createCorridorBudget(connections));
 
             // Calculate available space for every zone and initialize queues.
             for (Zone zone : zones) {
@@ -406,118 +429,24 @@ public class CrowdSimulationEngine {
                 );
             }
 
-            // FIRST: serve each destination's shared queue only once.
-            // Waiting visitors may use any incoming corridor, subject to that
-            // corridor's remaining throughput and the destination's free space.
-            for (Zone destination : zones) {
-                int destinationId = destination.getId();
-                int waitingVisitors =
-                        startOfMinute.queueLengths().getOrDefault(destinationId, 0);
-                int queueServed = 0;
-
-                for (ZoneConnection connection : connections) {
-                    if (waitingVisitors == 0) {
-                        break;
-                    }
-
-                    if (!connection.getToZone().getId().equals(destinationId)) {
-                        continue;
-                    }
-
-                    int corridorCapacityLeft =
-                            remainingCorridorCapacity.getOrDefault(connection, 0);
-                    int availableSpace =
-                            remainingDestinationSpace.getOrDefault(destinationId, 0);
-
-                    int queuedToMove = Math.min(
-                            waitingVisitors,
-                            Math.min(corridorCapacityLeft, availableSpace)
-                    );
-
-                    if (queuedToMove <= 0) {
-                        continue;
-                    }
-
-                    waitingVisitors -= queuedToMove;
-                    queueServed += queuedToMove;
-
-                    remainingCorridorCapacity.put(
-                            connection,
-                            corridorCapacityLeft - queuedToMove
-                    );
-                    remainingDestinationSpace.put(
-                            destinationId,
-                            availableSpace - queuedToMove
-                    );
-                    nextOccupancy.put(
-                            destinationId,
-                            nextOccupancy.getOrDefault(destinationId, 0) + queuedToMove
-                    );
-                }
-
-                // Remove only the queued visitors who actually entered.
-                nextQueues.put(
-                        destinationId,
-                        startOfMinute.queueLengths().getOrDefault(destinationId, 0)
-                                - queueServed
-                );
-            }
-
-            // SECOND: move new visitors using each corridor's remaining capacity.
+            // Move only visitors physically present at the source. A full destination
+            // blocks movement; it must not teleport visitors into an unlocated queue.
+            // Use the start-of-minute source budget to prevent multi-hop movement.
+            // Routed event cohorts are reserved and moved by their own route planner.
             for (ZoneConnection connection : connections) {
                 int fromId = connection.getFromZone().getId();
                 int toId = connection.getToZone().getId();
-
-                int corridorCapacityLeft =
-                        remainingCorridorCapacity.getOrDefault(connection, 0);
-                int visitorsAvailable =
-                        remainingSourceVisitors.getOrDefault(fromId, 0);
-
-                // Existing queues have priority; request up to 10 new visitors.
-                int newVisitorsRequested = Math.min(
-                        10,
-                        Math.min(visitorsAvailable, corridorCapacityLeft)
-                );
-
-                if (newVisitorsRequested <= 0) {
-                    continue;
-                }
-
-                remainingCorridorCapacity.put(
-                        connection,
-                        corridorCapacityLeft - newVisitorsRequested
-                );
-
-                int availableSpace =
-                        remainingDestinationSpace.getOrDefault(toId, 0);
-                int newVisitorsEntering =
-                        Math.min(newVisitorsRequested, availableSpace);
-                int newVisitorsWaiting =
-                        newVisitorsRequested - newVisitorsEntering;
-
-                // Under the current queue rule, visitors unable to enter leave
-                // the source and join the destination's shared queue.
-                remainingSourceVisitors.put(
-                        fromId,
-                        visitorsAvailable - newVisitorsRequested
-                );
-                remainingDestinationSpace.put(
-                        toId,
-                        availableSpace - newVisitorsEntering
-                );
-
-                nextOccupancy.put(
-                        fromId,
-                        nextOccupancy.getOrDefault(fromId, 0) - newVisitorsRequested
-                );
-                nextOccupancy.put(
-                        toId,
-                        nextOccupancy.getOrDefault(toId, 0) + newVisitorsEntering
-                );
-                nextQueues.put(
-                        toId,
-                        nextQueues.getOrDefault(toId, 0) + newVisitorsWaiting
-                );
+                if (fromId == toId) continue;
+                int available = remainingSourceVisitors.getOrDefault(fromId, 0);
+                int corridorLeft = remainingCorridorCapacity.getOrDefault(connection, 0);
+                int free = remainingDestinationSpace.getOrDefault(toId, 0);
+                int moved = Math.min(10, Math.min(available, Math.min(corridorLeft, free)));
+                if (moved <= 0) continue;
+                remainingSourceVisitors.put(fromId, available - moved);
+                remainingDestinationSpace.put(toId, free - moved);
+                remainingCorridorCapacity.put(connection, corridorLeft - moved);
+                nextOccupancy.merge(fromId, -moved, Integer::sum);
+                nextOccupancy.merge(toId, moved, Integer::sum);
             }
 
             currentState = new SimulationState(nextOccupancy, nextQueues);
@@ -527,6 +456,20 @@ public class CrowdSimulationEngine {
         return history;
     }
 
+
+    public Map<ZoneConnection, Integer> createCorridorBudget(
+            List<ZoneConnection> connections) {
+        Map<ZoneConnection, Integer> budget = new HashMap<>();
+        if (connections == null) return budget;
+        for (ZoneConnection connection : connections) {
+            if (connection != null) {
+                budget.put(connection, Math.max(0,
+                        connection.getMaxVisitorsPerMinute() == null
+                                ? 0 : connection.getMaxVisitorsPerMinute()));
+            }
+        }
+        return budget;
+    }
 
     /**
      * Reject invalid simulation inputs before creating snapshots or moving visitors.

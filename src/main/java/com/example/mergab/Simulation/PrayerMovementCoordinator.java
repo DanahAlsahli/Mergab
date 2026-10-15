@@ -44,13 +44,33 @@ public class PrayerMovementCoordinator {
             String simulationDate,
             Map<Integer, Integer> alreadyReservedVisitors) {
 
+        return advanceMinute(state, zones, connections, capacities, prayerTimes,
+                minuteOfDay, simulationDate, alreadyReservedVisitors,
+                createCorridorBudget(connections));
+    }
+
+    /** Advances prayer cohorts using the same corridor budget as all other
+     * movement during this simulated minute. */
+    public SimulationState advanceMinute(
+            SimulationState state,
+            List<Zone> zones,
+            List<ZoneConnection> connections,
+            Map<Integer, Integer> capacities,
+            Map<String, String> prayerTimes,
+            int minuteOfDay,
+            String simulationDate,
+            Map<Integer, Integer> alreadyReservedVisitors,
+            Map<ZoneConnection, Integer> remainingCorridorCapacity) {
+
         Objects.requireNonNull(state, "Simulation state is required");
+        Objects.requireNonNull(remainingCorridorCapacity, "Corridor budget is required");
         if (prayerTimes == null || prayerTimes.isEmpty()) return state;
 
         Map<Integer, Zone> zonesById = new HashMap<>();
         for (Zone zone : zones) zonesById.put(zone.getId(), zone);
 
-        SimulationState current = moveCohorts(state, connections, capacities, minuteOfDay);
+        SimulationState current = moveCohorts(state, connections, capacities, minuteOfDay,
+                remainingCorridorCapacity);
         String[] prayerKeys = {"fajr", "dhuhr", "asr", "maghrib", "isha"};
         for (String key : prayerKeys) {
             String time = prayerTimes.get(key);
@@ -111,12 +131,9 @@ public class PrayerMovementCoordinator {
     }
 
     private SimulationState moveCohorts(SimulationState state, List<ZoneConnection> connections,
-                                        Map<Integer, Integer> capacities, int minuteOfDay) {
+                                        Map<Integer, Integer> capacities, int minuteOfDay,
+                                        Map<ZoneConnection, Integer> corridorRemaining) {
         Map<Integer, Integer> occupancy = new HashMap<>(state.occupancy());
-        Map<ZoneConnection, Integer> corridorRemaining = new HashMap<>();
-        for (ZoneConnection c : connections) {
-            corridorRemaining.put(c, Math.max(0, c.getMaxVisitorsPerMinute() == null ? 0 : c.getMaxVisitorsPerMinute()));
-        }
 
         for (Cohort cohort : new ArrayList<>(cohorts)) {
             if (cohort.count <= 0) continue;
@@ -157,6 +174,20 @@ public class PrayerMovementCoordinator {
         }
         cohorts.removeIf(c -> c.count <= 0);
         return new SimulationState(occupancy, state.queueLengths());
+    }
+
+    private Map<ZoneConnection, Integer> createCorridorBudget(List<ZoneConnection> connections) {
+        Map<ZoneConnection, Integer> budget = new HashMap<>();
+        if (connections != null) {
+            for (ZoneConnection connection : connections) {
+                if (connection != null) {
+                    budget.put(connection, Math.max(0,
+                            connection.getMaxVisitorsPerMinute() == null
+                                    ? 0 : connection.getMaxVisitorsPerMinute()));
+                }
+            }
+        }
+        return budget;
     }
 
     private boolean hasPassed(int arrivedAt, int now, int leaveAt) {

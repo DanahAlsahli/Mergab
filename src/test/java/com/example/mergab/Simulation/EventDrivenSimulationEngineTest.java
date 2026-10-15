@@ -249,4 +249,38 @@ class EventDrivenSimulationEngineTest {
                         List.of(event), simulationStart, 45, 5)
         );
     }
+
+    @Test
+    void shouldRedistributeMissedArrivalWindowAcrossRemainingMinutesWhenStartedLate() {
+        Zone zone = new Zone();
+        zone.setId(99);
+        zone.setCapacity(100);
+        zone.setInitialVisitors(0);
+        ExpoEvent event = new ExpoEvent();
+        event.setId(99);
+        event.setName("Late-start event");
+        event.setZone(zone);
+        event.setExpectedDemand(10);
+        event.setStartDateTime(LocalDateTime.of(2026, 10, 16, 10, 10));
+        event.setEndDateTime(LocalDateTime.of(2026, 10, 16, 11, 0));
+
+        Map<Integer, Map<Integer, Integer>> schedule = new EventDrivenSimulationEngine()
+                .scheduleArrivals(List.of(event), LocalDateTime.of(2026, 10, 16, 10, 5), 10, 30);
+
+        assertEquals(10, schedule.values().stream()
+                .mapToInt(byZone -> byZone.getOrDefault(99, 0)).sum());
+        assertTrue(schedule.keySet().stream().allMatch(minute -> minute >= 1 && minute <= 5));
+    }
+
+    @Test
+    void shouldNotDropDemandWhenSimulationStartsAtEventStart() {
+        ExpoEvent event = createEvent(7, 12,
+                simulationStart, simulationStart.plusMinutes(20));
+        Map<Integer, Map<Integer, Integer>> schedule = engine.scheduleArrivals(
+                List.of(event), simulationStart, 10, 30);
+        // The event fixture targets zone 7, so assertions must inspect zone 7.
+        assertEquals(12, schedule.values().stream()
+                .mapToInt(byZone -> byZone.getOrDefault(7, 0)).sum());
+        assertEquals(12, schedule.get(1).get(7));
+    }
 }

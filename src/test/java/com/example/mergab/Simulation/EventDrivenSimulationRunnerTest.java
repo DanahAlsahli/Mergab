@@ -569,4 +569,59 @@ class EventDrivenSimulationRunnerTest {
                 .orElseThrow();
     }
 
+
+    @Test
+    void shouldSendEventAttendeesTowardEntranceAfterEventEnds() {
+        Zone entrance = routeZone(1, "Entrance", 50, 0);
+        Zone corridor = routeZone(2, "Corridor", 50, 0);
+        Zone eventZone = routeZone(3, "Event Hall", 50, 0);
+        com.example.mergab.Model.Facility entranceFacility = new com.example.mergab.Model.Facility();
+        entranceFacility.setType("ENTRANCE");
+        entranceFacility.setZone(entrance);
+        entrance.setFacilities(new java.util.HashSet<>(java.util.Set.of(entranceFacility)));
+
+        List<com.example.mergab.Model.ZoneConnection> connections = List.of(
+                routeConnection(11, entrance, corridor, 10),
+                routeConnection(12, corridor, eventZone, 10),
+                routeConnection(13, eventZone, corridor, 10),
+                routeConnection(14, corridor, entrance, 10));
+        LocalDateTime start = LocalDateTime.of(2026, 10, 16, 10, 0);
+        ExpoEvent event = new ExpoEvent();
+        event.setId(11);
+        event.setName("Short event");
+        event.setZone(eventZone);
+        event.setExpectedDemand(3);
+        event.setStartDateTime(start.plusMinutes(3));
+        event.setEndDateTime(start.plusMinutes(6));
+
+        EventDrivenSimulationRunner runner = new EventDrivenSimulationRunner(
+                new CrowdSimulationEngine(), new EventDrivenSimulationEngine());
+        List<SimulationSnapshotRecord> snapshots = runner.runSimulation(
+                List.of(entrance, corridor, eventZone), connections, List.of(event), start, 12, 3, 42L);
+
+        assertEquals(0, snapshotAt(snapshots, 12, 1).occupancy());
+        assertEquals(0, snapshotAt(snapshots, 12, 2).occupancy());
+        assertEquals(0, snapshotAt(snapshots, 12, 3).occupancy());
+        assertTrue(snapshots.stream().allMatch(s -> s.occupancy() >= 0));
+    }
+
+    @Test
+    void shouldProduceTheSameSnapshotsForTheSameRandomSeed() {
+        Zone first = routeZone(1, "First", 2, 2);
+        Zone second = routeZone(2, "Second", 2, 2);
+        Zone destination = routeZone(3, "Destination", 1, 0);
+        List<com.example.mergab.Model.ZoneConnection> connections = List.of(
+                routeConnection(21, first, destination, 1),
+                routeConnection(22, second, destination, 1));
+        EventDrivenSimulationRunner runner = new EventDrivenSimulationRunner(
+                new CrowdSimulationEngine(), new EventDrivenSimulationEngine());
+        LocalDateTime start = LocalDateTime.of(2026, 10, 16, 10, 0);
+
+        List<SimulationSnapshotRecord> firstRun = runner.runSimulation(
+                List.of(first, second, destination), connections, List.of(), start, 5, 5, 1234L);
+        List<SimulationSnapshotRecord> secondRun = runner.runSimulation(
+                List.of(first, second, destination), connections, List.of(), start, 5, 5, 1234L);
+
+        assertEquals(firstRun, secondRun);
+    }
 }

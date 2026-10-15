@@ -59,9 +59,11 @@ class EventAndPrayerIntegrationTest {
         event.setEndDateTime(start.plusMinutes(30));
 
         PrayerTimesService prayerTimes = mock(PrayerTimesService.class);
-        when(prayerTimes.getTodayTimes()).thenReturn(Map.of(
+        Map<String, String> testPrayerTimes = Map.of(
                 "fajr", "04:30", "dhuhr", "12:00", "asr", "15:00",
-                "maghrib", "18:00", "isha", "19:30"));
+                "maghrib", "18:00", "isha", "19:30");
+        when(prayerTimes.getTodayTimes()).thenReturn(testPrayerTimes);
+        when(prayerTimes.getTimesForDate(start.toLocalDate())).thenReturn(testPrayerTimes);
 
         EventDrivenSimulationRunner runner = new EventDrivenSimulationRunner(
                 new CrowdSimulationEngine(), new EventDrivenSimulationEngine(), prayerTimes);

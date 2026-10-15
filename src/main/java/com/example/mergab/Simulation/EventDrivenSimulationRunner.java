@@ -7,6 +7,7 @@ import com.example.mergab.Model.ZoneConnection;
 import com.example.mergab.Service.PrayerTimesService;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.*;
 
 public class EventDrivenSimulationRunner {
@@ -43,6 +44,19 @@ public class EventDrivenSimulationRunner {
             int durationMinutes,
             int arrivalWindowMinutes) {
 
+        return runSimulation(zones, connections, events, simulationStart,
+                durationMinutes, arrivalWindowMinutes, 0L);
+    }
+
+    public List<SimulationSnapshotRecord> runSimulation(
+            List<Zone> zones,
+            List<ZoneConnection> connections,
+            List<ExpoEvent> events,
+            LocalDateTime simulationStart,
+            int durationMinutes,
+            int arrivalWindowMinutes,
+            long randomSeed) {
+
         validateInputs(zones, connections, events, simulationStart,
                 durationMinutes, arrivalWindowMinutes);
         Map<Integer, Integer> capacities = validateZones(zones);
@@ -54,7 +68,7 @@ public class EventDrivenSimulationRunner {
 
         return runSimulationFromState(zones, connections, events,
                 simulationStart, durationMinutes, arrivalWindowMinutes,
-                initialState, capacities);
+                initialState, capacities, randomSeed);
     }
 
     public List<SimulationSnapshotRecord> runSimulation(
@@ -66,24 +80,46 @@ public class EventDrivenSimulationRunner {
             int arrivalWindowMinutes,
             SimulationState initialState) {
 
+        return runSimulation(zones, connections, events, simulationStart,
+                durationMinutes, arrivalWindowMinutes, initialState, 0L);
+    }
+
+    public List<SimulationSnapshotRecord> runSimulation(
+            List<Zone> zones,
+            List<ZoneConnection> connections,
+            List<ExpoEvent> events,
+            LocalDateTime simulationStart,
+            int durationMinutes,
+            int arrivalWindowMinutes,
+            SimulationState initialState,
+            long randomSeed) {
+
         Objects.requireNonNull(initialState, "Initial state is required");
         validateInputs(zones, connections, events, simulationStart,
                 durationMinutes, arrivalWindowMinutes);
         Map<Integer, Integer> capacities = validateZones(zones);
 
+        Map<Integer, Integer> normalizedOccupancy = new HashMap<>();
+        Map<Integer, Integer> normalizedQueues = new HashMap<>();
         for (Zone zone : zones) {
             int zoneId = zone.getId();
             int occupancy = initialState.occupancy().getOrDefault(zoneId, 0);
             int queue = initialState.queueLengths().getOrDefault(zoneId, 0);
             if (occupancy < 0 || occupancy > capacities.get(zoneId) || queue < 0) {
-                throw new IllegalArgumentException(
-                        "Invalid initial state for zone " + zoneId);
+                throw new IllegalArgumentException("Invalid initial state for zone " + zoneId);
             }
+            normalizedOccupancy.put(zoneId, occupancy);
+            normalizedQueues.put(zoneId, queue);
         }
+        if (!capacities.keySet().containsAll(initialState.occupancy().keySet())
+                || !capacities.keySet().containsAll(initialState.queueLengths().keySet())) {
+            throw new IllegalArgumentException("Initial state references an unknown zone ID");
+        }
+        SimulationState normalizedState = new SimulationState(normalizedOccupancy, normalizedQueues);
 
         return runSimulationFromState(zones, connections, events,
                 simulationStart, durationMinutes, arrivalWindowMinutes,
-                initialState, capacities);
+                normalizedState, capacities, randomSeed);
     }
 
     private List<SimulationSnapshotRecord> runSimulationFromState(
@@ -94,16 +130,34 @@ public class EventDrivenSimulationRunner {
             int durationMinutes,
             int arrivalWindowMinutes,
             SimulationState initialState,
-            Map<Integer, Integer> capacities) {
+            Map<Integer, Integer> capacities,
+            long randomSeed) {
 
         Map<Integer, Map<Integer, Integer>> arrivalSchedule =
                 eventDrivenSimulationEngine.scheduleArrivals(
                         events, simulationStart, durationMinutes, arrivalWindowMinutes);
 
         boolean routeModeEnabled = hasEntranceFacility(zones);
+        LocalDateTime simulationEnd = simulationStart.plusMinutes(durationMinutes);
+        List<ExpoEvent> relevantEvents = events.stream()
+                .filter(event -> event.getExpectedDemand() > 0)
+                .filter(event -> event.getStartDateTime().minusMinutes(arrivalWindowMinutes)
+                        .isBefore(simulationEnd)
+                        && event.getEndDateTime().isAfter(simulationStart))
+                .toList();
         Map<Integer, RoutePlan> routePlans = routeModeEnabled
-                ? buildRoutePlans(zones, connections, events)
+                ? buildRoutePlans(zones, connections, relevantEvents, simulationEnd)
                 : Map.of();
+        Map<Integer, LocalDateTime> directEventEnds = new HashMap<>();
+        if (!routeModeEnabled) {
+            for (ExpoEvent event : relevantEvents) {
+                if (event != null && event.getZone() != null && event.getZone().getId() != null) {
+                    directEventEnds.merge(event.getZone().getId(), event.getEndDateTime(),
+                            (a, b) -> a.isAfter(b) ? a : b);
+                }
+            }
+        }
+        Map<Integer, Integer> directEventVisitors = new HashMap<>();
 
         // For legacy scenarios without configured entrances, retain the existing
         // direct-to-event-zone arrival behavior.
@@ -115,16 +169,17 @@ public class EventDrivenSimulationRunner {
         // In route mode, pending arrivals are grouped by their event destination.
         Map<Integer, Integer> pendingByTarget = new HashMap<>();
         PrayerMovementCoordinator prayerCoordinator = new PrayerMovementCoordinator();
-        Map<String, String> prayerTimes = prayerTimesService == null
-                ? Map.of() : prayerTimesService.getTodayTimes();
+        Map<LocalDate, Map<String, String>> prayerTimesByDate = new HashMap<>();
+        Map<String, String> startDatePrayerTimes = getPrayerTimesForDate(
+                simulationStart.toLocalDate(), prayerTimesByDate, Map.of());
         SimulationState currentState = initialState;
 
         // Process the simulation start instant too. The minute loop below begins
         // at 1, so without this call a prayer whose 10-minute preparation window
         // begins exactly at simulationStart would never be triggered.
-        if (!prayerTimes.isEmpty()) {
+        if (!startDatePrayerTimes.isEmpty()) {
             currentState = prayerCoordinator.advanceMinute(
-                    currentState, zones, connections, capacities, prayerTimes,
+                    currentState, zones, connections, capacities, startDatePrayerTimes,
                     simulationStart.getHour() * 60 + simulationStart.getMinute(),
                     simulationStart.toLocalDate().toString(), Map.of());
         }
@@ -136,23 +191,35 @@ public class EventDrivenSimulationRunner {
             Map<Integer, Integer> protectedVisitors = routeModeEnabled
                     ? getProtectedVisitors(routePlans)
                     : new HashMap<>();
+            if (!routeModeEnabled) {
+                // Legacy direct-to-event arrivals stay at their event zone until
+                // the event ends, so normal movement cannot make departure counts negative.
+                directEventVisitors.forEach((zoneId, count) ->
+                        protectedVisitors.merge(zoneId, count, Integer::sum));
+            }
             prayerCoordinator.getProtectedVisitors().forEach((zoneId, count) ->
                     protectedVisitors.merge(zoneId, count, Integer::sum));
 
+            List<ZoneConnection> movementOrder = new ArrayList<>(connections);
+            Collections.shuffle(movementOrder, new Random(randomSeed + minute));
+            Map<ZoneConnection, Integer> corridorBudget =
+                    crowdSimulationEngine.createCorridorBudget(connections);
             List<SimulationSnapshotRecord> movementRecords =
                     crowdSimulationEngine.runSimulationWithMultipleConnections(
-                            zones, connections, 1, currentState, protectedVisitors);
+                            zones, movementOrder, 1, currentState, protectedVisitors,
+                            corridorBudget);
 
             currentState = stateFromMinuteOne(movementRecords, zones, currentState);
 
             if (routeModeEnabled) {
                 currentState = advanceRouteCohorts(
-                        currentState, routePlans, zones, capacities);
+                        currentState, routePlans, zones, capacities, corridorBudget,
+                        simulationStart.plusMinutes(minute));
                 currentState = admitPendingRouteArrivals(
                         currentState, pendingByTarget, routePlans, capacities);
             } else {
                 currentState = admitWaitingArrivals(
-                        currentState, waitingArrivals, capacities);
+                        currentState, waitingArrivals, capacities, directEventVisitors);
             }
 
             Map<Integer, Integer> arrivalsThisMinute =
@@ -200,21 +267,41 @@ public class EventDrivenSimulationRunner {
 
                     currentState = adjustOccupancy(
                             currentState, targetZoneId, admitted);
+                    directEventVisitors.merge(targetZoneId, admitted, Integer::sum);
                     waitingArrivals.merge(
                             targetZoneId, arrivals - admitted, Integer::sum);
                 }
             }
 
+            LocalDateTime simulatedTime = simulationStart.plusMinutes(minute);
             if (routeModeEnabled) {
-                waitingArrivals = routePendingQueuesByEntrance(
-                        pendingByTarget, routePlans);
+                for (Map.Entry<Integer, RoutePlan> entry : routePlans.entrySet()) {
+                    if (!simulatedTime.isBefore(entry.getValue().eventEndTime)) {
+                        pendingByTarget.remove(entry.getKey());
+                    }
+                }
+                waitingArrivals = routePendingQueuesByEntrance(pendingByTarget, routePlans);
+            } else {
+                // Legacy direct mode has no configured exit route. Remove only the
+                // event attendees we tracked, not unrelated initial visitors.
+                for (Map.Entry<Integer, LocalDateTime> entry : directEventEnds.entrySet()) {
+                    if (!simulatedTime.isBefore(entry.getValue())) {
+                        int zoneId = entry.getKey();
+                        int attendees = directEventVisitors.getOrDefault(zoneId, 0);
+                        currentState = adjustOccupancy(currentState, zoneId, -attendees);
+                        directEventVisitors.put(zoneId, 0);
+                        waitingArrivals.put(zoneId, 0);
+                    }
+                }
             }
+            Map<String, String> prayerTimes = getPrayerTimesForDate(
+                    simulatedTime.toLocalDate(), prayerTimesByDate, startDatePrayerTimes);
             if (!prayerTimes.isEmpty()) {
-                LocalDateTime simulatedTime = simulationStart.plusMinutes(minute);
                 currentState = prayerCoordinator.advanceMinute(
                         currentState, zones, connections, capacities, prayerTimes,
                         simulatedTime.getHour() * 60 + simulatedTime.getMinute(),
-                        simulatedTime.toLocalDate().toString(), protectedVisitors);
+                        simulatedTime.toLocalDate().toString(), protectedVisitors,
+                        corridorBudget);
             }
             addSnapshots(history, currentState, waitingArrivals, minute);
         }
@@ -225,10 +312,19 @@ public class EventDrivenSimulationRunner {
     private Map<Integer, RoutePlan> buildRoutePlans(
             List<Zone> zones,
             List<ZoneConnection> connections,
-            List<ExpoEvent> events) {
+            List<ExpoEvent> events,
+            LocalDateTime simulationEnd) {
 
         Map<Integer, RoutePlan> plans = new HashMap<>();
         Set<Integer> eventZoneIds = new HashSet<>();
+        Map<Integer, LocalDateTime> latestEndByZone = new HashMap<>();
+        for (ExpoEvent event : events) {
+            if (event != null && event.getZone() != null && event.getZone().getId() != null
+                    && event.getEndDateTime() != null) {
+                latestEndByZone.merge(event.getZone().getId(), event.getEndDateTime(),
+                        (a, b) -> a.isAfter(b) ? a : b);
+            }
+        }
 
         for (ExpoEvent event : events) {
             if (event == null || event.getZone() == null
@@ -237,9 +333,8 @@ public class EventDrivenSimulationRunner {
                         "Every event must reference a zone with an ID");
             }
             int targetId = event.getZone().getId();
-            if (!eventZoneIds.add(targetId)) {
-                continue;
-            }
+            LocalDateTime eventEndTime = latestEndByZone.get(targetId);
+            if (!eventZoneIds.add(targetId)) continue;
 
 
             Zone target = zones.stream()
@@ -266,9 +361,67 @@ public class EventDrivenSimulationRunner {
                 }
             }
 
-            plans.put(targetId, new RoutePlan(route, zoneIds));
+            List<ZoneConnection> returnRoute = findRouteToExit(zones, connections, target);
+            if (!eventEndTime.isAfter(simulationEnd) && returnRoute == null) {
+                throw new IllegalArgumentException("Event zone " + targetId
+                        + " has no directed route to an EXIT or ENTRANCE before the simulation ends");
+            }
+            if (returnRoute == null) returnRoute = List.of();
+            List<Integer> returnZoneIds = new ArrayList<>();
+            returnZoneIds.add(targetId);
+            for (ZoneConnection connection : returnRoute) {
+                returnZoneIds.add(connection.getToZone().getId());
+            }
+            plans.put(targetId, new RoutePlan(route, zoneIds, returnRoute,
+                    returnZoneIds, eventEndTime));
         }
         return plans;
+    }
+
+    private List<ZoneConnection> findRouteToExit(
+            List<Zone> zones, List<ZoneConnection> connections, Zone source) {
+        boolean hasExplicitExit = zones.stream().filter(z -> z.getFacilities() != null)
+                .flatMap(z -> z.getFacilities().stream())
+                .anyMatch(f -> f != null && "EXIT".equalsIgnoreCase(f.getType()));
+        String destinationType = hasExplicitExit ? "EXIT" : "ENTRANCE";
+        Set<Integer> destinations = new TreeSet<>();
+        for (Zone zone : zones) {
+            if (zone.getFacilities() != null && zone.getFacilities().stream().anyMatch(f -> f != null
+                    && destinationType.equalsIgnoreCase(f.getType()))) destinations.add(zone.getId());
+        }
+        if (destinations.contains(source.getId())) return List.of();
+        if (destinations.isEmpty()) return null;
+
+        Map<Integer, List<ZoneConnection>> outgoing = new HashMap<>();
+        for (ZoneConnection edge : connections) {
+            if (edge != null && edge.getFromZone() != null && edge.getToZone() != null
+                    && edge.getFromZone().getId() != null && edge.getToZone().getId() != null) {
+                outgoing.computeIfAbsent(edge.getFromZone().getId(), ignored -> new ArrayList<>()).add(edge);
+            }
+        }
+        Queue<Integer> queue = new ArrayDeque<>();
+        Set<Integer> visited = new HashSet<>();
+        Map<Integer, ZoneConnection> previous = new HashMap<>();
+        queue.add(source.getId()); visited.add(source.getId());
+        Integer found = null;
+        while (!queue.isEmpty()) {
+            int current = queue.remove();
+            if (destinations.contains(current)) { found = current; break; }
+            for (ZoneConnection edge : outgoing.getOrDefault(current, List.of())) {
+                int next = edge.getToZone().getId();
+                if (visited.add(next)) { previous.put(next, edge); queue.add(next); }
+            }
+        }
+        if (found == null) return null;
+        LinkedList<ZoneConnection> path = new LinkedList<>();
+        int current = found;
+        while (current != source.getId()) {
+            ZoneConnection edge = previous.get(current);
+            if (edge == null) return null;
+            path.addFirst(edge);
+            current = edge.getFromZone().getId();
+        }
+        return path;
     }
 
     private boolean hasEntranceFacility(List<Zone> zones) {
@@ -292,9 +445,11 @@ public class EventDrivenSimulationRunner {
         for (RoutePlan plan : routePlans.values()) {
             for (int step = 0; step < plan.visitorsAtStep.length; step++) {
                 int count = plan.visitorsAtStep[step];
-                if (count > 0) {
-                    protectedCounts.merge(plan.zoneIds.get(step), count, Integer::sum);
-                }
+                if (count > 0) protectedCounts.merge(plan.zoneIds.get(step), count, Integer::sum);
+            }
+            for (int step = 0; step < plan.returningVisitorsAtStep.length; step++) {
+                int count = plan.returningVisitorsAtStep[step];
+                if (count > 0) protectedCounts.merge(plan.returnZoneIds.get(step), count, Integer::sum);
             }
         }
         return protectedCounts;
@@ -304,51 +459,66 @@ public class EventDrivenSimulationRunner {
             SimulationState state,
             Map<Integer, RoutePlan> routePlans,
             List<Zone> zones,
-            Map<Integer, Integer> capacities) {
-
+            Map<Integer, Integer> capacities,
+            Map<ZoneConnection, Integer> corridorCapacityLeft,
+            LocalDateTime simulatedTime) {
         Map<Integer, Integer> occupancy = new HashMap<>(state.occupancy());
-        Map<ZoneConnection, Integer> corridorCapacityLeft = new HashMap<>();
-        Map<Integer, Integer> zoneCapacity = capacities;
 
         for (RoutePlan plan : routePlans.values()) {
-            for (ZoneConnection connection : plan.connections) {
-                corridorCapacityLeft.putIfAbsent(
-                        connection,
-                        Math.max(0, connection.getMaxVisitorsPerMinute()));
+            if (!simulatedTime.isBefore(plan.eventEndTime)) {
+                int lastInbound = plan.visitorsAtStep.length - 1;
+                if (lastInbound >= 0 && plan.visitorsAtStep[lastInbound] > 0) {
+                    plan.returningVisitorsAtStep[0] += plan.visitorsAtStep[lastInbound];
+                    plan.visitorsAtStep[lastInbound] = 0;
+                }
+            }
+            int lastReturn = plan.returningVisitorsAtStep.length - 1;
+            if (lastReturn >= 0 && plan.returningVisitorsAtStep[lastReturn] > 0) {
+                int exited = plan.returningVisitorsAtStep[lastReturn];
+                int exitZone = plan.returnZoneIds.get(lastReturn);
+                occupancy.put(exitZone, Math.max(0, occupancy.getOrDefault(exitZone, 0) - exited));
+                plan.returningVisitorsAtStep[lastReturn] = 0;
             }
         }
 
-        // Each cohort advances by at most one connection per minute.
+        // Inbound cohorts advance at most one directed connection per minute.
         for (RoutePlan plan : routePlans.values()) {
-            // Work backwards so a cohort moved into the next zone cannot
-            // traverse a second connection during the same minute.
             for (int step = plan.connections.size() - 1; step >= 0; step--) {
-                int waitingAtStep = plan.visitorsAtStep[step];
-                if (waitingAtStep <= 0) {
-                    continue;
-                }
-
-                ZoneConnection connection = plan.connections.get(step);
-                int fromId = connection.getFromZone().getId();
-                int toId = connection.getToZone().getId();
-
-                int corridorLeft = corridorCapacityLeft.getOrDefault(connection, 0);
-                int freeSpace = Math.max(
-                        0, zoneCapacity.get(toId) - occupancy.getOrDefault(toId, 0));
-                int moved = Math.min(waitingAtStep, Math.min(corridorLeft, freeSpace));
-
-                if (moved <= 0) {
-                    continue;
-                }
-
-                occupancy.put(fromId, occupancy.getOrDefault(fromId, 0) - moved);
-                occupancy.put(toId, occupancy.getOrDefault(toId, 0) + moved);
+                int count = plan.visitorsAtStep[step];
+                if (count <= 0) continue;
+                ZoneConnection edge = plan.connections.get(step);
+                int from = edge.getFromZone().getId(), to = edge.getToZone().getId();
+                int left = corridorCapacityLeft.getOrDefault(edge, 0);
+                int free = Math.max(0, capacities.get(to) - occupancy.getOrDefault(to, 0));
+                int moved = Math.min(count, Math.min(left, free));
+                if (moved <= 0) continue;
+                occupancy.put(from, occupancy.getOrDefault(from, 0) - moved);
+                occupancy.put(to, occupancy.getOrDefault(to, 0) + moved);
                 plan.visitorsAtStep[step] -= moved;
                 plan.visitorsAtStep[step + 1] += moved;
-                corridorCapacityLeft.put(connection, corridorLeft - moved);
+                corridorCapacityLeft.put(edge, left - moved);
             }
         }
 
+        // Event attendees return to an exit after the event ends, sharing the
+        // exact same remaining per-minute corridor budget as all other cohorts.
+        for (RoutePlan plan : routePlans.values()) {
+            for (int step = plan.returnConnections.size() - 1; step >= 0; step--) {
+                int count = plan.returningVisitorsAtStep[step];
+                if (count <= 0) continue;
+                ZoneConnection edge = plan.returnConnections.get(step);
+                int from = edge.getFromZone().getId(), to = edge.getToZone().getId();
+                int left = corridorCapacityLeft.getOrDefault(edge, 0);
+                int free = Math.max(0, capacities.get(to) - occupancy.getOrDefault(to, 0));
+                int moved = Math.min(count, Math.min(left, free));
+                if (moved <= 0) continue;
+                occupancy.put(from, occupancy.getOrDefault(from, 0) - moved);
+                occupancy.put(to, occupancy.getOrDefault(to, 0) + moved);
+                plan.returningVisitorsAtStep[step] -= moved;
+                plan.returningVisitorsAtStep[step + 1] += moved;
+                corridorCapacityLeft.put(edge, left - moved);
+            }
+        }
         return new SimulationState(occupancy, state.queueLengths());
     }
 
@@ -407,10 +577,23 @@ public class EventDrivenSimulationRunner {
         return new SimulationState(occupancy, state.queueLengths());
     }
 
+    private Map<String, String> getPrayerTimesForDate(
+            LocalDate date,
+            Map<LocalDate, Map<String, String>> cache,
+            Map<String, String> fallback) {
+        if (prayerTimesService == null) return Map.of();
+        Map<String, String> cached = cache.get(date);
+        if (cached != null) return cached;
+        Map<String, String> times = prayerTimesService.getTimesForDate(date);
+        if (times == null || times.isEmpty()) times = fallback;
+        cache.put(date, times);
+        return times;
+    }
+
     private Map<Integer, Integer> validateZones(List<Zone> zones) {
         Map<Integer, Integer> capacities = new HashMap<>();
         for (Zone zone : zones) {
-            if (zone.getId() == null) {
+            if (zone == null || zone.getId() == null) {
                 throw new IllegalArgumentException("Every zone must have an ID");
             }
             if (zone.getCapacity() == null || zone.getInitialVisitors() == null
@@ -419,7 +602,9 @@ public class EventDrivenSimulationRunner {
                 throw new IllegalArgumentException(
                         "Invalid initial occupancy or capacity for zone " + zone.getId());
             }
-            capacities.put(zone.getId(), zone.getCapacity());
+            if (capacities.putIfAbsent(zone.getId(), zone.getCapacity()) != null) {
+                throw new IllegalArgumentException("Duplicate zone ID: " + zone.getId());
+            }
         }
         return capacities;
     }
@@ -448,7 +633,8 @@ public class EventDrivenSimulationRunner {
     private SimulationState admitWaitingArrivals(
             SimulationState state,
             Map<Integer, Integer> waitingArrivals,
-            Map<Integer, Integer> capacities) {
+            Map<Integer, Integer> capacities,
+            Map<Integer, Integer> directEventVisitors) {
 
         Map<Integer, Integer> occupancy = new HashMap<>(state.occupancy());
         for (Map.Entry<Integer, Integer> entry : waitingArrivals.entrySet()) {
@@ -461,6 +647,7 @@ public class EventDrivenSimulationRunner {
             int availableSpace = Math.max(0, capacities.get(zoneId) - currentOccupancy);
             int admitted = Math.min(waiting, availableSpace);
             occupancy.put(zoneId, currentOccupancy + admitted);
+            directEventVisitors.merge(zoneId, admitted, Integer::sum);
             waitingArrivals.put(zoneId, waiting - admitted);
         }
         return new SimulationState(occupancy, state.queueLengths());
@@ -514,11 +701,21 @@ public class EventDrivenSimulationRunner {
         private final List<ZoneConnection> connections;
         private final List<Integer> zoneIds;
         private final int[] visitorsAtStep;
+        private final List<ZoneConnection> returnConnections;
+        private final List<Integer> returnZoneIds;
+        private final int[] returningVisitorsAtStep;
+        private LocalDateTime eventEndTime;
 
-        private RoutePlan(List<ZoneConnection> connections, List<Integer> zoneIds) {
+        private RoutePlan(List<ZoneConnection> connections, List<Integer> zoneIds,
+                          List<ZoneConnection> returnConnections, List<Integer> returnZoneIds,
+                          LocalDateTime eventEndTime) {
             this.connections = List.copyOf(connections);
             this.zoneIds = List.copyOf(zoneIds);
             this.visitorsAtStep = new int[zoneIds.size()];
+            this.returnConnections = List.copyOf(returnConnections);
+            this.returnZoneIds = List.copyOf(returnZoneIds);
+            this.returningVisitorsAtStep = new int[returnZoneIds.size()];
+            this.eventEndTime = eventEndTime;
         }
     }
 }
