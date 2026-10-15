@@ -31,7 +31,7 @@ public class VisitorService {
     }
 
     @Transactional
-    public void register(VisitorDTO dto) {
+    public String register(VisitorDTO dto) {
         if (userRepository.findUserByEmail(dto.getEmail()) != null) {
             throw new ApiException("Email already exists");
         }
@@ -54,7 +54,7 @@ public class VisitorService {
         user.setVisitor(visitor);
         visitorRepository.save(visitor);
 
-
+        return visitor.getQrToken();
     }
 
     @Transactional

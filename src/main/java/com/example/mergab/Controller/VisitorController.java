@@ -4,6 +4,7 @@ import com.example.mergab.Api.ApiResponse;
 import com.example.mergab.DTO.UpdateVisitorDTO;
 import com.example.mergab.DTO.VisitorDTO;
 import com.example.mergab.Model.User;
+import com.example.mergab.Service.EmailService;
 import com.example.mergab.Service.VisitorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class VisitorController {
 
     private final VisitorService visitorService;
+    private final EmailService emailService;
 
     @GetMapping("/get-all")
     public ResponseEntity<?> getAllVisitors() {
@@ -26,7 +28,11 @@ public class VisitorController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody @Valid VisitorDTO dto) {
-        visitorService.register(dto);
+        String qrToken = visitorService.register(dto);
+
+        // Sent after the visitor is saved successfully (runs in background)
+        emailService.sendWelcomeEmail(dto.getEmail(), dto.getFullName(), qrToken);
+
         return ResponseEntity.status(201).body(new ApiResponse("Visitor registered successfully"));
     }
 
