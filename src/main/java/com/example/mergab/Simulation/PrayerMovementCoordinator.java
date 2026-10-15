@@ -19,12 +19,16 @@ public class PrayerMovementCoordinator {
     public Map<Integer, Integer> getProtectedVisitors() {
         Map<Integer, Integer> result = new HashMap<>();
         for (Cohort cohort : cohorts) {
-            if (cohort.count > 0 && cohort.step < (cohort.returning ? cohort.returnPath.size() : cohort.outbound.size())) {
-                List<Zone> path = cohort.returning ? cohort.returnPath : cohort.outbound;
-                if (cohort.step >= path.size()) continue;
-                int zoneId = path.get(cohort.step).getId();
-                result.merge(zoneId, cohort.count, Integer::sum);
-            }
+            if (cohort.count <= 0) continue;
+            List<Zone> path = cohort.returning ? cohort.returnPath : cohort.outbound;
+
+            // Once a returning cohort reaches its original zone, it is no longer
+            // on a reserved prayer journey and may participate in ordinary movement.
+            if (cohort.returning && cohort.step >= path.size() - 1) continue;
+            if (cohort.step < 0 || cohort.step >= path.size()) continue;
+
+            int zoneId = path.get(cohort.step).getId();
+            result.merge(zoneId, cohort.count, Integer::sum);
         }
         return result;
     }
@@ -116,6 +120,13 @@ public class PrayerMovementCoordinator {
 
         for (Cohort cohort : new ArrayList<>(cohorts)) {
             if (cohort.count <= 0) continue;
+
+            // A completed return journey releases its visitors from the protected cohort.
+            if (cohort.returning && cohort.step >= cohort.returnPath.size() - 1) {
+                cohort.count = 0;
+                continue;
+            }
+
             if (!cohort.returning && cohort.step >= cohort.outbound.size() - 1) {
                 if (cohort.arrivedAtMinute < 0) cohort.arrivedAtMinute = minuteOfDay;
                 // Wait until 15 minutes after the scheduled prayer time.

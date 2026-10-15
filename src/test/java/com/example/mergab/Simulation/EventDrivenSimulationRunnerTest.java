@@ -11,6 +11,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class EventDrivenSimulationRunnerTest {
 
@@ -409,4 +410,163 @@ class EventDrivenSimulationRunnerTest {
         assertTrue(finalEntranceOccupancy < 10,
                 "Visitors should not all remain at the entrance");
     }
+
+
+    @Test
+    void routeVisitorsShouldAdvanceAtMostOneConnectionPerMinute() {
+        Zone entrance = routeZone(1, "Entrance", 10, 0);
+        Zone corridor = routeZone(2, "Corridor", 10, 0);
+        Zone eventZone = routeZone(3, "Event Hall", 10, 0);
+
+        com.example.mergab.Model.Facility entranceFacility =
+                new com.example.mergab.Model.Facility();
+        entranceFacility.setType("ENTRANCE");
+        entranceFacility.setZone(entrance);
+        entrance.setFacilities(new java.util.HashSet<>(
+                java.util.Set.of(entranceFacility)));
+
+        com.example.mergab.Model.ZoneConnection first =
+                routeConnection(1, entrance, corridor, 10);
+        com.example.mergab.Model.ZoneConnection second =
+                routeConnection(2, corridor, eventZone, 10);
+
+        LocalDateTime start = LocalDateTime.of(2026, 10, 16, 10, 0);
+        ExpoEvent event = new ExpoEvent();
+        event.setId(1);
+        event.setName("Route Timing Test");
+        event.setZone(eventZone);
+        event.setExpectedDemand(1);
+        event.setStartDateTime(start.plusMinutes(2));
+        event.setEndDateTime(start.plusMinutes(20));
+
+        EventDrivenSimulationRunner runner = new EventDrivenSimulationRunner(
+                new CrowdSimulationEngine(), new EventDrivenSimulationEngine());
+
+        List<SimulationSnapshotRecord> snapshots = runner.runSimulation(
+                List.of(entrance, corridor, eventZone),
+                List.of(first, second), List.of(event), start, 4, 1);
+
+        assertEquals(1, snapshotAt(snapshots, 2, 1).occupancy(),
+                "The scheduled visitor should first enter through the entrance");
+        assertEquals(0, snapshotAt(snapshots, 2, 2).occupancy(),
+                "The visitor must not skip directly into the corridor");
+        assertEquals(1, snapshotAt(snapshots, 3, 2).occupancy(),
+                "The visitor should advance one connection in the next minute");
+        assertEquals(0, snapshotAt(snapshots, 3, 3).occupancy(),
+                "The visitor must not cross two connections in one minute");
+        assertEquals(1, snapshotAt(snapshots, 4, 3).occupancy(),
+                "The visitor should reach the event zone on the following minute");
+    }
+
+    @Test
+    void routeVisitorsShouldRemainAccountedForWhenDestinationIsFull() {
+        Zone entrance = routeZone(1, "Entrance", 10, 0);
+        Zone corridor = routeZone(2, "Corridor", 10, 0);
+        Zone eventZone = routeZone(3, "Full Event Hall", 1, 1);
+
+        com.example.mergab.Model.Facility entranceFacility =
+                new com.example.mergab.Model.Facility();
+        entranceFacility.setType("ENTRANCE");
+        entranceFacility.setZone(entrance);
+        entrance.setFacilities(new java.util.HashSet<>(
+                java.util.Set.of(entranceFacility)));
+
+        com.example.mergab.Model.ZoneConnection first =
+                routeConnection(1, entrance, corridor, 10);
+        com.example.mergab.Model.ZoneConnection second =
+                routeConnection(2, corridor, eventZone, 10);
+
+        LocalDateTime start = LocalDateTime.of(2026, 10, 16, 10, 0);
+        ExpoEvent event = new ExpoEvent();
+        event.setId(1);
+        event.setName("Full Hall Test");
+        event.setZone(eventZone);
+        event.setExpectedDemand(1);
+        event.setStartDateTime(start.plusMinutes(2));
+        event.setEndDateTime(start.plusMinutes(20));
+
+        EventDrivenSimulationRunner runner = new EventDrivenSimulationRunner(
+                new CrowdSimulationEngine(), new EventDrivenSimulationEngine());
+
+        List<SimulationSnapshotRecord> snapshots = runner.runSimulation(
+                List.of(entrance, corridor, eventZone),
+                List.of(first, second), List.of(event), start, 4, 1);
+
+        SimulationSnapshotRecord finalEntrance = snapshotAt(snapshots, 4, 1);
+        SimulationSnapshotRecord finalCorridor = snapshotAt(snapshots, 4, 2);
+        SimulationSnapshotRecord finalEvent = snapshotAt(snapshots, 4, 3);
+
+        assertEquals(0, finalEntrance.occupancy());
+        assertEquals(1, finalCorridor.occupancy(),
+                "The visitor should wait in the last reachable zone when the event zone is full");
+        assertEquals(1, finalEvent.occupancy(),
+                "The event zone must remain at its capacity");
+        assertEquals(2, finalEntrance.occupancy()
+                        + finalCorridor.occupancy()
+                        + finalEvent.occupancy(),
+                "The initial visitor and arriving visitor must both remain accounted for");
+        assertTrue(snapshots.stream().allMatch(s -> s.occupancy() >= 0),
+                "Visitor movement must never create negative occupancy");
+    }
+
+
+    @Test
+    void shouldRejectEventWhenNoDirectedRouteFromAnEntranceExists() {
+        Zone entrance = routeZone(1, "Entrance", 10, 0);
+        Zone isolatedEventZone = routeZone(2, "Isolated Event Hall", 10, 0);
+
+        com.example.mergab.Model.Facility entranceFacility =
+                new com.example.mergab.Model.Facility();
+        entranceFacility.setType("ENTRANCE");
+        entranceFacility.setZone(entrance);
+        entrance.setFacilities(new java.util.HashSet<>(
+                java.util.Set.of(entranceFacility)));
+
+        LocalDateTime start = LocalDateTime.of(2026, 10, 16, 10, 0);
+        ExpoEvent event = new ExpoEvent();
+        event.setId(1);
+        event.setName("Unreachable Event");
+        event.setZone(isolatedEventZone);
+        event.setExpectedDemand(1);
+        event.setStartDateTime(start.plusMinutes(1));
+        event.setEndDateTime(start.plusMinutes(20));
+
+        EventDrivenSimulationRunner runner = new EventDrivenSimulationRunner(
+                new CrowdSimulationEngine(), new EventDrivenSimulationEngine());
+
+        assertThrows(IllegalArgumentException.class, () -> runner.runSimulation(
+                List.of(entrance, isolatedEventZone), List.of(), List.of(event),
+                start, 5, 1),
+                "The simulation should reject an event that visitors cannot reach from an entrance");
+    }
+
+    private Zone routeZone(int id, String name, int capacity, int initialVisitors) {
+        Zone zone = new Zone();
+        zone.setId(id);
+        zone.setName(name);
+        zone.setCapacity(capacity);
+        zone.setInitialVisitors(initialVisitors);
+        zone.setFacilities(new java.util.HashSet<>());
+        return zone;
+    }
+
+    private com.example.mergab.Model.ZoneConnection routeConnection(
+            int id, Zone from, Zone to, int throughput) {
+        com.example.mergab.Model.ZoneConnection connection =
+                new com.example.mergab.Model.ZoneConnection();
+        connection.setId(id);
+        connection.setFromZone(from);
+        connection.setToZone(to);
+        connection.setMaxVisitorsPerMinute(throughput);
+        return connection;
+    }
+
+    private SimulationSnapshotRecord snapshotAt(
+            List<SimulationSnapshotRecord> snapshots, int minute, int zoneId) {
+        return snapshots.stream()
+                .filter(s -> s.minute() == minute && s.zoneId() == zoneId)
+                .findFirst()
+                .orElseThrow();
+    }
+
 }

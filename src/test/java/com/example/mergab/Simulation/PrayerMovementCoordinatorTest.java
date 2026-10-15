@@ -12,6 +12,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class PrayerMovementCoordinatorTest {
 
@@ -48,6 +49,54 @@ class PrayerMovementCoordinatorTest {
         assertEquals(3, state.occupancy().get(2));
         assertEquals(7, state.occupancy().get(1));
         assertTrue(state.occupancy().values().stream().allMatch(v -> v >= 0 && v <= 20));
+    }
+
+
+    @Test
+    void prayerVisitorsReturnToTheirOriginalZoneAndAreReleasedAfterward() {
+        Fixture f = fixture();
+        PrayerMovementCoordinator coordinator = new PrayerMovementCoordinator();
+        SimulationState state = new SimulationState(
+                Map.of(1, 10, 2, 0, 3, 0), Map.of(1, 0, 2, 0, 3, 0));
+        Map<Integer, Integer> capacities = Map.of(1, 20, 2, 20, 3, 20);
+        Map<String, String> times = Map.of("dhuhr", "12:00");
+
+        // Trigger at 11:50, then advance through the outbound trip, prayer wait,
+        // and the return trip. The selected cohort contains three visitors.
+        state = coordinator.advanceMinute(state, f.zones, f.connections, capacities,
+                times, 710, "2026-10-15", Map.of());
+        assertEquals(3, coordinator.getProtectedVisitors().get(1));
+
+        for (int minute = 711; minute <= 737; minute++) {
+            state = coordinator.advanceMinute(state, f.zones, f.connections, capacities,
+                    times, minute, "2026-10-15", Map.of());
+        }
+
+        assertEquals(10, state.occupancy().get(1),
+                "All visitors should be back in their original zone after the return journey");
+        assertEquals(0, state.occupancy().get(2));
+        assertEquals(0, state.occupancy().get(3));
+        assertFalse(coordinator.getProtectedVisitors().containsKey(1),
+                "Visitors must be released from prayer protection after returning");
+    }
+
+    @Test
+    void prayerVisitorsAreNotReservedWhenNoOutboundAndReturnRouteExists() {
+        Fixture f = fixture();
+        List<ZoneConnection> disconnected = List.of(
+                connection(1, f.zones.get(0), f.zones.get(1), 3));
+        PrayerMovementCoordinator coordinator = new PrayerMovementCoordinator();
+        SimulationState initial = new SimulationState(
+                Map.of(1, 10, 2, 0, 3, 0), Map.of(1, 0, 2, 0, 3, 0));
+
+        SimulationState afterTrigger = coordinator.advanceMinute(
+                initial, f.zones, disconnected, Map.of(1, 20, 2, 20, 3, 20),
+                Map.of("dhuhr", "12:00"), 710, "2026-10-15", Map.of());
+
+        assertEquals(initial.occupancy(), afterTrigger.occupancy(),
+                "Visitors should not be removed from their zone if no complete prayer route exists");
+        assertTrue(coordinator.getProtectedVisitors().isEmpty(),
+                "Visitors without a valid outbound and return route must not be reserved");
     }
 
     private Fixture fixture() {

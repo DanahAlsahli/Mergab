@@ -346,11 +346,8 @@ public class CrowdSimulationEngine {
             SimulationState initialState,
             Map<Integer, Integer> reservedSourceVisitors) {
 
-        if (reservedSourceVisitors == null) {
-            throw new IllegalArgumentException(
-                    "Reserved visitor counts cannot be null"
-            );
-        }
+        validateSimulationInputs(zones, connections, durationMinutes,
+                initialState, reservedSourceVisitors);
 
         SimulationState currentState = initialState;
         List<SimulationSnapshotRecord> history = new ArrayList<>();
@@ -528,6 +525,102 @@ public class CrowdSimulationEngine {
         }
 
         return history;
+    }
+
+
+    /**
+     * Reject invalid simulation inputs before creating snapshots or moving visitors.
+     * This keeps impossible occupancy and queue values from contaminating every
+     * later minute of the simulation.
+     */
+    private void validateSimulationInputs(
+            List<Zone> zones,
+            List<ZoneConnection> connections,
+            int durationMinutes,
+            SimulationState initialState,
+            Map<Integer, Integer> reservedSourceVisitors) {
+
+        if (zones == null || zones.isEmpty()) {
+            throw new IllegalArgumentException("Zones cannot be null or empty");
+        }
+        if (connections == null) {
+            throw new IllegalArgumentException("Connections cannot be null");
+        }
+        if (initialState == null) {
+            throw new IllegalArgumentException("Initial simulation state cannot be null");
+        }
+        if (reservedSourceVisitors == null) {
+            throw new IllegalArgumentException("Reserved visitor counts cannot be null");
+        }
+        if (durationMinutes < 0) {
+            throw new IllegalArgumentException("Simulation duration cannot be negative");
+        }
+
+        Map<Integer, Zone> zonesById = new HashMap<>();
+        for (Zone zone : zones) {
+            if (zone == null || zone.getId() == null) {
+                throw new IllegalArgumentException("Every zone must have an ID");
+            }
+            if (zone.getCapacity() == null || zone.getCapacity() < 0) {
+                throw new IllegalArgumentException(
+                        "Zone capacity cannot be null or negative: " + zone.getId());
+            }
+            if (zonesById.putIfAbsent(zone.getId(), zone) != null) {
+                throw new IllegalArgumentException("Duplicate zone ID: " + zone.getId());
+            }
+        }
+
+        for (Map.Entry<Integer, Integer> entry : initialState.occupancy().entrySet()) {
+            Integer zoneId = entry.getKey();
+            Integer count = entry.getValue();
+            Zone zone = zonesById.get(zoneId);
+            if (zone == null) {
+                throw new IllegalArgumentException("Initial occupancy references unknown zone: " + zoneId);
+            }
+            if (count == null || count < 0) {
+                throw new IllegalArgumentException("Occupancy cannot be negative or null for zone: " + zoneId);
+            }
+            if (count > zone.getCapacity()) {
+                throw new IllegalArgumentException("Initial occupancy exceeds capacity for zone: " + zoneId);
+            }
+        }
+
+        for (Map.Entry<Integer, Integer> entry : initialState.queueLengths().entrySet()) {
+            Integer zoneId = entry.getKey();
+            Integer count = entry.getValue();
+            if (!zonesById.containsKey(zoneId)) {
+                throw new IllegalArgumentException("Initial queue references unknown zone: " + zoneId);
+            }
+            if (count == null || count < 0) {
+                throw new IllegalArgumentException("Queue length cannot be negative or null for zone: " + zoneId);
+            }
+        }
+
+        for (ZoneConnection connection : connections) {
+            if (connection == null || connection.getFromZone() == null
+                    || connection.getToZone() == null
+                    || connection.getFromZone().getId() == null
+                    || connection.getToZone().getId() == null) {
+                throw new IllegalArgumentException("Every connection must have valid source and destination zones");
+            }
+            if (!zonesById.containsKey(connection.getFromZone().getId())
+                    || !zonesById.containsKey(connection.getToZone().getId())) {
+                throw new IllegalArgumentException("Connection references a zone outside this simulation");
+            }
+            if (connection.getMaxVisitorsPerMinute() == null
+                    || connection.getMaxVisitorsPerMinute() <= 0) {
+                throw new IllegalArgumentException("Corridor throughput must be greater than zero");
+            }
+        }
+
+        for (Map.Entry<Integer, Integer> entry : reservedSourceVisitors.entrySet()) {
+            if (!zonesById.containsKey(entry.getKey())) {
+                throw new IllegalArgumentException("Reserved visitors reference unknown zone: " + entry.getKey());
+            }
+            if (entry.getValue() == null || entry.getValue() < 0) {
+                throw new IllegalArgumentException("Reserved visitor count cannot be negative or null");
+            }
+        }
     }
 
 
