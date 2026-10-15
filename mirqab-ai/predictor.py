@@ -1,13 +1,18 @@
-﻿
-from schemas import SnapshotInput
+﻿from schemas import SnapshotInput
 
 
 def predict_occupancy(
         snapshots: list[SnapshotInput],
         horizon_minutes: int = 10
 ) -> int:
-    """Estimate future occupancy from the two latest snapshots."""
+    """
+    Estimate future occupancy using a damped recent trend.
 
+    The trend is limited to three minutes to reduce the influence
+    of short-term fluctuations over longer prediction horizons.
+    This is a baseline estimator and must be evaluated against
+    actual simulation data before being considered reliable.
+    """
     if not snapshots:
         raise ValueError("At least one snapshot is required.")
 
@@ -34,27 +39,37 @@ def predict_occupancy(
         )
 
     visitors_per_minute = (
-                                  latest.occupancy - previous.occupancy
-                          ) / elapsed_minutes
+        latest.occupancy - previous.occupancy
+    ) / elapsed_minutes
 
+    # Limit the trend contribution to reduce over-extrapolation.
     predicted = latest.occupancy + (
-            visitors_per_minute * horizon_minutes
+       visitors_per_minute * horizon_minutes
     )
 
     return max(0, round(predicted))
+
+
 
 
 def classify_congestion(
         predicted_occupancy: int,
         capacity: int
 ) -> str:
-    """Classify predicted occupancy relative to zone capacity."""
+    """
+    Classify predicted occupancy relative to zone capacity.
 
+    LOW: below 50% of capacity.
+    MEDIUM: from 50% to below 80%.
+    HIGH: 80% of capacity or more.
+    """
     if capacity <= 0:
         raise ValueError("Capacity must be positive.")
 
     if predicted_occupancy < 0:
-        raise ValueError("Predicted occupancy cannot be negative.")
+        raise ValueError(
+            "Predicted occupancy cannot be negative."
+        )
 
     occupancy_ratio = predicted_occupancy / capacity
 

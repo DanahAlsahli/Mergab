@@ -6,6 +6,7 @@ import lombok.*;
 
 
 
+
 // يمنع تكرار Snapshot لنفس المحاكاة والمنطقة والدقيقة داخل قاعدة البيانات
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"simulation_id", "zone_id", "minute"}))
 
