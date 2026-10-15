@@ -1,0 +1,207 @@
+
+/* ==========================================
+   MERGAB | ORGANIZER EVENTS
+   ========================================== */
+
+/* Statistics */
+
+.events-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 23px;
+}
+
+.events-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+}
+
+.events-stat-card > .material-symbols-rounded {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 49px;
+    height: 49px;
+    border-radius: 14px;
+    background: #edf5ee;
+    color: #287154;
+    font-size: 25px;
+}
+
+.events-stat-card div {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.events-stat-card div span {
+    color: #718277;
+    font-size: 12px;
+}
+
+.events-stat-card strong {
+    color: #193d32;
+    font-size: 27px;
+    font-weight: 700;
+}
+
+/* Event editor */
+
+#eventEditor {
+    margin-bottom: 23px;
+}
+
+#eventEditor .zones-field select {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 13px;
+    border: 1px solid #dce5de;
+    border-radius: 11px;
+    background: #fff;
+    color: #193d32;
+    font: inherit;
+    font-size: 13px;
+    outline: none;
+}
+
+#eventEditor .zones-field select:focus {
+    border-color: #398565;
+    box-shadow: 0 0 0 3px rgba(57, 133, 101, .11);
+}
+
+#eventEditor .zones-field input[type="datetime-local"] {
+    direction: ltr;
+    text-align: right;
+}
+
+/* Events list */
+
+.events-list-panel {
+    margin-bottom: 25px;
+}
+
+.events-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.events-filter-tabs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.events-filter {
+    min-height: 38px;
+    padding: 9px 16px;
+    border: 1px solid #e1e8e1;
+    border-radius: 10px;
+    background: #fff;
+    color: #65776b;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.events-filter:hover {
+    background: #edf5ef;
+    color: #174d3c;
+}
+
+.events-filter.active {
+    background: #174d3c;
+    border-color: #174d3c;
+    color: #fff;
+}
+
+.events-search {
+    width: 240px;
+    max-width: 100%;
+    min-height: 40px;
+    padding: 10px 14px;
+    border: 1px solid #dce5de;
+    border-radius: 11px;
+    background: #fff;
+    color: #193d32;
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+}
+
+.events-search:focus {
+    border-color: #398565;
+    box-shadow: 0 0 0 3px rgba(57, 133, 101, .11);
+}
+
+/* Status labels */
+
+.event-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+    border-radius: 30px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.event-status.upcoming {
+    background: #edf3fb;
+    color: #416c9d;
+}
+
+.event-status.ongoing {
+    background: #eaf5ed;
+    color: #287154;
+}
+
+.event-status.ended {
+    background: #f2f3f1;
+    color: #748076;
+}
+
+/* Table */
+
+.events-table td {
+    line-height: 1.8;
+}
+
+.events-table td:first-child {
+    font-weight: 700;
+    color: #193d32;
+}
+
+/* Responsive */
+
+@media (max-width: 1000px) {
+    .events-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 650px) {
+    .events-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .events-search {
+        width: 100%;
+    }
+
+    .events-table {
+        min-width: 920px;
+    }
+}

@@ -1,0 +1,318 @@
+/* Visitor Interactive Map */
+
+.map-page {
+    padding-bottom: 60px;
+}
+
+.map-eyebrow {
+    display: inline-block;
+    color: #237558;
+    font-weight: 700;
+    margin-bottom: 9px;
+    font-size: 14px;
+}
+
+.map-jump a {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.map-livebar {
+    display: flex;
+    gap: 9px;
+    align-items: center;
+    padding: 12px 16px;
+    margin-bottom: 18px;
+    border: 1px solid #D8E8DF;
+    background: #F0F7F1;
+    color: #164A37;
+    border-radius: 14px;
+    font-size: 14px;
+}
+
+.map-livebar .material-symbols-rounded {
+    font-size: 22px;
+}
+
+.map-livebar-end {
+    margin-inline-start: auto;
+    font-size: 12px;
+    color: #527567;
+}
+
+.map-main-column {
+    min-width: 0;
+}
+
+.v-map,
+.mqm.v-map {
+    height: 560px;
+    min-height: 380px;
+}
+
+.map-empty {
+    padding: 12px 8px;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+.map-layer-name {
+    flex: 1;
+    min-width: 0;
+}
+
+.map-layer-note {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.layer-list button:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+/* Selected zone */
+
+.sel-card {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px 22px;
+    padding: 16px 18px;
+}
+
+.sel-name {
+    flex: 1 1 175px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.sel-name > .material-symbols-rounded {
+    color: var(--green-600);
+    font-size: 31px;
+}
+
+.sel-name strong {
+    font: 700 19px var(--display);
+    display: block;
+}
+
+.sel-stats {
+    display: flex;
+    flex: 1 1 230px;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+}
+
+.sel-stats span {
+    display: flex;
+    flex-direction: column;
+}
+
+.sel-stats small {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.sel-stats b {
+    font-size: 18px;
+}
+
+.map-badge {
+    display: block;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.map-badge.low {
+    color: #2C8064;
+}
+
+.map-badge.medium {
+    color: #8A691B;
+}
+
+.map-badge.high {
+    color: #AA5A13;
+}
+
+.map-badge.critical {
+    color: #B52828;
+}
+
+.route-note {
+    width: 100%;
+    padding: 11px 13px;
+    border-radius: 12px;
+    background: #EAF2FC;
+    color: #1A3D6E;
+    font-size: 14px;
+}
+
+/* Route planner */
+
+.pick-chips .chip[aria-pressed="true"] {
+    background: var(--green-900);
+    color: #fff;
+    border-color: var(--green-900);
+}
+
+.map-plan-form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+}
+
+.map-fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+    width: 100%;
+}
+
+.map-fieldset legend {
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.map-start-field {
+    width: 100%;
+    max-width: 340px;
+}
+
+.map-start-field select {
+    width: 100%;
+}
+
+.map-check-field {
+    flex-direction: row !important;
+    gap: 10px;
+    align-items: center;
+}
+
+.map-check-field input {
+    width: 20px;
+    height: 20px;
+}
+
+.map-plan-result h3 {
+    font-size: 17px;
+    margin-bottom: 14px;
+}
+
+.map-plan-result .map-empty {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.map-route-steps {
+    list-style: decimal;
+    padding-inline-start: 25px;
+    display: grid;
+    gap: 9px;
+}
+
+.map-route-steps li {
+    padding: 9px 6px;
+}
+
+.map-route-steps button {
+    display: inline;
+    border: 0;
+    background: none;
+    color: #17654D;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-inline-start: 8px;
+}
+
+/* Crowds and suggestions */
+
+.two-col {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.crowd-list {
+    display: grid;
+    gap: 16px;
+}
+
+.crowd-row {
+    width: 100%;
+}
+
+.crowd-row:disabled {
+    cursor: not-allowed;
+}
+
+.map-dot {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--c, #aaa);
+    display: inline-block;
+}
+
+.map-suggestion {
+    display: block;
+    width: 100%;
+    text-align: start;
+    padding: 13px 0;
+    background: none;
+    border: 0;
+    border-top: 1px solid var(--line);
+    cursor: pointer;
+}
+
+.map-suggestion strong {
+    display: block;
+    color: var(--ink);
+}
+
+.map-suggestion small {
+    color: var(--muted);
+}
+
+/* Responsive */
+
+@media (max-width: 960px) {
+    .two-col {
+        grid-template-columns: 1fr;
+    }
+
+    .map-livebar {
+        flex-wrap: wrap;
+    }
+
+    .map-livebar-end {
+        width: 100%;
+        margin-inline-start: 0;
+    }
+}
+
+@media (max-width: 640px) {
+    .v-map,
+    .mqm.v-map {
+        height: 430px;
+    }
+
+    .sel-card {
+        align-items: flex-start;
+    }
+}
+
+/* Starting zone isn't a real GPS position */
+
+.map-page .mqm-ime,
+.map-page .mqm-ime-label {
+    display: none !important;
+}

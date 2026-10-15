@@ -1,0 +1,400 @@
+
+/* ==========================================
+   MERGAB | ORGANIZER ZONES
+   ========================================== */
+
+.zones-page-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.zones-page-heading h1 {
+    margin: 0 0 8px;
+    color: var(--org-green);
+    font-family: var(--display, "Readex Pro", sans-serif);
+    font-size: clamp(25px, 2.4vw, 33px);
+}
+
+.zones-page-heading p {
+    margin: 0;
+    color: var(--org-muted);
+    font-size: 13px;
+    line-height: 1.9;
+}
+
+/* Buttons */
+
+.zones-primary-btn,
+.zones-secondary-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 44px;
+    padding: 11px 19px;
+    border-radius: 11px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.zones-primary-btn {
+    background: var(--org-green);
+    color: #fff;
+    border: 1px solid var(--org-green);
+}
+
+.zones-primary-btn:hover {
+    background: #205a46;
+    border-color: #205a46;
+}
+
+.zones-secondary-btn {
+    background: #fff;
+    color: var(--org-green);
+    border: 1px solid var(--org-border);
+}
+
+.zones-secondary-btn:hover {
+    background: #f3f7f3;
+}
+
+.zones-primary-btn:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+.zones-primary-btn .material-symbols-rounded {
+    font-size: 20px;
+}
+
+/* Map */
+
+.zones-map-panel {
+    margin-bottom: 22px;
+}
+
+.zones-map {
+    height: 520px;
+    border: 1px solid #e4e9df;
+    border-radius: 15px;
+    background: #eee9dc;
+    overflow: hidden;
+}
+
+.zones-map-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 30px;
+    background: #e9f2eb;
+    color: #317458;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.zones-map-hint {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 16px 0 0;
+    color: var(--org-muted);
+    font-size: 12px;
+    line-height: 1.8;
+}
+
+.zones-map-hint .material-symbols-rounded {
+    font-size: 19px;
+    color: #a88b55;
+}
+
+.zones-map.is-placing {
+    outline: 2px solid var(--org-gold);
+    outline-offset: 3px;
+}
+
+.zones-map.is-placing .mqm-istage {
+    cursor: crosshair;
+}
+
+/* Editor */
+
+.zones-editor {
+    margin-bottom: 22px;
+}
+
+.zones-editor[hidden] {
+    display: none !important;
+}
+
+.zones-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--org-border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--org-text);
+    cursor: pointer;
+}
+
+.zones-icon-btn:hover {
+    background: #f3f6f2;
+}
+
+.zones-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.zones-field {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    min-width: 0;
+}
+
+.zones-field label {
+    color: var(--org-text);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.zones-field input {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 13px;
+    border: 1px solid #dce5de;
+    border-radius: 11px;
+    background: #fff;
+    color: var(--org-text);
+    font: inherit;
+    font-size: 13px;
+    outline: none;
+}
+
+.zones-field input:focus {
+    border-color: #398565;
+    box-shadow: 0 0 0 3px rgba(57, 133, 101, .11);
+}
+
+.zones-field input[readonly] {
+    background: #f6f8f5;
+    color: #557267;
+}
+
+.zones-field small {
+    color: var(--org-muted);
+    font-size: 11px;
+}
+
+.zones-coordinates {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    direction: ltr;
+}
+
+.zones-checkboxes {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-top: 23px;
+}
+
+.zones-checkboxes label {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.zones-checkboxes input {
+    width: 17px;
+    height: 17px;
+    accent-color: #174d3c;
+}
+
+.zones-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 11px;
+    margin-top: 26px;
+}
+
+.zones-form-message {
+    margin-top: 18px;
+    padding: 13px 15px;
+    border-radius: 11px;
+    font-size: 12px;
+}
+
+.zones-form-message[hidden] {
+    display: none !important;
+}
+
+.zones-form-message.success {
+    background: #edf7ef;
+    color: #236848;
+}
+
+.zones-form-message.error {
+    background: #fff1ef;
+    color: #a63d36;
+}
+
+/* Zones table */
+
+.zones-table-panel {
+    margin-bottom: 25px;
+}
+
+.zones-count {
+    padding: 8px 13px;
+    border-radius: 20px;
+    background: #edf4ed;
+    color: #285f46;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.zones-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.zones-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: right;
+    font-size: 12px;
+}
+
+.zones-table th {
+    padding: 15px;
+    background: #f5f8f5;
+    color: #52675a;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.zones-table td {
+    padding: 16px 15px;
+    border-bottom: 1px solid #edf0ea;
+    color: var(--org-text);
+    vertical-align: middle;
+}
+
+.zones-table tbody tr:hover {
+    background: #fafbf9;
+}
+
+.zones-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.zones-table button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    margin-inline-end: 5px;
+    border: 1px solid #e1e8e1;
+    border-radius: 9px;
+    background: #fff;
+    color: var(--org-green);
+    cursor: pointer;
+}
+
+.zones-table button:hover {
+    background: #edf5ef;
+}
+
+.zones-table button.delete-zone {
+    color: #ba514a;
+}
+
+.zones-table button.delete-zone:hover {
+    background: #fff0ed;
+}
+
+/* Responsive */
+
+@media (max-width: 900px) {
+    .zones-map {
+        height: 420px;
+    }
+}
+
+@media (max-width: 600px) {
+    .zones-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .zones-map {
+        height: 350px;
+    }
+
+    .zones-page-heading > .zones-primary-btn {
+        width: 100%;
+    }
+
+    .zones-form-actions > button {
+        flex: 1;
+    }
+
+    .zones-table {
+        min-width: 650px;
+    }
+}
+
+/* Zone boundary drawing tools */
+
+.zones-drawing-tools {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 18px;
+    padding: 20px;
+    background: #f8faf7;
+    border: 1px solid #e1e8e1;
+    border-radius: 14px;
+}
+
+.zones-drawing-tools[hidden] {
+    display: none !important;
+}
+
+.zones-drawing-label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #174d3c;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.zones-drawing-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#boundaryDrawingStatus {
+    color: #6b7d72;
+    font-size: 12px;
+}

@@ -1,0 +1,331 @@
+
+/* ==========================================
+   MERGAB | ORGANIZER SIMULATIONS
+   ========================================== */
+
+/* Summary statistics */
+
+.simulation-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+.simulation-stat {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+}
+
+.simulation-stat > .material-symbols-rounded {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: #edf5ee;
+    color: #287154;
+    font-size: 27px;
+}
+
+.simulation-stat > div {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.simulation-stat small,
+.simulation-result-stats small {
+    color: var(--org-muted);
+    font-size: 12px;
+}
+
+.simulation-stat strong {
+    color: var(--org-green);
+    font-size: 28px;
+    font-weight: 700;
+}
+
+/* Simulation editor */
+
+#simulationEditor {
+    margin-bottom: 22px;
+}
+
+#simulationEditor .zones-field select {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 13px;
+    border: 1px solid #dce5de;
+    border-radius: 11px;
+    background: white;
+    color: var(--org-text);
+    font: inherit;
+    font-size: 13px;
+    outline: none;
+}
+
+#simulationEditor .zones-field select:focus {
+    border-color: #398565;
+    box-shadow: 0 0 0 3px rgba(57, 133, 101, .11);
+}
+
+/* Main simulation map */
+
+.simulation-map-panel {
+    margin-bottom: 22px;
+}
+
+#simulationMap {
+    position: relative;
+    width: 100%;
+    height: 540px;
+    min-height: 380px;
+    background: #eee9dc;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+/* Timeline and playback */
+
+.simulation-playback {
+    margin-top: 20px;
+    padding: 21px;
+    background: #f8faf7;
+    border: 1px solid var(--org-border);
+    border-radius: 15px;
+}
+
+.simulation-playback-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.simulation-playback-heading > div {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.simulation-playback-heading strong {
+    color: var(--org-green);
+    font-size: 14px;
+}
+
+.simulation-playback-heading small {
+    color: var(--org-muted);
+    font-size: 12px;
+}
+
+.simulation-minute {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: #e7f0e9;
+    color: #246747;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.simulation-timeline {
+    margin-top: 23px;
+}
+
+#simulationTimeline {
+    display: block;
+    width: 100%;
+    height: 7px;
+    margin: 0;
+    border-radius: 10px;
+    accent-color: #247c59;
+    cursor: pointer;
+}
+
+#simulationTimeline:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+.simulation-timeline-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+    color: var(--org-muted);
+    font-size: 11px;
+}
+
+.simulation-playback-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 11px;
+    margin-top: 22px;
+}
+
+.simulation-playback-actions button:disabled {
+    opacity: .48;
+    cursor: not-allowed;
+}
+
+.simulation-playback-actions .material-symbols-rounded {
+    font-size: 20px;
+}
+
+.simulation-speed {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-inline-start: auto;
+}
+
+.simulation-speed label {
+    color: var(--org-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.simulation-speed select {
+    min-width: 77px;
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 1px solid var(--org-border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--org-green);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Results */
+
+.simulation-results {
+    margin-bottom: 22px;
+}
+
+.simulation-result-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.simulation-result-stats > div {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 19px;
+    border: 1px solid #e4eae3;
+    border-radius: 13px;
+    background: #f8faf7;
+}
+
+.simulation-result-stats strong {
+    color: var(--org-green);
+    font-size: 26px;
+    font-weight: 700;
+}
+
+#simulationSnapshotsBody td,
+#simulationsTableBody td {
+    line-height: 1.8;
+}
+
+/* Saved simulations */
+
+.simulation-list-panel {
+    margin-bottom: 28px;
+}
+
+.simulation-table td:first-child {
+    font-weight: 700;
+    color: var(--org-green);
+}
+
+/* Dynamic simulation status badges */
+
+.simulation-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 12px;
+    border-radius: 30px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.simulation-status.completed {
+    background: #eaf5ed;
+    color: #287154;
+}
+
+.simulation-status.pending {
+    background: #fbf3e4;
+    color: #976c2b;
+}
+
+.simulation-status.failed {
+    background: #fff0ed;
+    color: #b14c42;
+}
+
+.simulation-status.running {
+    background: #edf3fb;
+    color: #416c9d;
+}
+
+/* Responsive */
+
+@media (max-width: 1000px) {
+    .simulation-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .simulation-result-stats {
+        grid-template-columns: 1fr;
+    }
+
+    #simulationMap {
+        height: 450px;
+    }
+}
+
+@media (max-width: 650px) {
+    #simulationMap {
+        height: 350px;
+        min-height: 350px;
+    }
+
+    .simulation-playback {
+        padding: 15px;
+    }
+
+    .simulation-playback-actions {
+        align-items: stretch;
+    }
+
+    .simulation-playback-actions > button {
+        flex: 1;
+    }
+
+    .simulation-speed {
+        width: 100%;
+        justify-content: space-between;
+        margin-inline-start: 0;
+        margin-top: 7px;
+    }
+
+    .simulation-table {
+        min-width: 850px;
+    }
+}

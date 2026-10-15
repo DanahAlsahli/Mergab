@@ -419,7 +419,7 @@
 
     // روابط المناطق في وضع الصورة
     function imageEdges() {
-      if (L.edges && L.edges.length) return L.edges;
+      if (Array.isArray(L.edges)) return L.edges;
       var out = [], seen = {};
       function add(a, b) { var id = [a, b].sort().join('|'); if (a !== b && !seen[id]) { seen[id] = 1; out.push([a, b]); } }
       zones.forEach(function (z) {
@@ -806,7 +806,6 @@
 
     function onDown(e) {
       if (e.button !== 0 || e.target.closest('.mqm-controls, .mqm-heat, .mqm-legend')) return;
-      if (IMG && state.zoom <= 1) return;   // السحب في وضع الصورة بس لما تكون مكبّرة
       var x0 = e.clientX, y0 = e.clientY, r0 = state.rot, p0 = state.pan.slice(), moved = false;
       function move(ev) {
         var dx = ev.clientX - x0, dy = ev.clientY - y0;
@@ -857,7 +856,8 @@
 
     /* ---------- التشغيل ---------- */
     if (IMG) buildImage(); else build3d();
-    state.start = resolve(state.start) || zones[0].key;
+    state.start = resolve(state.start) ||
+        (zones.length ? zones[0].key : null);
     placeMe();
     buildGraph();
     fit();

@@ -23,6 +23,9 @@ public class ZoneConnection {
     @Column(columnDefinition = "int not null")
     private Integer maxVisitorsPerMinute;
 
+    @Column(columnDefinition = "TEXT")
+    private String pathPoints;
+
     @ManyToOne
     @JoinColumn(name = "from_zone_id", nullable = false)
     private Zone fromZone;

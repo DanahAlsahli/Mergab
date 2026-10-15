@@ -47,6 +47,9 @@ public class Zone {
     @Column(nullable = true)
     private Double mapY;
 
+    @Column(columnDefinition = "TEXT")
+    private String boundaryPoints;
+
     @OneToMany(mappedBy = "fromZone")
     @JsonIgnore
     private Set<ZoneConnection> outgoingConnections;

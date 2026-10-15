@@ -38,10 +38,7 @@ public class ZoneConnectionService {
             throw new ApiException("A zone cannot connect to itself");
         }
 
-        // Prevent duplicate connection
-        if (zoneConnectionRepository.existsByFromZone_IdAndToZone_Id(fromZoneId, toZoneId)) {
-            throw new ApiException("Zone connection already exists");
-        }
+
 
         zoneConnection.setFromZone(fromZone);
         zoneConnection.setToZone(toZone);
@@ -60,6 +57,8 @@ public class ZoneConnectionService {
         }
 
         oldConnection.setMaxVisitorsPerMinute(zoneConnection.getMaxVisitorsPerMinute());
+        oldConnection.setPathPoints(zoneConnection.getPathPoints());
+
 
         zoneConnectionRepository.save(oldConnection);
     }
@@ -87,12 +86,7 @@ public class ZoneConnectionService {
             throw new ApiException("A zone cannot connect to itself");
         }
 
-        // Prevent duplicate connection
-        ZoneConnection existingConnection = zoneConnectionRepository.findByFromZone_IdAndToZone_Id(fromZoneId, toZoneId);
 
-        if (existingConnection != null && !existingConnection.getId().equals(id)) {
-            throw new ApiException("Zone connection already exists");
-        }
 
         oldConnection.setFromZone(fromZone);
         oldConnection.setToZone(toZone);
