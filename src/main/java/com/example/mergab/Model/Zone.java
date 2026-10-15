@@ -1,4 +1,4 @@
-﻿package com.example.mergab.Model;
+package com.example.mergab.Model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -54,4 +54,10 @@ public class Zone {
     @OneToMany(mappedBy = "zone")
     @JsonIgnore
     private Set<ZoneVisit> zoneVisits;
+
+    @Column(nullable = false)
+    private Boolean hasPrayerArea = false;
+
+    @Column(nullable = false)
+    private Boolean indoor = true;
 }
