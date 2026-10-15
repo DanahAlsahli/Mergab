@@ -38,32 +38,91 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Account destination based on saved session.
-    const accountLink = document.getElementById('accountLink');
 
-    if (accountLink) {
+    // Navbar authentication based on user role
+    const accountLink = document.getElementById('accountLink');
+    const profileLink = document.getElementById('navProfileLink');
+    const profileName = document.getElementById('navProfileName');
+    const logoutButton = document.getElementById('navLogoutButton');
+
+    let currentSession = null;
+
+    try {
+        currentSession = JSON.parse(
+            sessionStorage.getItem('mergab.session') || 'null'
+        );
+    } catch (error) {
+        console.warn('Invalid session data');
+    }
+
+    const accountPaths = {
+        ADMIN: '/account',
+        ORGANIZER: '/account',
+        VISITOR: '/visitor/account'
+    };
+
+    if (currentSession?.token && accountPaths[currentSession.role]) {
+
+        // Hide login button
+        if (accountLink) {
+            accountLink.hidden = true;
+        }
+
+        // Show user profile
+        if (profileLink && profileName) {
+            profileLink.href = accountPaths[currentSession.role];
+            profileName.textContent =
+                currentSession.fullName || 'المستخدم';
+
+            profileLink.hidden = false;
+        }
+
+        // Show logout button
+        if (logoutButton) {
+            logoutButton.hidden = false;
+
+            logoutButton.addEventListener('click', () => {
+                if (window.MergabAuth?.logout) {
+                    window.MergabAuth.logout();
+                } else {
+                    sessionStorage.removeItem('mergab.session');
+                    window.location.replace('/login');
+                }
+            });
+        }
+
+    } else {
+        if (accountLink) accountLink.hidden = false;
+        if (profileLink) profileLink.hidden = true;
+        if (logoutButton) logoutButton.hidden = true;
+    }
+
+
+    // Dashboard link based on user role
+    const dashboardLink = document.getElementById('dashboardNavLink');
+
+    if (dashboardLink) {
         try {
             const session = JSON.parse(
                 sessionStorage.getItem('mergab.session') || 'null'
             );
 
-            if (session?.role && session?.token) {
-                const destinations = {
-                    ADMIN: '/admin',
-                    ORGANIZER: '/organizer/dashboard',
-                    VISITOR: '/visitor/account'
-                };
+            const dashboardPaths = {
+                ADMIN: '/admin',
+                ORGANIZER: '/organizer/dashboard'
+            };
 
-                accountLink.href = destinations[session.role] || '/login';
-                accountLink.dataset.t = 'account';
-                accountLink.textContent =
-                    document.documentElement.lang === 'en'
-                        ? 'My account'
-                        : 'حسابي';
+            if (session?.token && dashboardPaths[session.role]) {
+                dashboardLink.href = dashboardPaths[session.role];
+                dashboardLink.hidden = false;
+            } else {
+                dashboardLink.hidden = true;
             }
         } catch (error) {
-            console.warn('Invalid session data');
+            dashboardLink.hidden = true;
         }
     }
+
 });
 
 
@@ -107,7 +166,11 @@ Mergab.layoutTranslations = {
         navFeatures: 'المميزات',
         login: 'تسجيل الدخول',
         account: 'حسابي',
-        footerTag: 'استكشف بذكاء، واستمتع بكل لحظة.'
+        footerTag: 'استكشف بذكاء، واستمتع بكل لحظة.',
+        dashboard: 'لوحة التحكم',
+        welcome: 'أهلًا بك ',
+        logout: 'تسجيل الخروج',
+
     },
     en: {
         navHome: 'Home',
@@ -116,7 +179,10 @@ Mergab.layoutTranslations = {
         navFeatures: 'Features',
         login: 'Log in',
         account: 'My account',
-        footerTag: 'Explore smarter, enjoy every moment.'
+        footerTag: 'Explore smarter, enjoy every moment.',
+        dashboard: 'Dashboard',
+        welcome: 'Welcome ',
+        logout: 'Log out',
     }
 };
 
@@ -141,7 +207,7 @@ Mergab.updateLayoutLanguage = function () {
 
     if (languageButton) {
         languageButton.textContent =
-            lang === 'ar' ? 'English' : 'العربية';
+            lang === 'ar' ? 'EN' : 'AR';
     }
 };
 
@@ -165,3 +231,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+

@@ -1,396 +1,249 @@
 <!doctype html>
-<html>
+<html lang="ar" dir="rtl" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" type="image/png" href="../../static/img/favicon.png">
-<title data-i18n="map.title">مرقاب</title>
-<script src="../../static/js/i18n.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@500;600;700&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" rel="stylesheet">
-<link rel="stylesheet" href="../../static/css/mergab.css">
-<link rel="stylesheet" href="../../static/map/mirqab-map.css">
-<style>
-  .sel-card { margin-top: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; padding: 16px 18px; }
-  .sel-card .name { display: flex; flex-direction: column; gap: 4px; flex: 1 1 200px; }
-  .sel-card .name b { font-family: var(--display); font-size: 20px; }
-  .sel-thumb { width: 64px; height: 64px; border-radius: 14px; flex: none; }
-  .sel-stats { display: flex; gap: 18px; flex-wrap: wrap; }
-  .sel-stats span { display: flex; flex-direction: column; font-size: 12.5px; color: var(--muted); }
-  .sel-stats b { font-size: 17px; color: var(--ink); }
-  .route-note { margin-top: 10px; padding: 12px 14px; border-radius: 12px; background: #EAF2FC; color: #1A3D6E; font-size: 14px; line-height: 1.7; width: 100%; }
-  .pick-chips .chip[aria-pressed="true"] { background: var(--green-600); border-color: var(--green-600); }
-  .two-col { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
-  @media (max-width: 960px) { .two-col { grid-template-columns: minmax(0, 1fr); } }
-</style>
-</head>
-<body>
-<header id="vHeader"></header>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0E3D32">
 
-<main class="v-wrap">
+  <title>مِرقاب | الخريطة التفاعلية</title>
+
+  <link rel="icon" href="/img/favicon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/mergab.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/map/mirqab-map.css">
+  <link rel="stylesheet" href="/css/visitor-map.css">
+
+  <script defer src="/js/base.js"></script>
+  <script defer src="/map/mirqab-map.js"></script>
+  <script defer src="/js/mergab-map-data.js"></script>
+  <script defer src="/js/visitor-map.js"></script>
+</head>
+
+<body>
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main class="v-wrap map-page">
+
   <div class="v-map-head">
-    <div><h1 class="section-title-sa" data-i18n="map.h1"></h1><p data-i18n="map.sub"></p></div>
-    <nav class="chips" aria-label="sections" id="jump">
-      <a class="chip" href="#map" style="display:inline-flex;align-items:center;text-decoration:none" data-i18n="nav.map"></a>
-      <a class="chip" href="#planner" style="display:inline-flex;align-items:center;text-decoration:none" data-i18n="plan.title"></a>
-      <a class="chip" href="#crowdTitle" style="display:inline-flex;align-items:center;text-decoration:none" data-i18n="crowd.title"></a>
-      <a class="chip" href="#suggest" style="display:inline-flex;align-items:center;text-decoration:none" data-i18n="sug.title"></a>
+    <div>
+            <span class="map-eyebrow" data-i="eyebrow">
+                استكشف إكسبو بذكاء
+            </span>
+
+      <h1 class="section-title-sa" data-i="title">
+        الخريطة التفاعلية
+      </h1>
+
+      <p data-i="subtitle">
+        تعرّف على المناطق، شاهد الازدحام، وخطّط مسارك.
+      </p>
+    </div>
+
+    <nav class="chips map-jump" aria-label="أقسام صفحة الخريطة">
+      <a class="chip" href="#map" data-i="mapNav">الخريطة</a>
+      <a class="chip" href="#planner" data-i="planNav">خطط مسارك</a>
+      <a class="chip" href="#crowdTitle" data-i="crowdNav">الازدحام</a>
+      <a class="chip" href="#suggest" data-i="suggestNav">اقتراحات</a>
     </nav>
   </div>
 
-  <div id="ctxBar" aria-live="polite" style="margin-bottom:18px"></div>
+  <div class="map-livebar" role="status" aria-live="polite">
+        <span class="material-symbols-rounded" aria-hidden="true">
+            sensors
+        </span>
+
+    <span id="mapStatus">
+            جاري تحميل بيانات الخريطة...
+        </span>
+
+    <span class="map-livebar-end" data-i="refreshNotice">
+            تحديث تلقائي كل 30 ثانية
+        </span>
+  </div>
 
   <div class="v-map-grid">
-    <nav class="card layer-list" id="layers" data-i18n-aria="map.zones"></nav>
-    <div>
-      <div class="fc-bar" role="group" aria-labelledby="fcLbl">
-        <span class="lbl" id="fcLbl"><span data-i18n="fc.title"></span></span>
-        <div class="chips" id="fcChips">
-          <button type="button" class="chip" data-m="0" aria-pressed="true" data-i18n="fc.now"></button>
-          <button type="button" class="chip" data-m="30" aria-pressed="false" data-i18n="fc.m30"></button>
-          <button type="button" class="chip" data-m="60" aria-pressed="false" data-i18n="fc.h1"></button>
-          <button type="button" class="chip" data-m="120" aria-pressed="false" data-i18n="fc.h2"></button>
-        </div>
+
+    <nav class="card layer-list" id="layers"
+         aria-label="مناطق إكسبو">
+      <p class="map-empty">جاري تحميل المناطق...</p>
+    </nav>
+
+    <div class="map-main-column">
+
+      <div id="map" class="v-map"
+           aria-label="خريطة إكسبو التفاعلية">
       </div>
-      <div id="map" class="v-map"></div>
-      <div class="fc-note" id="fcNote" aria-live="polite" hidden></div>
-      <section class="card sel-card" id="selCard" aria-live="polite" hidden>
-        <span class="sel-thumb" id="sThumb" aria-hidden="true"></span>
-        <div class="name"><b id="sName"></b><span id="sBadge"></span></div>
+
+      <section class="card sel-card"
+               id="selCard"
+               aria-live="polite"
+               hidden>
+
+        <div class="sel-name">
+                    <span class="material-symbols-rounded"
+                          aria-hidden="true">location_on</span>
+
+          <div>
+            <strong id="sName"></strong>
+            <span id="sBadge" class="map-badge"></span>
+          </div>
+        </div>
+
         <div class="sel-stats">
-          <span><span data-i18n="map.visitors"></span><b id="sCount"></b></span>
-          <span><span data-i18n="map.capacity"></span><b id="sCap"></b></span>
-          <span><span data-i18n="map.wait"></span><b id="sWait"></b></span>
-          <span><span data-i18n="map.todayEvents"></span><b id="sEvents"></b></span>
+                    <span>
+                        <small data-i="visitors">عدد الزوار المسجل</small>
+                        <b id="sCount">—</b>
+                    </span>
+
+          <span>
+                        <small data-i="capacity">السعة</small>
+                        <b id="sCap">—</b>
+                    </span>
+
+          <span>
+                        <small data-i="eventsToday">فعاليات اليوم</small>
+                        <b id="sEvents">—</b>
+                    </span>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button type="button" class="btn btn-ghost" id="saveBtn"></button>
-          <button type="button" class="btn btn-primary" id="goBtn" data-i18n="map.takeMe"></button>
-        </div>
+
+        <button type="button"
+                class="btn btn-primary"
+                id="goBtn">
+
+                    <span class="material-symbols-rounded"
+                          aria-hidden="true">route</span>
+
+          <span data-i="showRoute">اعرض المسار</span>
+        </button>
+
         <div class="route-note" id="routeNote" hidden></div>
+
       </section>
+
     </div>
   </div>
 
-  <section class="v-section" id="planner" aria-labelledby="planTitle">
+  <section class="v-section"
+           id="planner"
+           aria-labelledby="planTitle">
+
     <div class="card card-pad">
-      <div class="card-head"><div><h2 id="planTitle" class="section-title-sa" style="font-size:24px" data-i18n="plan.title"></h2>
-        <p style="margin:6px 0 0;color:var(--muted)" data-i18n="plan.sub"></p></div></div>
+
+      <div class="card-head">
+        <div>
+          <h2 id="planTitle"
+              class="section-title-sa"
+              data-i="planTitle">
+            خطّط زيارتك
+          </h2>
+
+          <p data-i="planDesc">
+            اختر نقطة البداية والمناطق اللي ودّك تزورها.
+            المسارات تقديرية وبحسب الاتصالات المسجلة.
+          </p>
+        </div>
+      </div>
+
       <div class="planner">
-        <form id="planForm" style="display:flex;flex-direction:column;gap:16px">
-          <fieldset style="border:0;padding:0;margin:0">
-            <legend style="font-weight:600;margin-bottom:10px" data-i18n="plan.where"></legend>
+
+        <form id="planForm" class="map-plan-form">
+
+          <fieldset class="map-fieldset">
+            <legend data-i="chooseZones">
+              المناطق اللي تبغى تزورها
+            </legend>
+
             <div class="chips pick-chips" id="pickZones"></div>
           </fieldset>
-          <div class="form-grid">
-            <label class="field"><span data-i18n="plan.start"></span><select id="startSel"></select></label>
-            <label class="field"><span data-i18n="plan.time"></span><select id="timeSel">
-              <option value="120" data-i18n="plan.h2"></option><option value="180" selected data-i18n="plan.h3"></option>
-              <option value="240" data-i18n="plan.h4"></option><option value="360" data-i18n="plan.h6"></option>
-            </select></label>
-            <label class="field full" style="flex-direction:row;align-items:center;gap:10px;font-weight:500">
-              <input type="checkbox" id="avoidChk" checked style="width:20px;min-height:20px;height:20px"> <span data-i18n="plan.avoid"></span></label>
-          </div>
-          <button type="submit" class="btn btn-primary" style="align-self:flex-start" data-i18n="plan.btn"></button>
+
+          <label class="field map-start-field">
+            <span data-i="startZone">نقطة البداية</span>
+            <select id="startSel"
+                    aria-label="نقطة البداية"></select>
+          </label>
+
+          <label class="field map-check-field">
+            <input type="checkbox"
+                   id="avoidChk"
+                   checked>
+
+            <span data-i="avoidCrowd">
+                            فضّل المسارات الأقل ازدحامًا
+                        </span>
+          </label>
+
+          <button type="submit"
+                  class="btn btn-primary"
+                  data-i="planButton">
+            أنشئ مساري
+          </button>
+
         </form>
-        <div>
-          <h3 style="font-size:16px;margin-bottom:12px" data-i18n="plan.result"></h3>
-          <ol class="plan-steps" id="planSteps"></ol>
+
+        <div class="map-plan-result">
+
+          <h3 data-i="routeResult">
+            المسار المقترح
+          </h3>
+
+          <ol class="plan-steps"
+              id="planSteps"
+              aria-live="polite"></ol>
+
         </div>
+
       </div>
     </div>
   </section>
 
-  <div class="two-col v-section" style="padding-top:20px">
-    <section class="card card-pad" aria-labelledby="crowdTitle">
-      <div class="card-head"><h2 id="crowdTitle" data-i18n="crowd.title"></h2><span class="badge badge-dot st-COMPLETED" data-i18n="live"></span></div>
-      <div class="crowd-list" id="crowd"></div>
+  <div class="two-col v-section">
+
+    <section class="card card-pad"
+             aria-labelledby="crowdTitle">
+
+      <div class="card-head">
+        <h2 id="crowdTitle" data-i="crowdTitle">
+          حالة الازدحام
+        </h2>
+      </div>
+
+      <div class="crowd-list"
+           id="crowd"
+           aria-live="polite"></div>
+
     </section>
-    <section class="card card-pad" id="suggest" aria-labelledby="sugTitle">
-      <div class="card-head"><div><h2 id="sugTitle" data-i18n="sug.title"></h2><p style="margin:4px 0 0;color:var(--muted);font-size:14px" data-i18n="sug.sub"></p></div></div>
-      <div id="sugList"></div>
+
+    <section class="card card-pad"
+             id="suggest"
+             aria-labelledby="sugTitle">
+
+      <div class="card-head">
+        <div>
+          <h2 id="sugTitle" data-i="sugTitle">
+            اقتراحات لزيارتك
+          </h2>
+
+          <p data-i="sugDesc">
+            اقتراحات حسب إشغال المناطق والفعاليات المسجلة.
+          </p>
+        </div>
+      </div>
+
+      <div id="sugList" aria-live="polite"></div>
+
     </section>
+
   </div>
+
 </main>
 
-<footer id="vFooter"></footer>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
 
-<script src="../../static/js/site-config.js"></script>
-<script src="../../static/js/mock-server.js"></script>
-<script src="../../static/js/api.js"></script>
-<script src="../../static/js/visitor.js"></script>
-<script src="../../static/map/mirqab-map.js"></script>
-<script>
-  const { api, esc, num, level, zoneName, fmtTime, toDate, isToday, toast } = Mergab;
-  const I = Visitor.icon;
-  const CFG = window.MERGAB_CONFIG.map;
-  const LANG = I18n.lang;
-
-  let ZONES = [], EVENTS = [], selected = null, map = null, picks = [];
-  const params = new URLSearchParams(location.search);
-  document.getElementById('planSteps').innerHTML = `<li class="empty" style="padding:20px 0">${esc(t('plan.pick'))}</li>`;
-
-  /* ---------- الخريطة (صورة خريطة المعرض من site-config.js) ---------- */
-  function makeMap() {
-    map = MirqabMap.create('#map', {
-      mode: 'image', lang: LANG, demo: false,
-      imageLayout: { src: Mergab.ROOT + CFG.src, hub: CFG.hub, zones: CFG.zones, metersPerUnit: CFG.metersPerUnit || 8 },
-      imageFit: 'contain',
-      start: document.getElementById('startSel').value || 'South Gate',
-      onSelect: z => showSelected(z.dbName || z.name)
-    });
-  }
-
-  function findZone(name) {
-    const n = String(name || '').trim().toLowerCase();
-    return ZONES.find(z => z.name.toLowerCase() === n || zoneName(z) === name);
-  }
-  function eventsIn(z) { return EVENTS.filter(e => e.zone && e.zone.id === z.id); }
-  function waitOf(z) { return Math.max(0, Math.round((z.initialVisitors / z.capacity - 0.3) * 45)); }
-
-  /* ---------- المنطقة المحددة ---------- */
-  function showSelected(name) {
-    const z = findZone(name);
-    if (!z) return;
-    selected = z;
-    const lv = level(z.initialVisitors, z.capacity);
-    document.getElementById('selCard').hidden = false;
-    document.getElementById('sThumb').setAttribute('style', Visitor.zoneArt(z));
-    document.getElementById('sName').textContent = zoneName(z);
-    document.getElementById('sBadge').innerHTML = `<span class="badge" style="background:${lv.color};color:${lv.ink}">${esc(lv.label)} · <span dir="ltr">${lv.percent}%</span></span>`;
-    document.getElementById('sCount').textContent = num(z.initialVisitors);
-    document.getElementById('sCap').textContent = num(z.capacity);
-    document.getElementById('sWait').textContent = waitOf(z) + ' ' + t('min');
-    document.getElementById('sEvents').textContent = eventsIn(z).filter(e => isToday(e.startDateTime)).length;
-    document.getElementById('routeNote').hidden = true;
-    renderSave();
-    renderLayers();
-  }
-
-  function routeTo(name, from) {
-    const r = map.showRoute(name, from ? { from } : undefined);
-    const note = document.getElementById('routeNote');
-    note.hidden = false;
-    if (!r) { note.textContent = t('map.routeNone'); return null; }
-    let h = I('walk', 16) + ' ' + t('map.routeBest', { m: r.best.minutes, d: num(r.best.meters) });
-    if (r.direct && r.avoided.length) h += '<br>' + esc(t('map.routeAvoid', { z: r.avoided.join(LANG === 'ar' ? '، ' : ', '), m: r.direct.minutes }));
-    note.innerHTML = h;
-    return r;
-  }
-  document.getElementById('goBtn').addEventListener('click', () => { if (selected) routeTo(selected.name); });
-
-  // حفظ المكان: يحتاج دخول كزائر
-  function renderSave() {
-    const btn = document.getElementById('saveBtn');
-    const me = Mergab.auth.get();
-    if (!me || me.role !== 'VISITOR') { btn.innerHTML = I('heart', 18) + ' ' + esc(t('map.saveLogin')); return; }
-    const on = Visitor.saved.has(selected.name);
-    btn.innerHTML = I('heart', 18, on ? '#C0392B' : null, on) + ' ' + esc(t(on ? 'map.saved' : 'map.save'));
-    btn.setAttribute('aria-pressed', String(on));
-  }
-  document.getElementById('saveBtn').addEventListener('click', () => {
-    const me = Mergab.auth.get();
-    if (!me || me.role !== 'VISITOR') {
-      location.href = Mergab.ROOT + 'login.html?next=' + encodeURIComponent(location.pathname + '?zone=' + encodeURIComponent(selected.name));
-      return;
-    }
-    toast(t(Visitor.saved.toggle(selected.name) ? 'map.savedToast' : 'map.removedToast'), 'success');
-    renderSave();
-  });
-
-  /* ---------- القائمة الجانبية ---------- */
-  function renderLayers() {
-    document.getElementById('layers').innerHTML = `<h2>${esc(t('map.zones'))}</h2>` + ZONES.map(z => {
-      const lv = level(z.initialVisitors, z.capacity);
-      return `<button type="button" data-zone="${esc(z.name)}" aria-pressed="${!!(selected && selected.id === z.id)}">
-        ${I(Visitor.zoneStyle(z).icon, 18)}<span>${esc(zoneName(z))}</span><span class="dot" style="background:${lv.color}" title="${esc(lv.label)}"></span></button>`;
-    }).join('');
-  }
-  document.getElementById('layers').addEventListener('click', e => {
-    const b = e.target.closest('[data-zone]');
-    if (b) map.select(b.dataset.zone);
-  });
-
-  /* ---------- حالة الازدحام ---------- */
-  function renderCrowd() {
-    const sorted = ZONES.slice().sort((a, b) => b.initialVisitors / b.capacity - a.initialVisitors / a.capacity);
-    document.getElementById('crowd').innerHTML = sorted.map(z => {
-      const lv = level(z.initialVisitors, z.capacity), s = Visitor.zoneStyle(z);
-      return `<button type="button" class="crowd-row" data-zone="${esc(z.name)}">
-        <span class="ic" style="background:${lv.soft};color:${s.b}">${I(s.icon, 18)}</span>
-        <b>${esc(zoneName(z))}</b>
-        <span class="meter"><i style="width:${Math.min(100, lv.percent)}%;background:${lv.color}"></i></span>
-        <span class="pct" dir="ltr">${lv.percent}%</span></button>`;
-    }).join('');
-  }
-  document.getElementById('crowd').addEventListener('click', e => {
-    const b = e.target.closest('[data-zone]');
-    if (!b) return;
-    map.select(b.dataset.zone);
-    document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-
-  /* ---------- اقتراحات ذكية ---------- */
-  function renderSuggestions() {
-    const now = new Date(), soon = new Date(now.getTime() + 4 * 3600e3);
-    const r = z => z.initialVisitors / z.capacity;
-    const notGate = ZONES.filter(z => !/gate/i.test(z.name));
-    const out = [];
-    const quiet = notGate.slice().sort((a, b) => r(a) - r(b))[0];
-    if (quiet) out.push({ z: quiet, title: t('sug.visit', { z: zoneName(quiet) }), sub: t('sug.visitSub', { l: level(quiet.initialVisitors, quiet.capacity).label }) });
-    const ev = EVENTS.filter(e => toDate(e.startDateTime) >= now && toDate(e.startDateTime) <= soon)
-      .map(e => ({ e, z: ZONES.find(x => e.zone && x.id === e.zone.id) }))
-      .filter(x => x.z && r(x.z) < 0.75)
-      .sort((a, b) => toDate(a.e.startDateTime) - toDate(b.e.startDateTime))[0];
-    if (ev) out.push({ z: ev.z, title: t('sug.event', { e: ev.e.name }), sub: t('sug.eventSub', { t: fmtTime(ev.e.startDateTime), z: zoneName(ev.z) }) });
-    const food = findZone('Food Court');
-    if (food && r(food) < 0.6) {
-      const w = waitOf(food);
-      out.push({ z: food, title: t('sug.food'), sub: w ? t('sug.foodWait', { m: w }) : t('sug.foodNo') });
-    }
-    const busy = notGate.slice().sort((a, b) => r(b) - r(a))[0];
-    if (busy && r(busy) >= 0.75) out.push({ z: busy, title: t('sug.avoid', { z: zoneName(busy) }), sub: t('sug.avoidSub', { p: Math.round(r(busy) * 100) }) });
-
-    document.getElementById('sugList').innerHTML = out.map(s => `
-      <div class="suggest"><span class="thumb" style="${Visitor.zoneArt(s.z)}" aria-hidden="true"></span>
-        <span class="meta"><b>${esc(s.title)}</b><small>${esc(s.sub)}</small></span>
-        <button type="button" class="icon-btn" data-zone="${esc(s.z.name)}" aria-label="${esc(t('sug.show', { z: zoneName(s.z) }))}">${Visitor.next(18)}</button></div>`).join('')
-      || `<div class="empty">${esc(t('sug.none'))}</div>`;
-  }
-  document.getElementById('sugList').addEventListener('click', e => {
-    const b = e.target.closest('[data-zone]');
-    if (!b) return;
-    map.select(b.dataset.zone);
-    routeTo(b.dataset.zone);
-    document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-
-  /* ---------- مخطط الرحلة ---------- */
-  function renderPicks() {
-    document.getElementById('pickZones').innerHTML = ZONES.filter(z => !/gate/i.test(z.name)).map(z =>
-      `<button type="button" class="chip" data-zone="${esc(z.name)}" aria-pressed="${picks.includes(z.name)}">${esc(zoneName(z))}</button>`).join('');
-    const startSel = document.getElementById('startSel');
-    const cur = startSel.value || 'South Gate';
-    startSel.innerHTML = ZONES.map(z => `<option value="${esc(z.name)}"${z.name === cur ? ' selected' : ''}>${esc(zoneName(z))}</option>`).join('');
-  }
-  document.getElementById('pickZones').addEventListener('click', e => {
-    const b = e.target.closest('[data-zone]');
-    if (!b) return;
-    const n = b.dataset.zone;
-    picks = picks.includes(n) ? picks.filter(x => x !== n) : picks.concat(n);
-    b.setAttribute('aria-pressed', String(picks.includes(n)));
-  });
-  document.getElementById('startSel').addEventListener('change', e => map.setStart(e.target.value));
-
-  document.getElementById('planForm').addEventListener('submit', e => {
-    e.preventDefault();
-    const steps = document.getElementById('planSteps');
-    if (!picks.length) { steps.innerHTML = `<li class="empty" style="padding:20px 0">${esc(t('plan.pick'))}</li>`; return; }
-    const avoid = document.getElementById('avoidChk').checked;
-    const total = Number(document.getElementById('timeSel').value);
-    let from = document.getElementById('startSel').value;
-    map.setStart(from);
-
-    // ترتيب جشع: كل مرة الوجهة الأقل تكلفة (وقت المشي + الانتظار لو نتجنب الزحام)
-    let left = picks.slice(), plan = [], clock = new Date();
-    while (left.length) {
-      const scored = left.map(n => {
-        const r = map.getRoute(n, { from });
-        const z = findZone(n);
-        const walk = r ? (avoid ? r.best.minutes : (r.direct || r.best).minutes) : 10;
-        const wait = waitOf(z);
-        return { n, z, walk, wait, cost: walk + (avoid ? wait * 1.5 : 0) };
-      }).sort((a, b) => a.cost - b.cost);
-      const nx = scored[0];
-      left = left.filter(x => x !== nx.n);
-      plan.push(Object.assign({ from }, nx));
-      from = nx.n;
-    }
-    const used = plan.reduce((s, p) => s + p.walk + p.wait, 0);
-    const stay = Math.max(15, Math.floor((total - used) / plan.length / 5) * 5);
-    steps.innerHTML = plan.map((p, i) => {
-      clock = new Date(clock.getTime() + (p.walk + p.wait) * 60e3);
-      const arrive = fmtTime(clock);
-      clock = new Date(clock.getTime() + stay * 60e3);
-      const lv = level(p.z.initialVisitors, p.z.capacity);
-      return `<li><span class="n" style="background:${Visitor.zoneStyle(p.z).a}">${i + 1}</span>
-        <span class="meta"><b>${esc(zoneName(p.z))}</b>
-        <small>${arrive} – ${fmtTime(clock)} · ${esc(t('plan.walk', { m: p.walk }))}${p.wait ? ' · ' + esc(t('plan.waitM', { m: p.wait })) : ''} · ${esc(lv.label)}</small>
-        <button type="button" class="v-link" data-from="${esc(p.from)}" data-to="${esc(p.n)}" style="background:none;border:0;padding:4px 0;cursor:pointer;font:inherit;font-size:14px">${esc(t('plan.show'))}</button></span></li>`;
-    }).join('') + `<li><span class="n" style="background:var(--green-900)">${I('clock', 16, '#fff')}</span><span class="meta"><b>${esc(t('plan.end', { t: fmtTime(clock) }))}</b><small>${esc(t('plan.stay', { m: stay }))}</small></span></li>`;
-    showRoutePart(plan[0].from, plan[0].n);
-  });
-  function showRoutePart(from, to) {
-    map.select(to);
-    routeTo(to, from);
-    document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-  document.getElementById('planSteps').addEventListener('click', e => {
-    const b = e.target.closest('[data-to]');
-    if (b) showRoutePart(b.dataset.from, b.dataset.to);
-  });
-
-  /* ---------- توقع الازدحام (أوقات الصلاة + الطقس) ----------
-     GET /forecast/zones?hours=2&step=30 → لكل منطقة نقاط متوقعة مع الأسباب */
-  let FORECAST = null, fcMinute = 0;
-  document.getElementById('fcLbl').insertAdjacentHTML('afterbegin', I('spark', 18));
-  function fcQuery() {
-    const dq = Visitor.demoQuery();
-    return '/forecast/zones?hours=2&step=30' + (dq ? '&' + dq : '');
-  }
-  async function showForecast(m) {
-    fcMinute = m;
-    document.querySelectorAll('#fcChips [data-m]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.m) === m)));
-    const note = document.getElementById('fcNote'), mapEl = document.getElementById('map');
-    if (!m) { note.hidden = true; mapEl.classList.remove('is-forecast'); map.setOccupancy(ZONES); return; }
-    if (!FORECAST) FORECAST = (await api.get(fcQuery())).zones || [];
-    const rows = FORECAST.map(f => ({ f, p: f.points.find(x => x.minute === m) || f.points[f.points.length - 1] }));
-    map.setOccupancy(rows.map(r => Object.assign({}, r.f.zone, { initialVisitors: r.p.expectedVisitors })));
-    mapEl.classList.add('is-forecast');
-    // أهم التغيّرات (اللي لها سبب)
-    const items = rows.filter(r => r.p.reasons.length).map(r => {
-      const z = ZONES.find(x => x.id === r.f.zone.id) || r.f.zone;
-      const before = Math.round(z.initialVisitors / z.capacity * 100);
-      const rs = r.p.reasons[0];
-      // اللي ما فعّل أوقات الصلاة يشوف سبب عام بدون ذكر الصلاة
-      const why = Visitor.prayerOn() ? t('fc.r.' + rs.code, { p: rs.prayer ? Visitor.prayerName(rs.prayer) : '' }) : t(r.p.percent > before ? 'fc.r.MORE' : 'fc.r.LESS');
-      const ch = r.p.percent === before ? '' : ' — ' + t(r.p.percent > before ? 'fc.up' : 'fc.down', { p: r.p.percent });
-      return { d: Math.abs(r.p.percent - before), html: `<li><b>${esc(zoneName(r.f.zone))}</b>: ${esc(why)}<span dir="auto">${esc(ch)}</span></li>` };
-    }).sort((a, b) => b.d - a.d).slice(0, 4);
-    const time = rows[0] ? rows[0].p.time : '';
-    note.hidden = false;
-    note.innerHTML = `<b>${esc(t('fc.at', { t: time }))}</b>` + (items.length ? `<ul>${items.map(x => x.html).join('')}</ul>` : `<div>${esc(t('fc.calm'))}</div>`);
-  }
-  document.getElementById('fcChips').addEventListener('click', e => {
-    const b = e.target.closest('[data-m]');
-    if (b) showForecast(Number(b.dataset.m));
-  });
-  Visitor.prayerBar(document.getElementById('ctxBar'));
-
-  /* ---------- التحميل ---------- */
-  async function load(first) {
-    const [zs, evs] = await Promise.all([api.get('/zone/get'), api.get('/expo-event/get')]);
-    ZONES = zs; EVENTS = evs;
-    if (first) { renderPicks(); makeMap(); }
-    if (!fcMinute) map.setOccupancy(ZONES);
-    FORECAST = null;
-    if (fcMinute) showForecast(fcMinute);
-    renderLayers(); renderCrowd(); renderSuggestions();
-    if (selected) showSelected(selected.name);
-    if (first) {
-      const want = params.get('zone') || params.get('q');
-      if (want) {
-        const q = want.trim().toLowerCase();
-        const z = ZONES.find(x => x.name.toLowerCase().includes(q) || zoneName(x).includes(want.trim()))
-          || (EVENTS.find(e => e.name.toLowerCase().includes(q)) || {}).zone;
-        if (z) map.select(z.name); else toast(t('map.notFound', { q: want }));
-      }
-      if (location.hash === '#planner' || location.hash === '#suggest') document.querySelector(location.hash).scrollIntoView();
-    }
-  }
-  load(true);
-  setInterval(() => load(false), 30000);
-</script>
 </body>
 </html>

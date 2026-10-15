@@ -56,8 +56,10 @@
                 method: "GET",
                 headers: {
                     Authorization: token,
-                    Accept: "application/json"
+                    Accept: "application/json",
+                    "X-Requested-With": "XMLHttpRequest"
                 },
+
                 cache: "no-store"
             }
         );

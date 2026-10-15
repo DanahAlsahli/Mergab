@@ -1,84 +1,313 @@
-<!doctype html>
-<html>
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"
+      xmlns:th="http://www.thymeleaf.org">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" type="image/png" href="../../static/img/favicon.png">
-<title data-i18n="o.t.zones">مرقاب</title>
-<script src="../../static/js/i18n.js"></script>
-<script src="../../static/js/i18n-staff.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@500;600;700&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" rel="stylesheet">
-<link rel="stylesheet" href="../../static/css/mergab.css">
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+
+  <title>إدارة المناطق | مِرقاب</title>
+
+  <link rel="icon" href="/img/favicon.png">
+
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap"
+        rel="stylesheet">
+
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/organizer.css">
+  <link rel="stylesheet" href="/css/organizer-zones.css">
+  <link rel="stylesheet" href="/map/mirqab-map.css">
+
+  <script defer src="/js/auth.js"></script>
+  <script defer src="/map/mirqab-map.js"></script>
+  <script defer src="/js/organizer-zones.js"></script>
 </head>
-<body data-area="organizer" data-page="zones">
-<header id="vHeader"></header>
 
-<main>
-  <section class="page-band o-band" id="band">
-    <div class="geo" aria-hidden="true"></div>
-    <div class="o-wrap">
-      <div><span class="eyebrow" data-i18n="motto"></span>
-        <h1 id="bandH" data-i18n="o.nav.zones"></h1>
-        <p id="bandP" data-i18n="o.zones.sub"></p></div>
-    </div>
-  </section>
-  <div class="sadu" aria-hidden="true"></div>
+<body class="organizer-page">
 
-  <div class="o-wrap o-body">
-    <section id="zonesTable"></section>
+<div class="organizer-layout">
+
+  <!-- SIDEBAR -->
+  <div th:replace="~{organizer/fragments/sidebar :: sidebar('zones')}"></div>
+
+  <!-- CONTENT -->
+  <div class="organizer-content">
+
+    <header class="organizer-topbar">
+
+      <div class="organizer-topbar-title">
+        <span class="material-symbols-rounded">location_on</span>
+        <span>إدارة المناطق</span>
+      </div>
+
+      <div class="organizer-topbar-actions">
+
+        <a href="/account"
+           class="organizer-user-link"
+           id="organizerAccountLink">
+          حسابي
+        </a>
+
+        <button type="button"
+                id="organizerLogoutButton"
+                class="organizer-icon-button"
+                title="تسجيل الخروج"
+                aria-label="تسجيل الخروج">
+          <span class="material-symbols-rounded">logout</span>
+        </button>
+
+      </div>
+
+    </header>
+
+    <main class="organizer-main">
+
+      <!-- HEADING -->
+      <div class="zones-page-heading">
+        <div>
+                    <span class="organizer-eyebrow">
+                        MERGAB / ZONES
+                    </span>
+          <h1>إدارة المناطق</h1>
+          <p>أضف مناطق إكسبو وحدد مواقعها على الخريطة التفاعلية.</p>
+        </div>
+
+        <button type="button"
+                id="addZoneButton"
+                class="zones-primary-btn">
+          <span class="material-symbols-rounded">add</span>
+          إضافة منطقة
+        </button>
+      </div>
+
+      <!-- INTERACTIVE MAP -->
+      <section class="organizer-panel zones-map-panel">
+
+        <div class="organizer-panel-heading">
+          <div>
+            <h2>خريطة مناطق إكسبو</h2>
+            <p>استعرض مواقع المناطق أو حدد موقع منطقة جديدة.</p>
+          </div>
+
+          <span id="zonesMapStatus"
+                class="zones-map-status">
+                        خريطة تفاعلية
+                    </span>
+        </div>
+
+        <div id="zonePlacementMap"
+             class="organizer-map-container zones-map">
+        </div>
+
+
+        <!-- Zone boundary drawing tools -->
+        <div id="zoneDrawingTools" class="zones-drawing-tools" hidden>
+
+    <span class="zones-drawing-label">
+        <span class="material-symbols-rounded">gesture</span>
+        حددي زوايا المنطقة على الخريطة
+    </span>
+
+          <div class="zones-drawing-actions">
+
+            <button type="button" id="undoBoundaryPoint"
+                    class="zones-secondary-btn">
+              <span class="material-symbols-rounded">undo</span>
+              تراجع
+            </button>
+
+            <button type="button" id="clearBoundary"
+                    class="zones-secondary-btn">
+              <span class="material-symbols-rounded">delete_outline</span>
+              مسح الرسم
+            </button>
+
+            <button type="button" id="finishBoundary"
+                    class="zones-primary-btn">
+              <span class="material-symbols-rounded">check</span>
+              إنهاء تحديد الحدود
+            </button>
+
+          </div>
+
+          <small id="boundaryDrawingStatus">
+            اختاري ثلاث زوايا على الأقل لتحديد مساحة المنطقة.
+          </small>
+
+        </div>
+
+
+        <p class="zones-map-hint">
+          <span class="material-symbols-rounded">info</span>
+          عند إضافة أو تعديل منطقة، اضغط على موقعها في الخريطة لتحديد الإحداثيات.
+        </p>
+
+      </section>
+
+      <!-- ADD / EDIT FORM -->
+      <section id="zoneEditor"
+               class="organizer-panel zones-editor"
+               hidden>
+
+        <div class="organizer-panel-heading">
+          <div>
+            <h2 id="zoneEditorTitle">إضافة منطقة جديدة</h2>
+            <p>أدخل بيانات المنطقة وحدد موقعها على الخريطة.</p>
+          </div>
+
+          <button type="button"
+                  id="closeZoneEditor"
+                  class="zones-icon-btn"
+                  aria-label="إغلاق">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+
+        <form id="zoneForm">
+          <input type="hidden" id="zoneBoundaryPoints">
+
+          <input type="hidden" id="zoneId">
+
+          <div class="zones-form-grid">
+
+            <div class="zones-field">
+              <label for="zoneName">اسم المنطقة</label>
+              <input type="text"
+                     id="zoneName"
+                     maxlength="50"
+                     required
+                     placeholder="مثال: منطقة الابتكار">
+            </div>
+
+            <div class="zones-field">
+              <label for="zoneCapacity">السعة القصوى</label>
+              <input type="number"
+                     id="zoneCapacity"
+                     min="1"
+                     required>
+            </div>
+
+            <div class="zones-field">
+              <label for="zoneInitialVisitors">
+                عدد الزوار الأولي
+              </label>
+              <input type="number"
+                     id="zoneInitialVisitors"
+                     min="0"
+                     value="0"
+                     required>
+            </div>
+
+            <div class="zones-field zones-location-field">
+              <label>موقع المنطقة على الخريطة</label>
+
+              <div class="zones-coordinates">
+                <input type="number"
+                       id="zoneMapX"
+                       placeholder="X"
+                       readonly
+                       aria-label="الإحداثي الأفقي">
+
+                <input type="number"
+                       id="zoneMapY"
+                       placeholder="Y"
+                       readonly
+                       aria-label="الإحداثي العمودي">
+              </div>
+
+              <small id="zoneLocationHint">
+                اضغط على الخريطة لتحديد الموقع.
+              </small>
+            </div>
+
+          </div>
+
+          <div class="zones-checkboxes">
+
+            <label>
+              <input type="checkbox" id="zoneIndoor">
+              منطقة داخلية
+            </label>
+
+            <label>
+              <input type="checkbox" id="zonePrayerArea">
+              تتوفر منطقة صلاة
+            </label>
+
+          </div>
+
+          <div id="zoneFormMessage"
+               class="zones-form-message"
+               role="status"
+               aria-live="polite"
+               hidden></div>
+
+          <div class="zones-form-actions">
+
+            <button type="submit"
+                    id="saveZoneButton"
+                    class="zones-primary-btn">
+              <span class="material-symbols-rounded">save</span>
+              حفظ المنطقة
+            </button>
+
+            <button type="button"
+                    id="cancelZoneButton"
+                    class="zones-secondary-btn">
+              إلغاء
+            </button>
+
+          </div>
+
+        </form>
+
+      </section>
+
+      <!-- ZONES TABLE -->
+      <section class="organizer-panel zones-table-panel">
+
+        <div class="organizer-panel-heading">
+          <div>
+            <h2>المناطق المسجلة</h2>
+            <p>إدارة بيانات المناطق ومواقعها.</p>
+          </div>
+
+          <span id="zonesCount" class="zones-count">—</span>
+        </div>
+
+        <div class="zones-table-wrap">
+          <table class="zones-table">
+            <thead>
+            <tr>
+              <th>المنطقة</th>
+              <th>السعة</th>
+              <th>الزوار الأوليون</th>
+              <th>الموقع</th>
+              <th>الإجراءات</th>
+            </tr>
+            </thead>
+
+            <tbody id="zonesTableBody">
+            <tr>
+              <td colspan="5">
+                جارٍ تحميل المناطق...
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </section>
+
+    </main>
+
   </div>
-</main>
+</div>
 
-<footer id="vFooter"></footer>
-
-<script src="../../static/js/site-config.js"></script>
-<script src="../../static/js/mock-server.js"></script>
-<script src="../../static/js/api.js"></script>
-<script src="../../static/js/organizer.js"></script>
-<script>
-  const { api, esc, num, level } = Mergab;
-  const I = Org.icon;
-  if (Org.shell()) {
-    const table = Org.mount({
-      el: '#zonesTable',
-      title: t('o.zones.all'), addLabel: t('o.zones.add'), editTitle: t('o.zones.edit'), emptyText: t('o.zones.empty'),
-      load: () => api.get('/zone/get'),
-      searchText: z => z.name + ' ' + Mergab.zoneName(z),
-      columns: [
-        { label: t('o.col.zone'), render: z => Org.zoneCell(z) },
-        { label: t('o.col.capacity'), render: z => num(z.capacity) },
-        { label: t('o.col.visitors'), render: z => num(z.initialVisitors) },
-        { label: t('o.col.occupancy'), render: z => {
-            const lv = level(z.initialVisitors, z.capacity);
-            return `<div style="display:flex;align-items:center;gap:10px;min-width:180px">
-              <div class="meter" style="flex:1"><i style="width:${Math.min(100, lv.percent)}%;background:${lv.color}"></i></div>
-              <span class="badge" style="background:${lv.soft};color:#14211C"><span dir="ltr">${lv.percent}%</span> · ${esc(lv.label)}</span></div>`;
-          } },
-        { label: t('o.col.features'), render: z => [
-            z.indoor ? `<span class="badge" style="background:#E4EEFB;color:#1A4E99">${I('home', 14)}${esc(t('o.zones.indoor'))}</span>` : '',
-            z.hasPrayerArea ? `<span class="badge" style="background:#E6F0EC;color:var(--green-700)">${I('pray', 14)}${esc(t('o.zones.prayer'))}</span>` : ''
-          ].join(' ') || '<span style="color:var(--muted)">—</span>' }
-      ],
-      fields: [
-        { name: 'name', label: t('o.zones.name'), required: true, full: true, placeholder: 'Main Plaza', dir: 'ltr', help: t('o.zones.nameHelp') },
-        { name: 'capacity', label: t('o.col.capacity'), type: 'number', required: true, min: 1 },
-        { name: 'initialVisitors', label: t('o.col.visitors'), type: 'number', required: true, min: 0, help: t('o.zones.visHelp') },
-        { name: 'hasPrayerArea', label: t('o.zones.prayerQ'), type: 'checkbox', icon: 'pray', full: true, help: t('o.zones.prayerHelp') },
-        { name: 'indoor', label: t('o.zones.indoorQ'), type: 'checkbox', icon: 'home', full: true }
-      ],
-      create: d => api.post('/zone/add', d),
-      update: (z, d) => api.put('/zone/update/' + z.id, d),
-      remove: z => api.del('/zone/delete/' + z.id),
-      deleteText: z => t('o.zones.del', { z: Mergab.zoneName(z) }),
-      afterLoad: rows => {
-        const name = decodeURIComponent(location.hash.slice(1));
-        const hit = name && rows.find(r => r.name.toLowerCase() === name.toLowerCase());
-        if (hit) { history.replaceState(null, '', location.pathname); table.open(hit); }
-      }
-    });
-  }
-</script>
 </body>
 </html>

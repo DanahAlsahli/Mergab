@@ -1,0 +1,134 @@
+
+/* ==========================================
+   MERGAB | ORGANIZER CONNECTIONS
+   ========================================== */
+
+/* Connection form */
+
+.zones-field select {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 13px;
+    border: 1px solid #dce5de;
+    border-radius: 11px;
+    background: #fff;
+    color: #193d32;
+    font: inherit;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+}
+
+.zones-field select:focus {
+    border-color: #398565;
+    box-shadow: 0 0 0 3px rgba(57, 133, 101, 0.11);
+}
+
+.zones-field select:disabled {
+    background: #f5f7f5;
+    color: #839087;
+    cursor: not-allowed;
+}
+
+/* Path status */
+
+.connection-path-status {
+    display: flex;
+    align-items: center;
+    min-height: 46px;
+    padding: 12px 14px;
+    border-radius: 11px;
+    border: 1px dashed #cbd8ce;
+    background: #f7faf7;
+    color: #75847a;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.connection-path-status.is-drawing {
+    color: #876b34;
+    background: #fbf7ed;
+    border-color: #e3cc99;
+}
+
+.connection-path-status.is-complete {
+    color: #246747;
+    background: #edf6ef;
+    border-color: #a9d4b8;
+}
+
+/* Drawing tools */
+
+#connectionDrawingTools {
+    margin-top: 18px;
+}
+
+#connectionDrawingTools .zones-drawing-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#connectionDrawingTools button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#connectionDrawingTools .material-symbols-rounded {
+    font-size: 19px;
+}
+
+/* Map drawing mode */
+
+#connectionMap.is-drawing {
+    outline: 2px solid #c7a76b;
+    outline-offset: 3px;
+}
+
+#connectionMap.is-drawing .mqm-istage {
+    cursor: crosshair;
+}
+
+/* Connections table */
+
+#connectionsTableBody td {
+    line-height: 1.8;
+}
+
+.connection-route-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 11px;
+    border-radius: 30px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.connection-route-label.saved {
+    background: #eaf4ed;
+    color: #246747;
+}
+
+.connection-route-label.missing {
+    background: #f8f1e7;
+    color: #986f32;
+}
+
+/* Responsive */
+
+@media (max-width: 600px) {
+    #connectionDrawingTools .zones-drawing-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    #connectionDrawingTools #finishPath {
+        grid-column: 1 / -1;
+    }
+
+    #connectionDrawingTools button {
+        justify-content: center;
+    }
+}

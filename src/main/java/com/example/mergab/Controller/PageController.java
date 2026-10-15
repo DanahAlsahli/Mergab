@@ -80,7 +80,7 @@ public class PageController {
 
     @GetMapping("/admin")
     public String adminDashboard() {
-        return "admin/index";
+        return "admin/dashboard";
     }
 
     @GetMapping("/admin/users")
@@ -91,5 +91,15 @@ public class PageController {
     @GetMapping("/forbidden")
     public String forbidden() {
         return "forbidden";
+    }
+
+    @GetMapping("/account")
+    public String account() {
+        return "account";
+    }
+
+    @GetMapping("/organizer/check-in")
+    public String organizerCheckIn() {
+        return "organizer/check-in";
     }
 }

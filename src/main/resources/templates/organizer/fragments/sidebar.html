@@ -1,0 +1,80 @@
+
+<!DOCTYPE html>
+<html lang="ar"
+      xmlns:th="http://www.thymeleaf.org">
+
+<body>
+
+<aside th:fragment="sidebar(activePage)"
+       class="organizer-sidebar">
+
+    <a href="/organizer/dashboard"
+       class="organizer-brand">
+        <img src="/img/logo-white.png" alt="مِرقاب">
+    </a>
+
+    <nav class="organizer-navigation"
+         aria-label="قائمة المنظّم">
+
+        <a href="/organizer/dashboard"
+           class="organizer-nav-link"
+           th:classappend="${activePage == 'dashboard'} ? ' active' : ''">
+            <span class="material-symbols-rounded">dashboard</span>
+            <span>لوحة التحكم</span>
+        </a>
+
+        <a href="/organizer/zones"
+           class="organizer-nav-link"
+           th:classappend="${activePage == 'zones'} ? ' active' : ''">
+            <span class="material-symbols-rounded">location_on</span>
+            <span>المناطق</span>
+        </a>
+
+        <a href="/organizer/connections"
+           class="organizer-nav-link"
+           th:classappend="${activePage == 'connections'} ? ' active' : ''">
+            <span class="material-symbols-rounded">route</span>
+            <span>ربط المناطق</span>
+        </a>
+
+        <a href="/organizer/check-in"
+           class="organizer-nav-link"
+           th:classappend="${activePage == 'check-in'} ? ' active' : ''">
+            <span class="material-symbols-rounded">qr_code_scanner</span>
+            <span>مسح QR الزوار</span>
+        </a>
+
+        <a href="/organizer/events"
+           class="organizer-nav-link"
+           th:classappend="${activePage == 'events'} ? ' active' : ''">
+            <span class="material-symbols-rounded">event</span>
+            <span>الفعاليات</span>
+        </a>
+
+        <a href="/organizer/simulations"
+           class="organizer-nav-link"
+           th:classappend="${activePage == 'simulations'} ? ' active' : ''">
+            <span class="material-symbols-rounded">model_training</span>
+            <span>المحاكاة</span>
+        </a>
+
+        <a href="/organizer/reports"
+           class="organizer-nav-link"
+           th:classappend="${activePage == 'reports'} ? ' active' : ''">
+            <span class="material-symbols-rounded">analytics</span>
+            <span>التقارير</span>
+        </a>
+
+    </nav>
+
+    <div class="organizer-sidebar-footer">
+        <a href="/account" class="organizer-account-link">
+            <span class="material-symbols-rounded">settings</span>
+            <span>إعدادات الحساب</span>
+        </a>
+    </div>
+
+</aside>
+
+</body>
+</html>

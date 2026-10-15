@@ -74,6 +74,7 @@ public class ZoneService {
         // Update zone position on the Expo map
         oldZone.setMapX(zone.getMapX());
         oldZone.setMapY(zone.getMapY());
+        oldZone.setBoundaryPoints(zone.getBoundaryPoints());
         zoneRepository.save(oldZone);
     }
 

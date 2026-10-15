@@ -26,23 +26,64 @@
             <a href="/visitor/map" data-t="navMap">الخريطة</a>
             <a href="/visitor/events" data-t="navEvents">الفعاليات</a>
             <a href="/#features" data-t="navFeatures">المميزات</a>
+
+            <a href="#"
+               id="dashboardNavLink"
+               data-t="dashboard"
+               hidden>
+                لوحة التحكم
+            </a>
         </nav>
 
+
         <div class="header-actions">
+
+            <!-- Language -->
             <button type="button"
                     id="langSwitch"
                     class="lang-btn"
-                    aria-label="Switch language">
+                    aria-label="تغيير اللغة">
                 English
             </button>
 
+            <!-- Login: Visible before signing in -->
             <a href="/login"
                id="accountLink"
                class="btn btn-primary"
                data-t="login">
                 تسجيل الدخول
             </a>
+
+            <!-- My Account: Icon only -->
+            <a href="/account"
+               id="navProfileLink"
+               class="nav-profile-link"
+               aria-label="حسابي"
+               title="حسابي"
+               hidden>
+                <span id="navProfileName">المستخدم</span>
+            </a>
+
+
+
+            <!-- Logout: Icon only -->
+            <button type="button"
+                    id="navLogoutButton"
+                    class="nav-logout-btn"
+                    aria-label="تسجيل الخروج"
+                    title="تسجيل الخروج"
+                    hidden>
+
+        <span class="material-symbols-rounded">
+            logout
+        </span>
+            </button>
+
         </div>
+
+
+
+
 
     </div>
 </header>

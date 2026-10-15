@@ -324,3 +324,301 @@ input {
     outline-offset: 4px;
 }
 
+/* ========================================
+   MERGAB | USER NAVBAR
+   ======================================== */
+
+/* User profile */
+.nav-profile-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px;
+    border: 1px solid #e1e8e1;
+    border-radius: 14px;
+    background: #f4f8f4;
+    color: #0e3d32;
+    text-decoration: none;
+    transition: 0.2s ease;
+    min-width: 0;
+}
+
+.nav-profile-link:hover {
+    background: #e7f1e9;
+    border-color: #bad5c3;
+}
+
+.nav-profile-link > .material-symbols-rounded {
+    font-size: 30px;
+    color: #2c8064;
+    flex-shrink: 0;
+}
+
+.nav-profile-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    text-align: start;
+}
+
+.nav-profile-text small {
+    font-size: 10px;
+    color: #6b7d72;
+    font-weight: 500;
+}
+
+.nav-profile-text strong {
+    display: block;
+    max-width: 145px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0e3d32;
+}
+
+/* Logout button */
+.nav-logout-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 44px;
+    padding: 9px 14px;
+    border: 1px solid #f0d7d7;
+    border-radius: 12px;
+    background: #fff5f5;
+    color: #b64e4e;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.nav-logout-btn:hover {
+    background: #b64e4e;
+    color: white;
+    border-color: #b64e4e;
+}
+
+.nav-logout-btn .material-symbols-rounded {
+    font-size: 19px;
+}
+
+/* Dashboard link */
+#dashboardNavLink {
+    color: #0e3d32;
+    font-weight: 700;
+}
+
+#dashboardNavLink:hover {
+    color: #2c8064;
+}
+
+/* Preserve hidden state */
+.nav-profile-link[hidden],
+.nav-logout-btn[hidden],
+#accountLink[hidden],
+#dashboardNavLink[hidden] {
+    display: none !important;
+}
+
+/* Keyboard accessibility */
+.nav-profile-link:focus-visible,
+.nav-logout-btn:focus-visible {
+    outline: 2px solid #2c8064;
+    outline-offset: 3px;
+}
+
+/* Tablet */
+@media (min-width: 731px) and (max-width: 1100px) {
+    .header-inner {
+        flex-wrap: wrap;
+        padding-block: 12px;
+    }
+
+    .header-nav {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .header-actions {
+        margin-inline-start: auto;
+    }
+
+    .nav-profile-text strong {
+        max-width: 115px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 730px) {
+    .header-actions {
+        order: 3;
+        width: 100%;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .header-nav {
+        order: 4;
+    }
+
+    .nav-profile-link {
+        flex: 1;
+        max-width: 210px;
+        padding: 7px 9px;
+    }
+
+    .nav-profile-text strong {
+        max-width: 120px;
+        font-size: 12px;
+    }
+
+    .nav-logout-btn {
+        min-height: 40px;
+        padding: 8px;
+        font-size: 11px;
+    }
+
+    .lang-btn {
+        padding: 8px;
+        font-size: 11px;
+    }
+}
+
+/* Small phones */
+@media (max-width: 400px) {
+    .nav-profile-text strong {
+        max-width: 75px;
+    }
+
+    .nav-profile-link {
+        gap: 6px;
+    }
+
+    .nav-profile-link > .material-symbols-rounded {
+        font-size: 25px;
+    }
+
+    .nav-logout-btn {
+        gap: 4px;
+        padding: 7px 6px;
+    }
+
+    .nav-logout-btn .material-symbols-rounded {
+        font-size: 17px;
+    }
+}
+/* Minimal account navigation */
+
+.nav-profile-link {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 0;
+    border-radius: 50%;
+    justify-content: center;
+    background: #edf3ee;
+    border: 1px solid #e0e8e1;
+}
+
+.nav-profile-link > .material-symbols-rounded {
+    font-size: 25px;
+    color: #204c3c;
+}
+
+.nav-profile-link:hover {
+    background: #dcebe0;
+    transform: none;
+}
+
+.nav-logout-btn {
+    width: 42px;
+    height: 42px;
+    min-height: 42px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #738078;
+}
+
+.nav-logout-btn:hover {
+    background: #f8eeee;
+    color: #a84848;
+    border: none;
+}
+
+.nav-logout-btn .material-symbols-rounded {
+    font-size: 22px;
+}
+
+.nav-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+@media (max-width: 730px) {
+    .nav-profile-link {
+        flex: 0 0 44px;
+    }
+}
+
+/* Clean navbar account */
+
+.nav-profile-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 0;
+    height: 40px;
+    padding: 0 8px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #203d33;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    flex: 0 1 auto;
+}
+
+.nav-profile-link:hover {
+    background: #f1f5f1;
+    color: #2c8064;
+    transform: none;
+}
+
+#navProfileName {
+    max-width: 125px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lang-btn {
+    min-width: 42px;
+    padding: 8px 11px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+@media (max-width: 730px) {
+    .nav-profile-link {
+        flex: 0 1 auto;
+        max-width: 125px;
+    }
+}

@@ -1,170 +1,460 @@
-<!doctype html>
-<html>
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"
+      xmlns:th="http://www.thymeleaf.org">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" type="image/png" href="../assets/img/favicon.png">
-<title data-i18n="o.t.simulations">مرقاب</title>
-<script src="../assets/js/i18n.js"></script>
-<script src="../assets/js/i18n-staff.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@500;600;700&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&display=block" rel="stylesheet">
-<link rel="stylesheet" href="../assets/css/mergab.css">
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+
+  <title>المحاكاة | مِرقاب</title>
+
+  <link rel="icon" href="/img/favicon.png">
+
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap"
+        rel="stylesheet">
+
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/organizer.css">
+  <link rel="stylesheet" href="/css/organizer-zones.css">
+  <link rel="stylesheet" href="/css/organizer-simulations.css">
+  <link rel="stylesheet" href="/map/mirqab-map.css">
+
+  <script defer src="/js/auth.js"></script>
+  <script defer src="/map/mirqab-map.js"></script>
+  <script defer src="/js/organizer-simulations.js"></script>
 </head>
-<body data-area="organizer" data-page="simulations">
-<header id="vHeader"></header>
 
-<main>
-  <section class="page-band o-band" id="band">
-    <div class="geo" aria-hidden="true"></div>
-    <div class="o-wrap">
-      <div><span class="eyebrow" data-i18n="motto"></span>
-        <h1 id="bandH" data-i18n="o.nav.simulations"></h1>
-        <p id="bandP" data-i18n="o.sim.sub"></p></div>
-    </div>
-  </section>
-  <div class="sadu" aria-hidden="true"></div>
+<body class="organizer-page">
 
-  <div class="o-wrap o-body">
-    <section id="simTable"></section>
+<div class="organizer-layout">
 
-    <section class="card card-pad" id="results" hidden aria-labelledby="resTitle">
-      <div class="card-head">
-        <h2 id="resTitle"></h2>
-        <button type="button" class="icon-btn" id="closeResults" data-icon="close" data-size="18"></button>
+  <!-- SHARED SIDEBAR -->
+  <div th:replace="~{organizer/fragments/sidebar :: sidebar('simulations')}"></div>
+
+  <div class="organizer-content">
+
+    <!-- TOP BAR -->
+    <header class="organizer-topbar">
+
+      <div class="organizer-topbar-title">
+        <span class="material-symbols-rounded">model_training</span>
+        <span>المحاكاة</span>
       </div>
-      <div id="resBody"></div>
-    </section>
 
-    <section id="intTable"></section>
+      <div class="organizer-topbar-actions">
+
+        <a href="/account"
+           id="organizerAccountLink"
+           class="organizer-user-link">
+          حسابي
+        </a>
+
+        <button type="button"
+                id="organizerLogoutButton"
+                class="organizer-icon-button"
+                aria-label="تسجيل الخروج">
+          <span class="material-symbols-rounded">logout</span>
+        </button>
+
+      </div>
+    </header>
+
+    <main class="organizer-main">
+
+      <!-- PAGE HEADER -->
+      <div class="zones-page-heading">
+
+        <div>
+                    <span class="organizer-eyebrow">
+                        MERGAB / SIMULATIONS
+                    </span>
+
+          <h1>محاكاة حركة الحشود</h1>
+
+          <p>
+            شغّلي سيناريوهات حركة الزوار واستعرضي
+            تغير الإشغال والطوابير على خريطة إكسبو.
+          </p>
+        </div>
+
+        <button type="button"
+                id="addSimulationButton"
+                class="zones-primary-btn">
+
+          <span class="material-symbols-rounded">add</span>
+          محاكاة جديدة
+        </button>
+
+      </div>
+
+      <!-- STATISTICS -->
+      <section class="simulation-stats">
+
+        <div class="organizer-panel simulation-stat">
+                    <span class="material-symbols-rounded">
+                        model_training
+                    </span>
+          <div>
+            <small>إجمالي المحاكاة</small>
+            <strong id="totalSimulationsCount">—</strong>
+          </div>
+        </div>
+
+        <div class="organizer-panel simulation-stat">
+                    <span class="material-symbols-rounded">
+                        task_alt
+                    </span>
+          <div>
+            <small>المحاكاة المكتملة</small>
+            <strong id="completedSimulationsCount">—</strong>
+          </div>
+        </div>
+
+        <div class="organizer-panel simulation-stat">
+                    <span class="material-symbols-rounded">
+                        pending_actions
+                    </span>
+          <div>
+            <small>بانتظار التشغيل</small>
+            <strong id="pendingSimulationsCount">—</strong>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- CREATE / EDIT -->
+      <section id="simulationEditor"
+               class="organizer-panel zones-editor"
+               hidden>
+
+        <div class="organizer-panel-heading">
+
+          <div>
+            <h2 id="simulationEditorTitle">
+              إنشاء محاكاة جديدة
+            </h2>
+            <p>
+              حددي بيانات السيناريو قبل التشغيل.
+            </p>
+          </div>
+
+          <button type="button"
+                  id="closeSimulationEditor"
+                  class="zones-icon-btn"
+                  aria-label="إغلاق">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+
+        </div>
+
+        <form id="simulationForm">
+
+          <input type="hidden" id="simulationId">
+
+          <div class="zones-form-grid">
+
+            <div class="zones-field">
+              <label for="simulationAttendance">
+                سجل الحضور التاريخي
+              </label>
+
+              <select id="simulationAttendance" required>
+                <option value="">
+                  جارٍ تحميل السجلات...
+                </option>
+              </select>
+
+              <small>
+                سجل مرتبط بالمحاكاة وفق المودل الحالي.
+              </small>
+            </div>
+
+            <div class="zones-field">
+              <label for="simulationDuration">
+                مدة المحاكاة بالدقائق
+              </label>
+
+              <input type="number"
+                     id="simulationDuration"
+                     min="1"
+                     max="600"
+                     step="1"
+                     value="30"
+                     required>
+            </div>
+
+            <div class="zones-field">
+              <label for="simulationSeed">
+                Random Seed
+              </label>
+
+              <input type="number"
+                     id="simulationSeed"
+                     step="1"
+                     placeholder="مثال: 20261015"
+                     required>
+
+              <small>
+                يُحفظ مع السيناريو، ولا يؤثر
+                في محرك الحساب الحالي.
+              </small>
+            </div>
+
+          </div>
+
+          <div id="simulationFormMessage"
+               class="zones-form-message"
+               role="status"
+               aria-live="polite"
+               hidden></div>
+
+          <div class="zones-form-actions">
+
+            <button type="submit"
+                    id="saveSimulationButton"
+                    class="zones-primary-btn">
+
+              <span class="material-symbols-rounded">save</span>
+              حفظ المحاكاة
+            </button>
+
+            <button type="button"
+                    id="cancelSimulationButton"
+                    class="zones-secondary-btn">
+              إلغاء
+            </button>
+
+          </div>
+
+        </form>
+
+      </section>
+
+      <!-- SIMULATION MAP -->
+      <section class="organizer-panel simulation-map-panel">
+
+        <div class="organizer-panel-heading">
+
+          <div>
+            <h2>خريطة المحاكاة التفاعلية</h2>
+            <p>
+              استعراض نتائج الإشغال والطوابير
+              حسب الدقيقة المختارة.
+            </p>
+          </div>
+
+          <span id="simulationMapStatus"
+                class="zones-map-status">
+                        بانتظار اختيار محاكاة
+                    </span>
+
+        </div>
+
+        <div id="simulationMap"
+             class="organizer-map-container zones-map">
+        </div>
+
+        <!-- PLAYBACK CONTROLS -->
+        <div class="simulation-playback">
+
+          <div class="simulation-playback-heading">
+            <div>
+              <strong id="selectedSimulationLabel">
+                لم يتم اختيار محاكاة
+              </strong>
+              <small id="simulationPlaybackHint">
+                شغّلي محاكاة أو اختاري نتائج محفوظة.
+              </small>
+            </div>
+
+            <span id="simulationMinuteLabel"
+                  class="simulation-minute">
+                            الدقيقة 0
+                        </span>
+          </div>
+
+          <div class="simulation-timeline">
+
+            <input type="range"
+                   id="simulationTimeline"
+                   min="0"
+                   max="0"
+                   value="0"
+                   step="1"
+                   disabled
+                   aria-label="دقيقة المحاكاة">
+
+            <div class="simulation-timeline-labels">
+              <span>البداية</span>
+              <span id="simulationEndMinute">—</span>
+            </div>
+
+          </div>
+
+          <div class="simulation-playback-actions">
+
+            <button type="button"
+                    id="playSimulationButton"
+                    class="zones-primary-btn"
+                    disabled>
+
+              <span class="material-symbols-rounded">play_arrow</span>
+              تشغيل العرض
+            </button>
+
+            <button type="button"
+                    id="pauseSimulationButton"
+                    class="zones-secondary-btn"
+                    disabled>
+
+              <span class="material-symbols-rounded">pause</span>
+              إيقاف مؤقت
+            </button>
+
+            <button type="button"
+                    id="resetSimulationButton"
+                    class="zones-secondary-btn"
+                    disabled>
+
+              <span class="material-symbols-rounded">replay</span>
+              من البداية
+            </button>
+
+            <div class="simulation-speed">
+              <label for="simulationPlaybackSpeed">
+                سرعة العرض
+              </label>
+
+              <select id="simulationPlaybackSpeed">
+                <option value="1">1×</option>
+                <option value="2">2×</option>
+                <option value="4">4×</option>
+              </select>
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- MINUTE RESULTS -->
+      <section class="simulation-results">
+
+        <div class="organizer-panel">
+          <div class="organizer-panel-heading">
+            <div>
+              <h2>نتائج الدقيقة المحددة</h2>
+              <p>
+                القيم الفعلية المحفوظة في
+                SimulationSnapshot.
+              </p>
+            </div>
+          </div>
+
+          <div class="simulation-result-stats">
+
+            <div>
+              <small>الزوار داخل المناطق</small>
+              <strong id="simulationTotalOccupancy">—</strong>
+            </div>
+
+            <div>
+              <small>إجمالي المنتظرين</small>
+              <strong id="simulationTotalQueue">—</strong>
+            </div>
+
+            <div>
+              <small>مناطق لديها طوابير</small>
+              <strong id="simulationQueuedZones">—</strong>
+            </div>
+
+          </div>
+
+          <div class="zones-table-wrap">
+
+            <table class="zones-table">
+
+              <thead>
+              <tr>
+                <th>المنطقة</th>
+                <th>الإشغال</th>
+                <th>نسبة السعة</th>
+                <th>الطابور</th>
+              </tr>
+              </thead>
+
+              <tbody id="simulationSnapshotsBody">
+              <tr>
+                <td colspan="4">
+                  اختاري محاكاة لعرض النتائج.
+                </td>
+              </tr>
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- SAVED SIMULATIONS -->
+      <section class="organizer-panel simulation-list-panel">
+
+        <div class="organizer-panel-heading">
+
+          <div>
+            <h2>المحاكاة المسجلة</h2>
+            <p>
+              تشغيل السيناريوهات ومراجعة نتائجها المحفوظة.
+            </p>
+          </div>
+
+          <span id="simulationsCount"
+                class="zones-count">—</span>
+
+        </div>
+
+        <div class="zones-table-wrap">
+
+          <table class="zones-table simulation-table">
+
+            <thead>
+            <tr>
+              <th>المحاكاة</th>
+              <th>المدة</th>
+              <th>Random Seed</th>
+              <th>الحالة</th>
+              <th>تاريخ التشغيل</th>
+              <th>الإجراءات</th>
+            </tr>
+            </thead>
+
+            <tbody id="simulationsTableBody">
+            <tr>
+              <td colspan="6">
+                جارٍ تحميل المحاكاة...
+              </td>
+            </tr>
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+
+    </main>
+
   </div>
-</main>
+</div>
 
-<footer id="vFooter"></footer>
-
-<script src="../assets/js/site-config.js"></script>
-<script src="../assets/js/mock-server.js"></script>
-<script src="../assets/js/api.js"></script>
-<script src="../assets/js/organizer.js"></script>
-<script>
-  const { api, esc, num, fmtDateTime, fmtDate, toDate, zoneName } = Mergab;
-  const user = Org.shell();
-  const STATUSES = ['PENDING', 'RUNNING', 'COMPLETED', 'FAILED'];
-  const COLORS = ['#0E3D32', '#D4B483', '#8E2A20', '#1F6B57', '#2F6FD0', '#A8641A', '#6B4FC2', '#7A8B83'];
-  const arrow = () => `<span aria-hidden="true" style="color:var(--muted)">${Org.icon(I18n.isAr ? 'arrowStart' : 'arrowEnd', 18)}</span>`;
-  const simName = s => t('o.sim.name', { n: s.id });
-
-  function attendanceOptions() {
-    return api.get('/attendance/get-all').then(list => list.map(a => ({
-      value: a.id, label: `${a.expoName} — ${fmtDate(a.attendanceDate)} (${num(a.totalAttendance)})`
-    })));
-  }
-
-  if (user) {
-    document.getElementById('closeResults').setAttribute('aria-label', t('card.close'));
-    document.getElementById('closeResults').addEventListener('click', () => document.getElementById('results').hidden = true);
-
-    const sims = Org.mount({
-      el: '#simTable',
-      title: t('o.sim.all'), addLabel: t('o.sim.add'), editTitle: t('o.sim.edit'), emptyText: t('o.sim.empty'),
-      load: () => api.get('/simulation/get-all'),
-      sort: (a, b) => b.id - a.id,
-      searchText: s => simName(s) + ' ' + s.status + ' ' + t('st.' + s.status),
-      columns: [
-        { label: t('o.col.sim'), render: s => `<b>${esc(simName(s))}</b>` },
-        { label: t('o.col.start'), render: s => fmtDateTime(s.startDateTime) },
-        { label: t('o.col.end'), render: s => fmtDateTime(s.endDateTime) },
-        { label: t('o.col.duration'), render: s => esc(t('o.min', { n: num(s.durationMinutes) })) },
-        { label: t('o.col.seed'), render: s => `<span dir="ltr">${esc(s.randomSeed)}</span>` },
-        { label: t('o.col.status'), render: s => Org.status(s.status) }
-      ],
-      extraActions: () => `<button type="button" class="icon-btn" data-action="results" aria-label="${esc(t('o.sim.results'))}" title="${esc(t('o.sim.results'))}">${Org.icon('chart', 18)}</button>`,
-      onAction: (act, s) => { if (act === 'results') showResults(s); },
-      fields: [
-        { name: 'historicalAttendanceId', label: t('o.sim.basedOn'), type: 'select', required: true, full: true, createOnly: true, options: attendanceOptions, help: t('o.sim.basedHelp') },
-        { name: 'durationMinutes', label: t('o.sim.duration'), type: 'number', required: true, min: 1, max: 600, default: 60 },
-        { name: 'randomSeed', label: t('o.col.seed'), type: 'number', required: true, default: () => Math.floor(Math.random() * 10000), help: t('o.sim.seedHelp') },
-        { name: 'startDateTime', label: t('o.col.start'), type: 'datetime-local' },
-        { name: 'endDateTime', label: t('o.col.end'), type: 'datetime-local' },
-        { name: 'status', label: t('o.col.status'), type: 'select', editOnly: true, required: true,
-          options: () => STATUSES.map(s => ({ value: s, label: t('st.' + s) })), help: t('o.sim.statusHelp') }
-      ],
-      create: d => api.post(`/simulation/add/${user.id}/${d.historicalAttendanceId}`, {
-        durationMinutes: d.durationMinutes, randomSeed: d.randomSeed, startDateTime: d.startDateTime, endDateTime: d.endDateTime, status: 'PENDING'
-      }),
-      update: (s, d) => api.put('/simulation/update/' + s.id, {
-        durationMinutes: d.durationMinutes, randomSeed: d.randomSeed, startDateTime: d.startDateTime, endDateTime: d.endDateTime, status: d.status
-      }),
-      remove: s => api.del('/simulation/delete/' + s.id),
-      deleteText: s => t('o.sim.del', { n: s.id })
-    });
-    if (location.hash === '#add') { history.replaceState(null, '', location.pathname); sims.open(null); }
-
-    Org.mount({
-      el: '#intTable',
-      title: t('o.int.all'), addLabel: t('o.int.add'), editTitle: t('o.int.edit'), emptyText: t('o.int.empty'),
-      load: () => api.get('/intervention/get-all'),
-      searchText: i => [i.sourceZone, i.targetZone].map(z => z ? z.name + ' ' + zoneName(z) : '').join(' '),
-      columns: [
-        { label: t('o.int.from'), render: i => Org.zoneCell(i.sourceZone) },
-        { label: '', render: arrow },
-        { label: t('o.int.to'), render: i => Org.zoneCell(i.targetZone) },
-        { label: t('o.int.startMin'), render: i => num(i.startMinute) },
-        { label: t('o.col.perMin'), render: i => num(i.visitorsPerMinute) }
-      ],
-      fields: [
-        { name: 'simulationId', label: t('o.col.sim'), type: 'select', required: true, full: true, createOnly: true,
-          options: () => api.get('/simulation/get-all').then(list => list.filter(s => s.status !== 'RUNNING')
-            .map(s => ({ value: s.id, label: `${simName(s)} — ${t('o.min', { n: s.durationMinutes })} (${t('st.' + s.status)})` }))),
-          help: t('o.int.simHelp') },
-        { name: 'sourceZoneId', label: t('o.int.fromQ'), type: 'select', required: true, options: Org.zoneOptions, value: i => i.sourceZone && i.sourceZone.id },
-        { name: 'targetZoneId', label: t('o.int.toQ'), type: 'select', required: true, options: Org.zoneOptions, value: i => i.targetZone && i.targetZone.id },
-        { name: 'startMinute', label: t('o.int.startMin'), type: 'number', required: true, min: 0, help: t('o.int.startHelp') },
-        { name: 'visitorsPerMinute', label: t('o.col.perMin'), type: 'number', required: true, min: 1 }
-      ],
-      create: d => api.post(`/intervention/add/${d.simulationId}/${d.sourceZoneId}/${d.targetZoneId}`, { startMinute: d.startMinute, visitorsPerMinute: d.visitorsPerMinute }),
-      update: (i, d) => api.put(`/intervention/update/${i.id}/${d.sourceZoneId}/${d.targetZoneId}`, { startMinute: d.startMinute, visitorsPerMinute: d.visitorsPerMinute }),
-      remove: i => api.del('/intervention/delete/' + i.id)
-    });
-
-    // نتائج المحاكاة من SimulationSnapshot
-    async function showResults(s) {
-      const box = document.getElementById('results'), body = document.getElementById('resBody');
-      document.getElementById('resTitle').textContent = t('o.sim.resultsOf', { n: s.id });
-      box.hidden = false;
-      body.innerHTML = `<div class="empty">${esc(t('loading'))}</div>`;
-      box.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      const snaps = await api.get('/simulation-snapshot/get-by-simulation/' + s.id);
-      if (!snaps.length) { body.innerHTML = `<div class="empty">${esc(t('o.sim.noResults'))}<br><small>${esc(t('o.sim.noResultsHelp'))}</small></div>`; return; }
-      const byZone = {};
-      snaps.forEach(sn => { const k = sn.zone ? sn.zone.id : '?'; (byZone[k] = byZone[k] || { zone: sn.zone || { name: '?' }, pts: [] }).pts.push(sn); });
-      const groups = Object.values(byZone);
-      groups.forEach(g => g.pts.sort((a, b) => a.minute - b.minute));
-      const maxMin = Math.max(1, ...snaps.map(x => x.minute));
-      const pctOf = sn => sn.zone && sn.zone.capacity ? sn.occupancy / sn.zone.capacity * 100 : 0;
-      const maxPct = Math.max(100, ...snaps.map(pctOf));
-      const W = 720, H = 240, P = { l: 44, r: 12, t: 12, b: 28 };
-      const x = m => P.l + (m / maxMin) * (W - P.l - P.r);
-      const y = p => P.t + (1 - p / maxPct) * (H - P.t - P.b);
-      let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(t('o.sim.chart'))}" style="display:block;max-height:280px;direction:ltr">`;
-      [0, 25, 50, 75, 100].forEach(p => {
-        svg += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(p)}" y2="${y(p)}" stroke="${p === 100 ? '#8E2A20' : '#ECE7DC'}" ${p === 100 ? 'stroke-dasharray="5 5"' : ''}/>`;
-        svg += `<text x="${P.l - 8}" y="${y(p) + 4}" text-anchor="end" font-size="11" fill="#66746D">${p}%</text>`;
-      });
-      for (let i = 0; i <= 4; i++) { const m = Math.round(maxMin * i / 4); svg += `<text x="${x(m)}" y="${H - 8}" text-anchor="middle" font-size="11" fill="#66746D">${m}′</text>`; }
-      groups.forEach((g, i) => { svg += `<polyline fill="none" stroke="${COLORS[i % COLORS.length]}" stroke-width="2.5" stroke-linejoin="round" points="${g.pts.map(p => x(p.minute) + ',' + y(pctOf(p))).join(' ')}"><title>${esc(zoneName(g.zone))}</title></polyline>`; });
-      svg += '</svg>';
-      const legend = '<div class="chart-legend">' + groups.map((g, i) => `<span><i style="background:${COLORS[i % COLORS.length]}"></i>${esc(zoneName(g.zone))}</span>`).join('') +
-        `<span><i style="background:repeating-linear-gradient(90deg,#8E2A20 0 4px,transparent 4px 7px)"></i>${esc(t('o.col.capacity'))}</span></div>`;
-      const peaks = '<div class="peaks">' + groups.map(g => {
-        const top = g.pts.reduce((a, b) => pctOf(b) > pctOf(a) ? b : a);
-        const q = Math.max(...g.pts.map(p => p.queueLength || 0));
-        return `<div class="peak"><span>${esc(t('o.sim.peak', { z: zoneName(g.zone) }))}</span><b dir="ltr">${Math.round(pctOf(top))}%</b> <small style="color:var(--muted)">${esc(t('o.sim.peakAt', { m: top.minute, q: num(q) }))}</small></div>`;
-      }).join('') + '</div>';
-      body.innerHTML = svg + legend + peaks;
-    }
-  }
-</script>
 </body>
 </html>

@@ -11,7 +11,6 @@ public interface ZoneConnectionRepository extends JpaRepository<ZoneConnection,I
 
     ZoneConnection findZoneConnectionById(Integer id);
     boolean existsByFromZone_IdAndToZone_Id(Integer fromZoneId, Integer toZoneId);
-    ZoneConnection findByFromZone_IdAndToZone_Id(Integer fromZoneId, Integer toZoneId);
     boolean existsByFromZone_IdOrToZone_Id(Integer fromZoneId, Integer toZoneId);
     List<ZoneConnection> findByFromZone_Id(Integer zoneId);
     List<ZoneConnection> findByFromZone_IdOrToZone_Id(Integer fromZoneId, Integer toZoneId);

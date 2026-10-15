@@ -57,6 +57,16 @@ public class Configuration {
                                 "/forbidden",
                                 "/visitor/map",
                                 "/visitor/events",
+                                "/admin",
+                                "/admin/users",
+                                "/account",
+                                "/organizer/dashboard",
+                                "/organizer/zones",
+                                "/organizer/connections",
+                                "/organizer/events",
+                                "/organizer/simulations",
+                                "/organizer/reports",
+                                "/organizer/check-in",
 
                                 // Static resources
                                 "/css/**",
@@ -78,9 +88,7 @@ public class Configuration {
                                 "/api/v1/organizer/get-all",
                                 "/api/v1/organizer/delete/{id}",
                                 "/api/v1/organizer/register",
-                                "/api/v1/visitor/get-all",
-                                "/admin",
-                                "/admin/users"
+                                "/api/v1/visitor/get-all"
                         ).hasAuthority("ADMIN")
 
                         .requestMatchers("/api/v1/organizer/update-my-phone",
@@ -137,13 +145,7 @@ public class Configuration {
                                 "/api/v1/facility/update/{id}",
                                 "/api/v1/facility/delete/{id}",
                                 "/api/v1/ai/predict/{simulationId}/{zoneId}",
-                                "/api/v1/ai/analyze/{simulationId}/{zoneId}",
-                                "/organizer/dashboard",
-                                "/organizer/zones",
-                                "/organizer/connections",
-                                "/organizer/events",
-                                "/organizer/simulations",
-                                "/organizer/reports")
+                                "/api/v1/ai/analyze/{simulationId}/{zoneId}")
                         .hasAuthority("ORGANIZER")
 
 

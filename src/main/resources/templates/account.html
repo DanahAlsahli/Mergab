@@ -1,0 +1,286 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حسابي | مِرقاب</title>
+
+    <link rel="icon" href="/img/favicon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" rel="stylesheet">
+
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/account.css">
+
+    <script defer src="/js/base.js"></script>
+    <script defer src="/js/auth.js"></script>
+    <script defer src="/js/account.js"></script>
+</head>
+
+<body class="account-page">
+
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main class="account-main">
+
+    <!-- Page Header -->
+    <section class="account-heading">
+        <div>
+            <span class="account-eyebrow">إدارة الحساب</span>
+            <h1>حسابي</h1>
+            <p>إدارة بياناتك الشخصية وإعدادات الأمان في مِرقاب.</p>
+        </div>
+
+        <a href="/" id="dashboardLink" class="account-dashboard-btn">
+            <span class="material-symbols-rounded">dashboard</span>
+            <span>لوحة التحكم</span>
+        </a>
+    </section>
+
+    <div class="account-layout">
+
+        <!-- Profile Card -->
+        <aside class="account-profile-card">
+            <div class="account-avatar">
+                <span class="material-symbols-rounded">person</span>
+            </div>
+
+            <h2 id="profileName">جارٍ تحميل البيانات...</h2>
+            <p id="profileEmail">—</p>
+
+            <div class="account-role">
+                <span class="material-symbols-rounded">verified_user</span>
+                <span id="profileRole">—</span>
+            </div>
+
+            <div class="account-profile-divider"></div>
+
+            <a href="/" id="profileDashboardLink" class="account-side-link">
+                <span class="material-symbols-rounded">space_dashboard</span>
+                <span>العودة للوحة التحكم</span>
+            </a>
+
+            <button type="button" id="logoutButton" class="account-logout-btn">
+                <span class="material-symbols-rounded">logout</span>
+                تسجيل الخروج
+            </button>
+        </aside>
+
+        <!-- Account Settings -->
+        <div class="account-content">
+
+            <!-- Personal Information -->
+
+            <!-- Personal Information -->
+            <section class="account-card">
+
+                <div class="account-card-heading">
+                    <div class="account-section-icon">
+                        <span class="material-symbols-rounded">badge</span>
+                    </div>
+
+                    <div>
+                        <h2>المعلومات الشخصية</h2>
+                        <p>بيانات حسابك الأساسية في مِرقاب.</p>
+                    </div>
+
+                    <!-- Edit button -->
+                    <button type="button"
+                            id="editProfileButton"
+                            class="account-edit-btn"
+                            aria-label="تعديل المعلومات الشخصية">
+                        <span class="material-symbols-rounded">edit</span>
+                    </button>
+                </div>
+
+                <!-- Default: View Mode -->
+                <div id="profileView" class="account-info-list">
+
+                    <div class="account-info-item">
+                        <div class="account-info-label">الاسم الكامل</div>
+                        <div class="account-info-value" id="viewFullName">—</div>
+                    </div>
+
+                    <div class="account-info-item">
+                        <div class="account-info-label">البريد الإلكتروني</div>
+                        <div class="account-info-value"
+                             id="viewEmail" dir="ltr">—</div>
+                    </div>
+
+                    <div class="account-info-item">
+                        <div class="account-info-label">نوع الحساب</div>
+                        <div class="account-info-value" id="viewRole">—</div>
+                    </div>
+
+                </div>
+
+                <!-- Edit Mode: Hidden by Default -->
+                <form id="profileForm" hidden>
+
+                    <div class="account-fields">
+
+                        <div class="account-field">
+                            <label for="fullName">الاسم الكامل</label>
+                            <input id="fullName"
+                                   name="fullName"
+                                   type="text"
+                                   minlength="3"
+                                   maxlength="50"
+                                   required>
+                        </div>
+
+                        <div class="account-field">
+                            <label for="email">البريد الإلكتروني</label>
+                            <input id="email"
+                                   name="email"
+                                   type="email"
+                                   dir="ltr"
+                                   required>
+                        </div>
+
+                        <div class="account-field">
+                            <label for="role">نوع الحساب</label>
+                            <input id="role" type="text" readonly>
+                        </div>
+
+                    </div>
+
+                    <div class="account-form-actions">
+
+                        <button type="submit"
+                                id="saveProfileButton"
+                                class="account-primary-btn">
+                            <span class="material-symbols-rounded">save</span>
+                            حفظ التغييرات
+                        </button>
+
+                        <button type="button"
+                                id="cancelProfileButton"
+                                class="account-cancel-btn">
+                            إلغاء
+                        </button>
+
+                    </div>
+
+                </form>
+
+                <div id="profileMessage"
+                     class="account-message"
+                     role="status"
+                     aria-live="polite"
+                     hidden></div>
+
+            </section>
+
+
+
+            <!-- Security -->
+
+            <!-- Security -->
+            <section class="account-card">
+
+                <div class="account-card-heading">
+                    <div class="account-section-icon">
+                        <span class="material-symbols-rounded">lock</span>
+                    </div>
+
+                    <div>
+                        <h2>الأمان وكلمة المرور</h2>
+                        <p>إدارة كلمة المرور وحماية حسابك.</p>
+                    </div>
+                </div>
+
+                <!-- Password option -->
+                <button type="button"
+                        id="togglePasswordSection"
+                        class="account-password-option"
+                        aria-expanded="false"
+                        aria-controls="passwordPanel">
+
+        <span class="material-symbols-rounded">
+            key
+        </span>
+
+                    <span class="account-password-option-text">
+            <strong>تغيير كلمة المرور</strong>
+            <small>تحديث كلمة المرور الخاصة بحسابك</small>
+        </span>
+
+                    <span class="material-symbols-rounded"
+                          id="passwordChevron">
+            expand_more
+        </span>
+                </button>
+
+                <!-- Hidden password form -->
+                <div id="passwordPanel" hidden>
+
+                    <form id="passwordForm">
+
+                        <div class="account-fields">
+
+                            <div class="account-field">
+                                <label for="oldPassword">كلمة المرور الحالية</label>
+                                <input id="oldPassword"
+                                       type="password"
+                                       autocomplete="current-password"
+                                       required>
+                            </div>
+
+                            <div class="account-field">
+                                <label for="newPassword">كلمة المرور الجديدة</label>
+                                <input id="newPassword"
+                                       type="password"
+                                       minlength="6"
+                                       autocomplete="new-password"
+                                       required>
+                            </div>
+
+                            <div class="account-field">
+                                <label for="confirmPassword">
+                                    تأكيد كلمة المرور الجديدة
+                                </label>
+                                <input id="confirmPassword"
+                                       type="password"
+                                       minlength="6"
+                                       autocomplete="new-password"
+                                       required>
+                            </div>
+
+                        </div>
+
+                        <div id="passwordMessage"
+                             class="account-message"
+                             role="status"
+                             aria-live="polite"
+                             hidden></div>
+
+                        <div class="account-form-actions">
+                            <button type="submit"
+                                    id="changePasswordButton"
+                                    class="account-primary-btn">
+                                <span class="material-symbols-rounded">save</span>
+                                حفظ كلمة المرور
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </section>
+
+
+
+        </div>
+    </div>
+
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

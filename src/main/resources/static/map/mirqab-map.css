@@ -218,3 +218,12 @@
 .mqm-btn:focus-visible,
 .mqm-heat:focus-visible,
 .mqm-label:focus-visible { outline: 3px solid #C8892B; outline-offset: 2px; }
+
+.mqm.mqm-imode {
+  cursor: grab;
+  touch-action: none;
+}
+
+.mqm.mqm-imode.mqm-dragging {
+  cursor: grabbing;
+}
