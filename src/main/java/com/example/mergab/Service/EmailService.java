@@ -46,7 +46,7 @@ public class EmailService {
             helper.addInline("qrCode", new ByteArrayResource(qrImage), "image/png");
 
             // Mirqab logo from static/img
-            helper.addInline("logo", new ClassPathResource("static/img/logo-white.png"), "image/png");
+            helper.addInline("logo", new ClassPathResource("static/img/logo-email.png"), "image/png");
 
             mailSender.send(message);
             log.info("Welcome email sent to {}", toEmail);
@@ -75,7 +75,7 @@ public class EmailService {
             helper.setText(html, true);
 
             // Mirqab logo from static/img - must be after setText
-            helper.addInline("logo", new ClassPathResource("static/img/logo-white.png"), "image/png");
+            helper.addInline("logo", new ClassPathResource("static/img/logo-email.png"), "image/png");
 
             mailSender.send(message);
             log.info("Password reset code sent to {}", toEmail);
