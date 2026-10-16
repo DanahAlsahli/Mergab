@@ -47,6 +47,23 @@ public class SimulationService {
                     prayerTimesService
             );
 
+    /**
+     * Selected Osaka day versus the average of all stored days for that expo.
+     * E.g. 10% higher daily attendance -> 10% higher event arrivals.
+     * Cap the change at +/-25% to avoid overwhelming a small test venue.
+     * With only one stored day, leave demand unchanged (no baseline available).
+     */
+    private List<ExpoEvent> applyHistoricalAttendance(Simulation simulation, List<ExpoEvent> events) {
+        HistoricalAttendance selected = simulation.getHistoricalAttendance();
+        if (selected == null || selected.getExpoName() == null || events.isEmpty()) {
+            return events;
+        }
+        List<HistoricalAttendance> sameExpo =
+                historicalAttendanceRepository.findByExpoNameOrderByAttendanceDateDesc(selected.getExpoName());
+        double factor = HistoricalAttendanceDemandScaler.multiplier(selected, sameExpo);
+        return HistoricalAttendanceDemandScaler.scaledEvents(events, factor);
+    }
+
     // كل المحاكاة (للأدمن)
     public List<Simulation> getAllSimulations() {
         return simulationRepository.findAll();
@@ -102,9 +119,8 @@ public class SimulationService {
             throw new ApiException("Cannot run a simulation without zones");
         }
 
-        // HistoricalAttendance is a venue-wide reference total, not a per-zone
-        // distribution. Do not invent zone occupancy from it: Zone.initialVisitors
-        // defines the starting state and ExpoEvent.expectedDemand drives arrivals.
+        // Osaka's daily attendance changes the relative event demand, but raw
+        // Osaka totals never become visitors in this smaller venue model.
         if (simulation.getDurationMinutes() == null || simulation.getDurationMinutes() < 1
                 || simulation.getDurationMinutes() > 600) {
             throw new ApiException("Simulation duration must be between 1 and 600 minutes");
@@ -147,7 +163,7 @@ public class SimulationService {
                 eventDrivenSimulationRunner.runSimulation(
                         zones,
                         zoneConnectionRepository.findAll(),
-                        events,
+                        applyHistoricalAttendance(simulation, events),
                         simulationStart,
                         simulation.getDurationMinutes(),
                         30,
@@ -256,7 +272,7 @@ public class SimulationService {
             // Aggregate snapshots cannot store active event/prayer route cohorts.
             // Replay the full deterministic timeline to reconstruct those journeys.
             replay = eventDrivenSimulationRunner.runSimulation(
-                    zones, connections, events, originalStart,
+                    zones, connections, applyHistoricalAttendance(simulation, events), originalStart,
                     newTotalDuration, 30, simulation.getRandomSeed());
         } else {
             replayMinuteOffset = lastMinute;
