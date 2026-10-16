@@ -51,6 +51,10 @@ public class Configuration {
                                 "/api/v1/facility/get-by-id/{id}",
                                 "/api/v1/facility/get-by-zone/{zoneId}",
 
+                                "/api/v1/zone-walk-path/get-active-by-zone/{zoneId}",
+                                "/api/v1/facility-access-path/get-active-by-facility/{facilityId}",
+
+
 
                                 // Public pages
                                 "/",
@@ -148,7 +152,9 @@ public class Configuration {
                                 "/api/v1/facility/delete/{id}",
                                 "/api/v1/ai/predict/{simulationId}/{zoneId}",
                                 "/api/v1/ai/analyze/{simulationId}/{zoneId}",
-                                "/api/v1/ai/early-warnings/{simulationId}")
+                                "/api/v1/ai/early-warnings/{simulationId}",
+                                "/api/v1/zone-walk-path/**",
+                                "/api/v1/facility-access-path/**")
                         .hasAuthority("ORGANIZER")
 
 

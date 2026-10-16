@@ -10,6 +10,9 @@ import com.example.mergab.Repository.FacilityRepository;
 import com.example.mergab.Repository.ZoneRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.example.mergab.Repository.FacilityAccessPathRepository;
+import jakarta.transaction.Transactional;
+import java.util.Objects;
 
 import java.util.Comparator;
 import java.util.List;
@@ -20,6 +23,7 @@ public class FacilityService {
 
     private final FacilityRepository facilityRepository;
     private final ZoneRepository zoneRepository;
+    private final FacilityAccessPathRepository accessPathRepository;
 
 
     // Get all facilities in the Expo
@@ -98,6 +102,14 @@ public class FacilityService {
         // Find the facility and validate that it exists
         Facility facility = getFacilityById(id);
 
+        boolean locationChanged = !Objects.equals(facility.getMapX(), dto.getMapX()) || !Objects.equals(facility.getMapY(), dto.getMapY());
+
+        if (locationChanged && accessPathRepository.existsByFacility_Id(id)) {
+
+            throw new ApiException("Remove facility access paths before changing its location");
+        }
+
+
         // Exits must be accessible to everyone
         if ("EXIT".equals(dto.getType()) && !"BOTH".equals(dto.getGender())) {
             throw new ApiException("Exit gender must be BOTH");
@@ -117,12 +129,19 @@ public class FacilityService {
 
 
     // Delete a facility without deleting its parent zone
+
+    @Transactional
     public void deleteFacility(Integer id) {
 
         Facility facility = getFacilityById(id);
 
+        // Delete facility access paths first
+        accessPathRepository.deleteAll(accessPathRepository.findAllByFacility_Id(id));
+
+        // Delete facility without deleting its zone
         facilityRepository.delete(facility);
     }
+
 
 
     // Find the nearest facility based on visitor location, type, and gender
