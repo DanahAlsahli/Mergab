@@ -415,7 +415,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     ) * 180 / Math.PI;
 
                 const size =
-                    Math.min(1.3, length / 5);
+                    Math.min(1.0, length / 6);
 
                 svgElement(layer, "polygon", {
                     points:
@@ -655,6 +655,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 : "شغّلي محاكاة أو اختاري نتائج محفوظة.";
 
         if (!ready) {
+            $("simulationTopZone").textContent = "—";
+            $("simulationTopPercent").textContent = "—";
+            $("simulationHighRiskZones").textContent = "—";
             $("simulationTotalOccupancy").textContent = "—";
             $("simulationTotalQueue").textContent = "—";
             $("simulationQueuedZones").textContent = "—";
@@ -670,6 +673,48 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const rows = snapshotsAtCurrentMinute();
+
+
+        // Live insights from actual simulation snapshots
+        const zoneInsights = rows.map(snapshot => {
+            const zone = zones.find(z =>
+                String(z.id) === String(snapshot.zone?.id)
+            );
+
+            const capacity = Number(
+                zone?.capacity ?? snapshot.zone?.capacity
+            );
+
+            const occupancy = Number(snapshot.occupancy) || 0;
+
+            return {
+                name: zone?.name || snapshot.zone?.name || "غير معروفة",
+                occupancy,
+                percent: capacity > 0
+                    ? (occupancy / capacity) * 100
+                    : 0,
+                validCapacity: capacity > 0
+            };
+        });
+
+        const topZone = [...zoneInsights]
+            .filter(zone => zone.validCapacity)
+            .sort((a, b) => b.percent - a.percent)[0];
+
+        const highRiskCount = zoneInsights.filter(zone =>
+            zone.validCapacity && zone.percent >= 75
+        ).length;
+
+        $("simulationTopZone").textContent =
+            topZone?.name || "—";
+
+        $("simulationTopPercent").textContent =
+            topZone
+                ? `${Math.round(topZone.percent)}%`
+                : "—";
+
+        $("simulationHighRiskZones").textContent =
+            String(highRiskCount);
 
         const occupancyTotal = rows.reduce(
             (sum, row) =>
