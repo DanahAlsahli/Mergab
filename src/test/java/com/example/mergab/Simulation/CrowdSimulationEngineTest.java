@@ -15,6 +15,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /// for testing the simulation calculation and making sure everything is ok
 
@@ -1180,4 +1181,181 @@ public class CrowdSimulationEngineTest {
 
 
 
+
+
+    @Test
+    void shouldRejectInitialOccupancyAboveZoneCapacity() {
+        Zone zone = createValidationZone(1, 10, 5);
+        SimulationState initialState = new SimulationState(Map.of(1, 11), Map.of(1, 0));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                new CrowdSimulationEngine().runSimulationWithMultipleConnections(
+                        List.of(zone), List.of(), 1, initialState));
+    }
+
+    @Test
+    void shouldRejectNegativeInitialOccupancy() {
+        Zone zone = createValidationZone(1, 10, 5);
+        SimulationState initialState = new SimulationState(Map.of(1, -1), Map.of(1, 0));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                new CrowdSimulationEngine().runSimulationWithMultipleConnections(
+                        List.of(zone), List.of(), 1, initialState));
+    }
+
+    @Test
+    void shouldRejectNegativeInitialQueueLength() {
+        Zone zone = createValidationZone(1, 10, 5);
+        SimulationState initialState = new SimulationState(Map.of(1, 5), Map.of(1, -1));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                new CrowdSimulationEngine().runSimulationWithMultipleConnections(
+                        List.of(zone), List.of(), 1, initialState));
+    }
+
+    @Test
+    void shouldRejectZeroCorridorThroughput() {
+        Zone from = createValidationZone(1, 10, 5);
+        Zone to = createValidationZone(2, 10, 0);
+        ZoneConnection connection = new ZoneConnection();
+        connection.setId(1);
+        connection.setFromZone(from);
+        connection.setToZone(to);
+        connection.setMaxVisitorsPerMinute(0);
+        SimulationState initialState = new SimulationState(Map.of(1, 5, 2, 0), Map.of(1, 0, 2, 0));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                new CrowdSimulationEngine().runSimulationWithMultipleConnections(
+                        List.of(from, to), List.of(connection), 1, initialState));
+    }
+
+
+    @Test
+    void shouldPreserveVisitorsAndRespectCapacityAndThroughputTogether() {
+        Zone sourceA = createValidationZone(1, 20, 10);
+        Zone sourceB = createValidationZone(2, 20, 10);
+        Zone destination = createValidationZone(3, 11, 10);
+
+        ZoneConnection connectionA = new ZoneConnection();
+        connectionA.setFromZone(sourceA);
+        connectionA.setToZone(destination);
+        connectionA.setMaxVisitorsPerMinute(3);
+
+        ZoneConnection connectionB = new ZoneConnection();
+        connectionB.setFromZone(sourceB);
+        connectionB.setToZone(destination);
+        connectionB.setMaxVisitorsPerMinute(3);
+
+        Map<Integer, Integer> initialOccupancy = new HashMap<>();
+        initialOccupancy.put(1, 10);
+        initialOccupancy.put(2, 10);
+        initialOccupancy.put(3, 10);
+        Map<Integer, Integer> initialQueues = new HashMap<>();
+        initialQueues.put(1, 0);
+        initialQueues.put(2, 0);
+        initialQueues.put(3, 2);
+
+        int initialTotal = initialOccupancy.values().stream()
+                .mapToInt(Integer::intValue).sum()
+                + initialQueues.values().stream()
+                .mapToInt(Integer::intValue).sum();
+
+        List<SimulationSnapshotRecord> history =
+                new CrowdSimulationEngine().runSimulationWithMultipleConnections(
+                        List.of(sourceA, sourceB, destination),
+                        List.of(connectionA, connectionB),
+                        5,
+                        new SimulationState(initialOccupancy, initialQueues));
+
+        for (int minute = 0; minute <= 5; minute++) {
+            final int currentMinute = minute;
+            List<SimulationSnapshotRecord> minuteSnapshots = history.stream()
+                    .filter(snapshot -> snapshot.minute() == currentMinute)
+                    .toList();
+
+            assertEquals(3, minuteSnapshots.size(),
+                    "Every zone should have a snapshot at minute " + currentMinute);
+
+            int occupancyTotal = minuteSnapshots.stream()
+                    .mapToInt(SimulationSnapshotRecord::occupancy).sum();
+            int queueTotal = minuteSnapshots.stream()
+                    .mapToInt(SimulationSnapshotRecord::queueLength).sum();
+            assertEquals(initialTotal, occupancyTotal + queueTotal,
+                    "Visitors must remain accounted for at minute " + currentMinute);
+
+            for (SimulationSnapshotRecord snapshot : minuteSnapshots) {
+                assertTrue(snapshot.occupancy() >= 0,
+                        "Occupancy cannot be negative at minute " + currentMinute);
+                int capacity = snapshot.zoneId() == 3 ? 11 : 20;
+                assertTrue(snapshot.occupancy() <= capacity,
+                        "Zone capacity exceeded at minute " + currentMinute);
+            }
+
+            if (minute > 0) {
+                for (int sourceId : List.of(1, 2)) {
+                    int previous = history.stream()
+                            .filter(snapshot -> snapshot.minute() == currentMinute - 1
+                                    && snapshot.zoneId() == sourceId)
+                            .findFirst().orElseThrow().occupancy();
+                    int current = minuteSnapshots.stream()
+                            .filter(snapshot -> snapshot.zoneId() == sourceId)
+                            .findFirst().orElseThrow().occupancy();
+                    assertTrue(previous - current <= 3,
+                            "Corridor throughput exceeded for source " + sourceId
+                                    + " at minute " + currentMinute);
+                }
+            }
+        }
+    }
+
+    @Test
+    void shouldRejectNullZoneCapacityBeforeSimulationStarts() {
+        Zone zone = createValidationZone(1, 10, 0);
+        zone.setCapacity(null);
+        SimulationState initialState = new SimulationState(Map.of(1, 0), Map.of(1, 0));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                new CrowdSimulationEngine().runSimulationWithMultipleConnections(
+                        List.of(zone), List.of(), 1, initialState));
+    }
+
+    private Zone createValidationZone(int id, int capacity, int initialVisitors) {
+        Zone zone = new Zone();
+        zone.setId(id);
+        zone.setName("Zone " + id);
+        zone.setCapacity(capacity);
+        zone.setInitialVisitors(initialVisitors);
+        return zone;
+    }
+
+
+    @Test
+    void shouldExposeConsumedCorridorBudgetForLaterMovementPhases() {
+        Zone source = new Zone();
+        source.setId(101);
+        source.setName("Source");
+        source.setCapacity(20);
+        source.setInitialVisitors(10);
+        Zone destination = new Zone();
+        destination.setId(102);
+        destination.setName("Destination");
+        destination.setCapacity(20);
+        destination.setInitialVisitors(0);
+
+        ZoneConnection connection = new ZoneConnection();
+        connection.setId(101);
+        connection.setFromZone(source);
+        connection.setToZone(destination);
+        connection.setMaxVisitorsPerMinute(1);
+        CrowdSimulationEngine engine = new CrowdSimulationEngine();
+        Map<ZoneConnection, Integer> sharedBudget = engine.createCorridorBudget(List.of(connection));
+
+        engine.runSimulationWithMultipleConnections(
+                List.of(source, destination), List.of(connection), 1,
+                new SimulationState(Map.of(101, 10, 102, 0), Map.of(101, 0, 102, 0)),
+                Map.of(), sharedBudget);
+
+        assertEquals(0, sharedBudget.get(connection),
+                "Later event/prayer movement must see that this corridor's minute budget was consumed");
+    }
 } // class end

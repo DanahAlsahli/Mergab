@@ -38,6 +38,16 @@ public class SimulationController {
         return ResponseEntity.status(201).body(new ApiResponse("Simulation added successfully"));
     }
 
+    // Continue a completed simulation by replaying its deterministic timeline.
+    @PostMapping("/continue/{id}")
+    public ResponseEntity<?> continueSimulation(
+            @PathVariable Integer id,
+            @RequestParam Integer additionalDurationMinutes) {
+        List<SimulationSnapshot> snapshots = simulationService.continueSimulation(
+                id, additionalDurationMinutes);
+        return ResponseEntity.status(200).body(snapshots);
+    }
+
     // run the simulation
     @PostMapping("/run/{id}")
     public ResponseEntity<?> runSimulation(@PathVariable Integer id) {

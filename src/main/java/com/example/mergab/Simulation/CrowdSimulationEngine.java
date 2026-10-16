@@ -329,6 +329,47 @@ public class CrowdSimulationEngine {
             int durationMinutes,
             SimulationState initialState) {
 
+        return runSimulationWithMultipleConnections(
+                zones, connections, durationMinutes, initialState, Map.of()
+        );
+    }
+
+    /**
+     * Runs normal crowd movement while reserving visitors that are following
+     * event-specific routes. Reserved visitors remain in occupancy but cannot
+     * be selected as ordinary source visitors during this minute.
+     */
+    public List<SimulationSnapshotRecord> runSimulationWithMultipleConnections(
+            List<Zone> zones,
+            List<ZoneConnection> connections,
+            int durationMinutes,
+            SimulationState initialState,
+            Map<Integer, Integer> reservedSourceVisitors) {
+
+        return runSimulationWithMultipleConnections(
+                zones, connections, durationMinutes, initialState,
+                reservedSourceVisitors, createCorridorBudget(connections));
+    }
+
+    /**
+     * Runs ordinary movement against a shared per-minute corridor budget.
+     * The supplied budget is decremented in place so event and prayer cohorts
+     * processed later in the same minute cannot reuse throughput already spent.
+     */
+    public List<SimulationSnapshotRecord> runSimulationWithMultipleConnections(
+            List<Zone> zones,
+            List<ZoneConnection> connections,
+            int durationMinutes,
+            SimulationState initialState,
+            Map<Integer, Integer> reservedSourceVisitors,
+            Map<ZoneConnection, Integer> remainingCorridorCapacity) {
+
+        validateSimulationInputs(zones, connections, durationMinutes,
+                initialState, reservedSourceVisitors);
+        if (remainingCorridorCapacity == null) {
+            throw new IllegalArgumentException("Corridor capacity budget cannot be null");
+        }
+
         SimulationState currentState = initialState;
         List<SimulationSnapshotRecord> history = new ArrayList<>();
         recordSnapshot(history, currentState, 0);
@@ -338,6 +379,21 @@ public class CrowdSimulationEngine {
 
             Map<Integer, Integer> remainingSourceVisitors =
                     new HashMap<>(startOfMinute.occupancy());
+
+            // Keep event-routed visitors in their intended route cohort.
+            for (Map.Entry<Integer, Integer> reserved
+                    : reservedSourceVisitors.entrySet()) {
+                int zoneId = reserved.getKey();
+                int reservedCount = Math.max(0, reserved.getValue());
+                remainingSourceVisitors.put(
+                        zoneId,
+                        Math.max(
+                                0,
+                                remainingSourceVisitors.getOrDefault(zoneId, 0)
+                                        - reservedCount
+                        )
+                );
+            }
             Map<Integer, Integer> remainingDestinationSpace =
                     new HashMap<>();
             Map<Integer, Integer> nextOccupancy =
@@ -345,9 +401,11 @@ public class CrowdSimulationEngine {
             Map<Integer, Integer> nextQueues =
                     new HashMap<>(startOfMinute.queueLengths());
 
-            // Each connection has its own throughput budget for this minute.
-            Map<ZoneConnection, Integer> remainingCorridorCapacity =
-                    new HashMap<>();
+            // The caller supplies the shared per-minute corridor budget. Reset
+            // it from connection limits for each minute, preserving the same map
+            // instance so later event/prayer phases see the remaining capacity.
+            remainingCorridorCapacity.clear();
+            remainingCorridorCapacity.putAll(createCorridorBudget(connections));
 
             // Calculate available space for every zone and initialize queues.
             for (Zone zone : zones) {
@@ -371,118 +429,24 @@ public class CrowdSimulationEngine {
                 );
             }
 
-            // FIRST: serve each destination's shared queue only once.
-            // Waiting visitors may use any incoming corridor, subject to that
-            // corridor's remaining throughput and the destination's free space.
-            for (Zone destination : zones) {
-                int destinationId = destination.getId();
-                int waitingVisitors =
-                        startOfMinute.queueLengths().getOrDefault(destinationId, 0);
-                int queueServed = 0;
-
-                for (ZoneConnection connection : connections) {
-                    if (waitingVisitors == 0) {
-                        break;
-                    }
-
-                    if (!connection.getToZone().getId().equals(destinationId)) {
-                        continue;
-                    }
-
-                    int corridorCapacityLeft =
-                            remainingCorridorCapacity.getOrDefault(connection, 0);
-                    int availableSpace =
-                            remainingDestinationSpace.getOrDefault(destinationId, 0);
-
-                    int queuedToMove = Math.min(
-                            waitingVisitors,
-                            Math.min(corridorCapacityLeft, availableSpace)
-                    );
-
-                    if (queuedToMove <= 0) {
-                        continue;
-                    }
-
-                    waitingVisitors -= queuedToMove;
-                    queueServed += queuedToMove;
-
-                    remainingCorridorCapacity.put(
-                            connection,
-                            corridorCapacityLeft - queuedToMove
-                    );
-                    remainingDestinationSpace.put(
-                            destinationId,
-                            availableSpace - queuedToMove
-                    );
-                    nextOccupancy.put(
-                            destinationId,
-                            nextOccupancy.getOrDefault(destinationId, 0) + queuedToMove
-                    );
-                }
-
-                // Remove only the queued visitors who actually entered.
-                nextQueues.put(
-                        destinationId,
-                        startOfMinute.queueLengths().getOrDefault(destinationId, 0)
-                                - queueServed
-                );
-            }
-
-            // SECOND: move new visitors using each corridor's remaining capacity.
+            // Move only visitors physically present at the source. A full destination
+            // blocks movement; it must not teleport visitors into an unlocated queue.
+            // Use the start-of-minute source budget to prevent multi-hop movement.
+            // Routed event cohorts are reserved and moved by their own route planner.
             for (ZoneConnection connection : connections) {
                 int fromId = connection.getFromZone().getId();
                 int toId = connection.getToZone().getId();
-
-                int corridorCapacityLeft =
-                        remainingCorridorCapacity.getOrDefault(connection, 0);
-                int visitorsAvailable =
-                        remainingSourceVisitors.getOrDefault(fromId, 0);
-
-                // Existing queues have priority; request up to 10 new visitors.
-                int newVisitorsRequested = Math.min(
-                        10,
-                        Math.min(visitorsAvailable, corridorCapacityLeft)
-                );
-
-                if (newVisitorsRequested <= 0) {
-                    continue;
-                }
-
-                remainingCorridorCapacity.put(
-                        connection,
-                        corridorCapacityLeft - newVisitorsRequested
-                );
-
-                int availableSpace =
-                        remainingDestinationSpace.getOrDefault(toId, 0);
-                int newVisitorsEntering =
-                        Math.min(newVisitorsRequested, availableSpace);
-                int newVisitorsWaiting =
-                        newVisitorsRequested - newVisitorsEntering;
-
-                // Under the current queue rule, visitors unable to enter leave
-                // the source and join the destination's shared queue.
-                remainingSourceVisitors.put(
-                        fromId,
-                        visitorsAvailable - newVisitorsRequested
-                );
-                remainingDestinationSpace.put(
-                        toId,
-                        availableSpace - newVisitorsEntering
-                );
-
-                nextOccupancy.put(
-                        fromId,
-                        nextOccupancy.getOrDefault(fromId, 0) - newVisitorsRequested
-                );
-                nextOccupancy.put(
-                        toId,
-                        nextOccupancy.getOrDefault(toId, 0) + newVisitorsEntering
-                );
-                nextQueues.put(
-                        toId,
-                        nextQueues.getOrDefault(toId, 0) + newVisitorsWaiting
-                );
+                if (fromId == toId) continue;
+                int available = remainingSourceVisitors.getOrDefault(fromId, 0);
+                int corridorLeft = remainingCorridorCapacity.getOrDefault(connection, 0);
+                int free = remainingDestinationSpace.getOrDefault(toId, 0);
+                int moved = Math.min(10, Math.min(available, Math.min(corridorLeft, free)));
+                if (moved <= 0) continue;
+                remainingSourceVisitors.put(fromId, available - moved);
+                remainingDestinationSpace.put(toId, free - moved);
+                remainingCorridorCapacity.put(connection, corridorLeft - moved);
+                nextOccupancy.merge(fromId, -moved, Integer::sum);
+                nextOccupancy.merge(toId, moved, Integer::sum);
             }
 
             currentState = new SimulationState(nextOccupancy, nextQueues);
@@ -490,6 +454,116 @@ public class CrowdSimulationEngine {
         }
 
         return history;
+    }
+
+
+    public Map<ZoneConnection, Integer> createCorridorBudget(
+            List<ZoneConnection> connections) {
+        Map<ZoneConnection, Integer> budget = new HashMap<>();
+        if (connections == null) return budget;
+        for (ZoneConnection connection : connections) {
+            if (connection != null) {
+                budget.put(connection, Math.max(0,
+                        connection.getMaxVisitorsPerMinute() == null
+                                ? 0 : connection.getMaxVisitorsPerMinute()));
+            }
+        }
+        return budget;
+    }
+
+    /**
+     * Reject invalid simulation inputs before creating snapshots or moving visitors.
+     * This keeps impossible occupancy and queue values from contaminating every
+     * later minute of the simulation.
+     */
+    private void validateSimulationInputs(
+            List<Zone> zones,
+            List<ZoneConnection> connections,
+            int durationMinutes,
+            SimulationState initialState,
+            Map<Integer, Integer> reservedSourceVisitors) {
+
+        if (zones == null || zones.isEmpty()) {
+            throw new IllegalArgumentException("Zones cannot be null or empty");
+        }
+        if (connections == null) {
+            throw new IllegalArgumentException("Connections cannot be null");
+        }
+        if (initialState == null) {
+            throw new IllegalArgumentException("Initial simulation state cannot be null");
+        }
+        if (reservedSourceVisitors == null) {
+            throw new IllegalArgumentException("Reserved visitor counts cannot be null");
+        }
+        if (durationMinutes < 0) {
+            throw new IllegalArgumentException("Simulation duration cannot be negative");
+        }
+
+        Map<Integer, Zone> zonesById = new HashMap<>();
+        for (Zone zone : zones) {
+            if (zone == null || zone.getId() == null) {
+                throw new IllegalArgumentException("Every zone must have an ID");
+            }
+            if (zone.getCapacity() == null || zone.getCapacity() < 0) {
+                throw new IllegalArgumentException(
+                        "Zone capacity cannot be null or negative: " + zone.getId());
+            }
+            if (zonesById.putIfAbsent(zone.getId(), zone) != null) {
+                throw new IllegalArgumentException("Duplicate zone ID: " + zone.getId());
+            }
+        }
+
+        for (Map.Entry<Integer, Integer> entry : initialState.occupancy().entrySet()) {
+            Integer zoneId = entry.getKey();
+            Integer count = entry.getValue();
+            Zone zone = zonesById.get(zoneId);
+            if (zone == null) {
+                throw new IllegalArgumentException("Initial occupancy references unknown zone: " + zoneId);
+            }
+            if (count == null || count < 0) {
+                throw new IllegalArgumentException("Occupancy cannot be negative or null for zone: " + zoneId);
+            }
+            if (count > zone.getCapacity()) {
+                throw new IllegalArgumentException("Initial occupancy exceeds capacity for zone: " + zoneId);
+            }
+        }
+
+        for (Map.Entry<Integer, Integer> entry : initialState.queueLengths().entrySet()) {
+            Integer zoneId = entry.getKey();
+            Integer count = entry.getValue();
+            if (!zonesById.containsKey(zoneId)) {
+                throw new IllegalArgumentException("Initial queue references unknown zone: " + zoneId);
+            }
+            if (count == null || count < 0) {
+                throw new IllegalArgumentException("Queue length cannot be negative or null for zone: " + zoneId);
+            }
+        }
+
+        for (ZoneConnection connection : connections) {
+            if (connection == null || connection.getFromZone() == null
+                    || connection.getToZone() == null
+                    || connection.getFromZone().getId() == null
+                    || connection.getToZone().getId() == null) {
+                throw new IllegalArgumentException("Every connection must have valid source and destination zones");
+            }
+            if (!zonesById.containsKey(connection.getFromZone().getId())
+                    || !zonesById.containsKey(connection.getToZone().getId())) {
+                throw new IllegalArgumentException("Connection references a zone outside this simulation");
+            }
+            if (connection.getMaxVisitorsPerMinute() == null
+                    || connection.getMaxVisitorsPerMinute() <= 0) {
+                throw new IllegalArgumentException("Corridor throughput must be greater than zero");
+            }
+        }
+
+        for (Map.Entry<Integer, Integer> entry : reservedSourceVisitors.entrySet()) {
+            if (!zonesById.containsKey(entry.getKey())) {
+                throw new IllegalArgumentException("Reserved visitors reference unknown zone: " + entry.getKey());
+            }
+            if (entry.getValue() == null || entry.getValue() < 0) {
+                throw new IllegalArgumentException("Reserved visitor count cannot be negative or null");
+            }
+        }
     }
 
 

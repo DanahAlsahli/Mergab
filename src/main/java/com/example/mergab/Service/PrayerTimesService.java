@@ -6,6 +6,7 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -42,6 +43,30 @@ public class PrayerTimesService {
             return Map.of("fajr", "04:41", "dhuhr", "11:44", "asr", "15:05", "maghrib", "17:35", "isha", "19:05");
         }
         return cached;
+    }
+
+    /** Returns prayer times for the requested simulated calendar date. */
+    public synchronized Map<String, String> getTimesForDate(LocalDate date) {
+        if (date == null) throw new IllegalArgumentException("Prayer date is required");
+        if (date.equals(LocalDate.now(RIYADH))) return getTodayTimes();
+        String requestedDate = date.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+        try {
+            Map<?, ?> response = rest.getForObject(URL + "&date=" + requestedDate, Map.class);
+            Map<?, ?> data = (Map<?, ?>) response.get("data");
+            Map<?, ?> timings = (Map<?, ?>) data.get("timings");
+            Map<String, String> result = new LinkedHashMap<>();
+            result.put("fajr", timings.get("Fajr").toString().substring(0, 5));
+            result.put("dhuhr", timings.get("Dhuhr").toString().substring(0, 5));
+            result.put("asr", timings.get("Asr").toString().substring(0, 5));
+            result.put("maghrib", timings.get("Maghrib").toString().substring(0, 5));
+            result.put("isha", timings.get("Isha").toString().substring(0, 5));
+            source = "live";
+            return Map.copyOf(result);
+        } catch (Exception e) {
+            source = "sample";
+            return Map.of("fajr", "04:41", "dhuhr", "11:44", "asr", "15:05",
+                    "maghrib", "17:35", "isha", "19:05");
+        }
     }
 
     public String getSource() { return source; }

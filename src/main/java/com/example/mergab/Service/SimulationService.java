@@ -9,14 +9,15 @@ import com.example.mergab.Model.Zone;
 import com.example.mergab.Repository.SimulationSnapshotRepository;
 import com.example.mergab.Repository.ZoneConnectionRepository;
 import com.example.mergab.Repository.ZoneRepository;
-import com.example.mergab.Simulation.CrowdSimulationEngine;
-import com.example.mergab.Simulation.SimulationSnapshotRecord;
+import com.example.mergab.Simulation.*;
 import com.example.mergab.Repository.HistoricalAttendanceRepository;
 import com.example.mergab.Repository.OrganizerRepository;
 import com.example.mergab.Repository.SimulationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.mergab.Model.ExpoEvent;
+import com.example.mergab.Repository.ExpoEventRepository;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -35,8 +36,16 @@ public class SimulationService {
     private final SimulationSnapshotRepository simulationSnapshotRepository;
     private final ZoneRepository zoneRepository;
     private final ZoneConnectionRepository zoneConnectionRepository;
+    private final ExpoEventRepository expoEventRepository;
+    private final PrayerTimesService prayerTimesService = new PrayerTimesService();
 
     private final CrowdSimulationEngine crowdSimulationEngine = new CrowdSimulationEngine();
+    private final EventDrivenSimulationRunner eventDrivenSimulationRunner =
+            new EventDrivenSimulationRunner(
+                    crowdSimulationEngine,
+                    new EventDrivenSimulationEngine(),
+                    prayerTimesService
+            );
 
     // كل المحاكاة (للأدمن)
     public List<Simulation> getAllSimulations() {
@@ -93,9 +102,21 @@ public class SimulationService {
             throw new ApiException("Cannot run a simulation without zones");
         }
 
+        // HistoricalAttendance is a venue-wide reference total, not a per-zone
+        // distribution. Do not invent zone occupancy from it: Zone.initialVisitors
+        // defines the starting state and ExpoEvent.expectedDemand drives arrivals.
+        if (simulation.getDurationMinutes() == null || simulation.getDurationMinutes() < 1
+                || simulation.getDurationMinutes() > 600) {
+            throw new ApiException("Simulation duration must be between 1 and 600 minutes");
+        }
+        if (simulation.getRandomSeed() == null) {
+            throw new ApiException("Simulation random seed is required");
+        }
         for (Zone zone : zones) {
-            if (zone.getInitialVisitors() > zone.getCapacity()) {
-                throw new ApiException("Initial visitors exceed capacity for zone: " + zone.getName());
+            if (zone.getCapacity() == null || zone.getInitialVisitors() == null
+                    || zone.getCapacity() < 0 || zone.getInitialVisitors() < 0
+                    || zone.getInitialVisitors() > zone.getCapacity()) {
+                throw new ApiException("Invalid initial visitors or capacity for zone: " + zone.getName());
             }
         }
 
@@ -103,11 +124,34 @@ public class SimulationService {
         simulation.setStartDateTime(LocalDateTime.now());
         simulationRepository.save(simulation);
 
+        LocalDateTime simulationStart = simulation.getStartDateTime();
+        LocalDateTime simulationEnd = simulationStart.plusMinutes(
+                simulation.getDurationMinutes()
+        );
+
+        List<ExpoEvent> events = expoEventRepository
+                .findExpoEventsByOrganizer_Id(
+                        simulation.getOrganizer().getId()
+                )
+                .stream()
+                // Only include events whose actual event interval overlaps
+                // this simulation. Do not simulate pre-arrivals for an event
+                // that begins after the simulation has already ended.
+                .filter(event ->
+                        event.getStartDateTime().isBefore(simulationEnd)
+                                && event.getEndDateTime().isAfter(simulationStart)
+                )
+                .toList();
+
         List<SimulationSnapshotRecord> records =
-                crowdSimulationEngine.runSimulationWithMultipleConnections(
+                eventDrivenSimulationRunner.runSimulation(
                         zones,
                         zoneConnectionRepository.findAll(),
-                        simulation.getDurationMinutes()
+                        events,
+                        simulationStart,
+                        simulation.getDurationMinutes(),
+                        30,
+                        simulation.getRandomSeed()
                 );
 
         Map<Integer, Zone> zonesById = zones.stream().collect(
@@ -129,10 +173,143 @@ public class SimulationService {
 
         simulationSnapshotRepository.saveAll(snapshots);
         simulation.setStatus("COMPLETED");
-        simulation.setEndDateTime(LocalDateTime.now());
+        simulation.setEndDateTime(simulationStart.plusMinutes(simulation.getDurationMinutes()));
         simulationRepository.save(simulation);
         return snapshots;
     }
+
+
+    /**
+     * Continue a completed simulation by deterministically replaying the full
+     * timeline with the original seed and appending only the new minutes.
+     * This reconstructs active event/prayer route cohorts without adding a new
+     * database column or storing transient engine internals in snapshot fields.
+     */
+    @Transactional
+    public List<SimulationSnapshot> continueSimulation(
+            Integer simulationId,
+            Integer additionalDurationMinutes) {
+
+        Simulation simulation = getSimulation(simulationId);
+        if (!"COMPLETED".equals(simulation.getStatus())) {
+            throw new ApiException("Only completed simulations can be continued");
+        }
+        if (additionalDurationMinutes == null || additionalDurationMinutes < 1) {
+            throw new ApiException("Additional duration must be at least 1 minute");
+        }
+
+        List<SimulationSnapshot> existingSnapshots =
+                simulationSnapshotRepository.findBySimulation_Id(simulationId);
+        if (existingSnapshots == null || existingSnapshots.isEmpty()) {
+            throw new ApiException("Cannot continue a simulation without saved snapshots");
+        }
+        if (simulation.getStartDateTime() == null || simulation.getRandomSeed() == null) {
+            throw new ApiException("Simulation start time and random seed are required to continue");
+        }
+
+        int lastMinute = existingSnapshots.stream()
+                .mapToInt(SimulationSnapshot::getMinute).max().orElseThrow();
+        int newTotalDuration = lastMinute + additionalDurationMinutes;
+        if (newTotalDuration > 600) {
+            throw new ApiException("Total simulation duration cannot exceed 600 minutes");
+        }
+
+        List<Zone> zones = zoneRepository.findAll();
+        if (zones.isEmpty()) throw new ApiException("Cannot continue a simulation without zones");
+        Map<Integer, Zone> zonesById = zones.stream().collect(
+                Collectors.toMap(Zone::getId, Function.identity()));
+
+        // Verify the saved final minute has exactly one snapshot per current zone.
+        Map<Integer, SimulationSnapshot> lastByZone = new java.util.HashMap<>();
+        for (SimulationSnapshot snapshot : existingSnapshots) {
+            if (snapshot.getMinute() == lastMinute) {
+                lastByZone.put(snapshot.getZone().getId(), snapshot);
+            }
+        }
+        if (lastByZone.size() != zones.size() || !lastByZone.keySet().equals(zonesById.keySet())) {
+            throw new ApiException("The latest saved minute must contain one snapshot for every current zone");
+        }
+
+        LocalDateTime originalStart = simulation.getStartDateTime();
+        LocalDateTime replayEnd = originalStart.plusMinutes(newTotalDuration);
+        List<ExpoEvent> events = expoEventRepository
+                .findExpoEventsByOrganizer_Id(simulation.getOrganizer().getId())
+                .stream()
+                // Match the original run's event-window rule during replay.
+                .filter(event -> event.getStartDateTime().isBefore(replayEnd)
+                        && event.getEndDateTime().isAfter(originalStart))
+                .toList();
+
+        List<com.example.mergab.Model.ZoneConnection> connections = zoneConnectionRepository.findAll();
+        boolean hasPrayerDestination = zones.stream().anyMatch(zone ->
+                Boolean.TRUE.equals(zone.getHasPrayerArea())
+                        && zone.getFacilities() != null
+                        && zone.getFacilities().stream().anyMatch(f -> f != null
+                                && "PRAYER_ROOM".equalsIgnoreCase(f.getType())));
+
+        List<SimulationSnapshotRecord> replay;
+        int replayMinuteOffset;
+        int firstNewRecordMinute;
+        if (!events.isEmpty() || hasPrayerDestination) {
+            replayMinuteOffset = 0;
+            firstNewRecordMinute = lastMinute;
+            // Aggregate snapshots cannot store active event/prayer route cohorts.
+            // Replay the full deterministic timeline to reconstruct those journeys.
+            replay = eventDrivenSimulationRunner.runSimulation(
+                    zones, connections, events, originalStart,
+                    newTotalDuration, 30, simulation.getRandomSeed());
+        } else {
+            replayMinuteOffset = lastMinute;
+            firstNewRecordMinute = 0;
+            // With no event or prayer journeys to restore, resume directly from
+            // the latest persisted aggregate state instead of discarding it.
+            Map<Integer, Integer> occupancy = new java.util.HashMap<>();
+            Map<Integer, Integer> queues = new java.util.HashMap<>();
+            lastByZone.forEach((zoneId, snapshot) -> {
+                occupancy.put(zoneId, snapshot.getOccupancy());
+                queues.put(zoneId, snapshot.getQueueLength());
+            });
+            replay = eventDrivenSimulationRunner.runSimulation(
+                    zones, connections, List.of(), originalStart.plusMinutes(lastMinute),
+                    additionalDurationMinutes, 30,
+                    new SimulationState(occupancy, queues), simulation.getRandomSeed());
+        }
+
+        Map<String, SimulationSnapshot> existingByMinuteAndZone = new java.util.HashMap<>();
+        for (SimulationSnapshot snapshot : existingSnapshots) {
+            existingByMinuteAndZone.put(snapshot.getMinute() + ":" + snapshot.getZone().getId(), snapshot);
+        }
+        List<SimulationSnapshot> newSnapshots = replay.stream()
+                .filter(record -> record.minute() > firstNewRecordMinute)
+                .map(record -> {
+                    Zone zone = zonesById.get(record.zoneId());
+                    if (zone == null) throw new ApiException("Simulation produced a snapshot for an unknown zone");
+                    int absoluteMinute = record.minute() + replayMinuteOffset;
+                    String key = absoluteMinute + ":" + record.zoneId();
+                    if (existingByMinuteAndZone.containsKey(key)) {
+                        throw new ApiException("A snapshot already exists for minute " + record.minute()
+                                + " and zone " + record.zoneId());
+                    }
+                    SimulationSnapshot snapshot = new SimulationSnapshot();
+                    snapshot.setSimulation(simulation);
+                    snapshot.setZone(zone);
+                    snapshot.setMinute(absoluteMinute);
+                    snapshot.setOccupancy(record.occupancy());
+                    snapshot.setQueueLength(record.queueLength());
+                    return snapshot;
+                }).toList();
+
+        simulation.setStatus("RUNNING");
+        simulationRepository.save(simulation);
+        simulationSnapshotRepository.saveAll(newSnapshots);
+        simulation.setDurationMinutes(newTotalDuration);
+        simulation.setEndDateTime(originalStart.plusMinutes(newTotalDuration));
+        simulation.setStatus("COMPLETED");
+        simulationRepository.save(simulation);
+        return newSnapshots;
+    }
+
+
 
     public void deleteSimulation(Integer id) {
         Simulation simulation = getSimulation(id);
