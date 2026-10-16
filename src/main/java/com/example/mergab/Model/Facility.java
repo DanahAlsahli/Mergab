@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Set;
+
 @Entity
 @Getter
 @Setter
@@ -48,4 +50,10 @@ public class Facility {
     @JoinColumn(name = "zone_id", nullable = false)
     @JsonIgnore
     private Zone zone;
+
+
+    @OneToMany(mappedBy = "facility")
+    @JsonIgnore
+    private Set<FacilityAccessPath> accessPaths;
+
 }
