@@ -488,13 +488,28 @@
     });
 
     // Search
-    $('heroSearch').addEventListener('submit', event => {
-        event.preventDefault();
+    $('heroSearch').addEventListener('submit', (e) => {
+        e.preventDefault();
 
         const query = $('searchText').value.trim();
+        const homeSearch = $('homeMapSearch');
 
-        location.href = '/visitor/map' +
-            (query ? '?q=' + encodeURIComponent(query) : '');
+        if (homeSearch) {
+            homeSearch.value = query;
+
+            homeSearch.dispatchEvent(
+                new Event('input', { bubbles: true })
+            );
+
+            $('homeMap').scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+
+            homeSearch.focus({
+                preventScroll: true
+            });
+        }
     });
 
     // Event filters

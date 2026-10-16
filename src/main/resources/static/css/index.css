@@ -532,6 +532,233 @@ html[dir="ltr"] .section-link .material-symbols-rounded {
     transform: rotate(20deg);
 }
 
+/* ===== Homepage Interactive Map ===== */
+
+.home-map-section {
+    padding: 54px 0 24px;
+    scroll-margin-top: 85px;
+}
+
+.home-map-section .section-heading {
+    margin-bottom: 23px;
+}
+
+.home-map-shell {
+    background: #fff;
+    border: 1px solid #dae8df;
+    border-radius: 22px;
+    padding: 16px;
+    box-shadow: 0 16px 50px #173e2a12;
+}
+
+.home-map-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.home-map-search {
+    display: flex;
+    flex: 1 1 290px;
+    gap: 9px;
+    align-items: center;
+    background: #f5f9f6;
+    border: 1px solid #d8e6dd;
+    border-radius: 13px;
+    padding: 0 13px;
+}
+
+.home-map-search input {
+    flex: 1;
+    min-width: 0;
+    padding: 13px 0;
+    font: inherit;
+    background: transparent;
+    border: 0;
+    outline: 0;
+    color: #173d30;
+}
+
+.home-map-search:focus-within {
+    outline: 2px solid #a6ccaf;
+}
+
+.home-map-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.home-map-toggle input {
+    accent-color: #176d53;
+}
+
+.home-map-refresh {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #537465;
+    font-size: 12px;
+}
+
+.home-map-refresh .material-symbols-rounded {
+    font-size: 17px;
+}
+
+.home-map-status {
+    min-height: 21px;
+    color: #47735f;
+    font-size: 12px;
+    margin: 7px 4px;
+}
+
+.home-expo-map,
+.mqm.home-expo-map {
+    height: 500px;
+    min-height: 360px;
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    background: #eaf1eb;
+}
+
+.home-map-bottom {
+    display: grid;
+    gap: 12px;
+    padding-top: 14px;
+}
+
+.home-map-selected {
+    font-size: 14px;
+    color: #184b37;
+    font-weight: 600;
+}
+
+.home-map-planner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: end;
+}
+
+.home-map-planner label {
+    display: grid;
+    gap: 5px;
+    font-size: 12px;
+    color: #526b5c;
+    flex: 1 1 170px;
+}
+
+.home-map-planner select {
+    width: 100%;
+    border: 1px solid #d7e4db;
+    border-radius: 10px;
+    padding: 11px;
+    font: inherit;
+    color: #173e30;
+    background: #fff;
+}
+
+.home-map-planner button {
+    min-height: 44px;
+}
+
+.home-map-route-status {
+    font-size: 12px;
+    color: #61746b;
+    margin: 0;
+}
+
+.home-map-results {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-height: 116px;
+    overflow: auto;
+}
+
+.home-map-results:empty {
+    display: none;
+}
+
+.home-map-result {
+    border: 1px solid #dbe8df;
+    color: #24543e;
+    background: #f7faf8;
+    border-radius: 9px;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.home-map-result:hover,
+.home-map-result:focus-visible {
+    background: #e5f3eb;
+}
+
+.home-map-result small {
+    color: #667a6c;
+    margin-inline-start: 6px;
+}
+
+.home-facility-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 8;
+}
+
+.home-facility-dot {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 29px;
+    height: 29px;
+    background: #176d53;
+    color: #fff;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px #0004;
+    pointer-events: auto;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+}
+
+.home-facility-dot .material-symbols-rounded {
+    font-size: 17px;
+}
+
+.home-facility-dot:hover,
+.home-facility-dot:focus-visible {
+    background: #bd8c46;
+    z-index: 3;
+}
+
+@media (max-width: 650px) {
+    .home-map-section {
+        padding-top: 34px;
+    }
+
+    .home-map-shell {
+        padding: 10px;
+    }
+
+    .home-expo-map,
+    .mqm.home-expo-map {
+        height: 390px;
+    }
+
+    .home-map-planner button {
+        width: 100%;
+    }
+}
+
 @media (max-width: 730px) {
     .home-cta {
         min-height: auto;

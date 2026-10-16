@@ -14,8 +14,12 @@
 
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="/map/mirqab-map.css">
     <script defer src="/js/base.js"></script>
     <script defer src="/js/index.js"></script>
+    <script defer src="/map/mirqab-map.js"></script>
+    <script defer src="/js/mergab-map-data.js"></script>
+    <script defer src="/js/home-map.js"></script>
 </head>
 
 <body>
@@ -43,7 +47,7 @@
             </form>
 
             <div class="hero-shortcuts">
-                <a href="/visitor/map">
+                <a href="#homeMap">
                     <span class="material-symbols-rounded">map</span>
                     <span data-t="shortcutMap">الخريطة التفاعلية</span>
                 </a>
@@ -51,7 +55,7 @@
                     <span class="material-symbols-rounded">event</span>
                     <span data-t="shortcutEvents">فعاليات اليوم</span>
                 </a>
-                <a href="/visitor/map#planner">
+                <a href="#homeMapPlanner">
                     <span class="material-symbols-rounded">route</span>
                     <span data-t="shortcutPlan">خطط مسارك</span>
                 </a>
@@ -60,6 +64,140 @@
     </section>
 
     <div class="sadu-divider" aria-hidden="true"></div>
+
+
+    <!-- Interactive Expo Map -->
+    <section class="home-map-section"
+             id="homeMap"
+             aria-labelledby="homeMapHeading">
+
+        <div class="home-container">
+
+            <div class="section-heading centered">
+                <span class="section-kicker">إكسبو بين يديك</span>
+
+                <h2 id="homeMapHeading">
+                    الخريطة التفاعلية
+                </h2>
+
+                <p>
+                    استكشف المناطق والمرافق، راقب الإشغال المسجّل،
+                    واختر طريقك داخل إكسبو.
+                </p>
+            </div>
+
+            <div class="home-map-shell">
+
+                <!-- Search and map controls -->
+                <div class="home-map-toolbar">
+
+                    <label class="home-map-search"
+                           for="homeMapSearch">
+
+                    <span class="material-symbols-rounded">
+                        search
+                    </span>
+
+                        <input
+                                id="homeMapSearch"
+                                type="search"
+                                autocomplete="off"
+                                placeholder="ابحث عن منطقة أو مرفق أو فعالية"
+                                aria-label="ابحث على خريطة إكسبو">
+                    </label>
+
+                    <label class="home-map-toggle">
+                        <input id="homeMapFacilitiesToggle"
+                               type="checkbox"
+                               checked>
+                        <span>المرافق</span>
+                    </label>
+
+                    <span class="home-map-refresh">
+                    <span class="material-symbols-rounded">
+                        sync
+                    </span>
+                    تحديث كل 30 ثانية
+                </span>
+
+                </div>
+
+                <!-- Search results -->
+                <div id="homeMapResults"
+                     class="home-map-results"
+                     aria-live="polite"></div>
+
+                <!-- Map loading state -->
+                <p id="homeMapStatus"
+                   class="home-map-status"
+                   role="status">
+                    جاري تحميل الخريطة...
+                </p>
+
+                <!-- Interactive map -->
+                <div id="homeExpoMap"
+                     class="home-expo-map"
+                     aria-label="خريطة مناطق إكسبو مع الحدود والازدحام والمسارات">
+                </div>
+
+                <!-- Route planner -->
+                <div class="home-map-bottom">
+
+                    <div id="homeMapSelected"
+                         class="home-map-selected"
+                         aria-live="polite">
+                        اضغط على منطقة في الخريطة لمعرفة حالتها.
+                    </div>
+
+                    <form id="homeMapPlanner"
+                          class="home-map-planner">
+
+                        <label>
+                            من
+                            <select id="homeMapStart"
+                                    required
+                                    aria-label="نقطة البداية">
+                            </select>
+                        </label>
+
+                        <label>
+                            إلى
+                            <select id="homeMapDestination"
+                                    required
+                                    aria-label="الوجهة">
+                            </select>
+                        </label>
+
+                        <button type="submit"
+                                class="btn btn-primary">
+
+                        <span class="material-symbols-rounded">
+                            route
+                        </span>
+
+                            اعرض المسار
+                        </button>
+
+                    </form>
+
+                    <p id="homeMapRouteStatus"
+                       class="home-map-route-status"
+                       role="status">
+
+                        اختاري نقطة البداية والوجهة.
+                        التوجيه بين المناطق تقديري حسب الاتصالات المسجلة.
+                    </p>
+
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+
+
+
+
 
     <div class="home-container">
         <section class="home-section" id="features">
