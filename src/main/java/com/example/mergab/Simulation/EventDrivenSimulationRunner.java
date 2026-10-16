@@ -173,6 +173,7 @@ public class EventDrivenSimulationRunner {
         Map<String, String> startDatePrayerTimes = getPrayerTimesForDate(
                 simulationStart.toLocalDate(), prayerTimesByDate, Map.of());
         SimulationState currentState = initialState;
+        OrdinaryVisitorFlow ordinaryFlow = new OrdinaryVisitorFlow(zones, initialState, randomSeed);
 
         // Process the simulation start instant too. The minute loop below begins
         // at 1, so without this call a prayer whose 10-minute preparation window
@@ -200,21 +201,19 @@ public class EventDrivenSimulationRunner {
             prayerCoordinator.getProtectedVisitors().forEach((zoneId, count) ->
                     protectedVisitors.merge(zoneId, count, Integer::sum));
 
-            List<ZoneConnection> movementOrder = new ArrayList<>(connections);
-            Collections.shuffle(movementOrder, new Random(randomSeed + minute));
+            // Ordinary guests explore connected zones with a realistic dwell time.
+            // Event-route guests and prayer guests remain protected and are handled
+            // by their existing coordinators, using the same corridor budget.
             Map<ZoneConnection, Integer> corridorBudget =
                     crowdSimulationEngine.createCorridorBudget(connections);
-            List<SimulationSnapshotRecord> movementRecords =
-                    crowdSimulationEngine.runSimulationWithMultipleConnections(
-                            zones, movementOrder, 1, currentState, protectedVisitors,
-                            corridorBudget);
-
-            currentState = stateFromMinuteOne(movementRecords, zones, currentState);
+            currentState = ordinaryFlow.advanceMinute(
+                    currentState, zones, connections, capacities,
+                    protectedVisitors, corridorBudget, minute);
 
             if (routeModeEnabled) {
                 currentState = advanceRouteCohorts(
                         currentState, routePlans, zones, capacities, corridorBudget,
-                        simulationStart.plusMinutes(minute));
+                        simulationStart.plusMinutes(minute), ordinaryFlow, minute);
                 currentState = admitPendingRouteArrivals(
                         currentState, pendingByTarget, routePlans, capacities);
             } else {
@@ -288,7 +287,11 @@ public class EventDrivenSimulationRunner {
                     if (!simulatedTime.isBefore(entry.getValue())) {
                         int zoneId = entry.getKey();
                         int attendees = directEventVisitors.getOrDefault(zoneId, 0);
-                        currentState = adjustOccupancy(currentState, zoneId, -attendees);
+                        // Most attendees stay to explore rather than disappearing
+                        // from the Expo immediately when their event ends.
+                        int departing = attendees / 5;
+                        ordinaryFlow.addVisitors(zoneId, attendees - departing, minute, true);
+                        currentState = adjustOccupancy(currentState, zoneId, -departing);
                         directEventVisitors.put(zoneId, 0);
                         waitingArrivals.put(zoneId, 0);
                     }
@@ -461,14 +464,20 @@ public class EventDrivenSimulationRunner {
             List<Zone> zones,
             Map<Integer, Integer> capacities,
             Map<ZoneConnection, Integer> corridorCapacityLeft,
-            LocalDateTime simulatedTime) {
+            LocalDateTime simulatedTime,
+            OrdinaryVisitorFlow ordinaryFlow,
+            int minute) {
         Map<Integer, Integer> occupancy = new HashMap<>(state.occupancy());
 
         for (RoutePlan plan : routePlans.values()) {
             if (!simulatedTime.isBefore(plan.eventEndTime)) {
                 int lastInbound = plan.visitorsAtStep.length - 1;
                 if (lastInbound >= 0 && plan.visitorsAtStep[lastInbound] > 0) {
-                    plan.returningVisitorsAtStep[0] += plan.visitorsAtStep[lastInbound];
+                    int attendees = plan.visitorsAtStep[lastInbound];
+                    int goingHome = Math.max(1, attendees / 5);
+                    int staying = attendees - goingHome;
+                    ordinaryFlow.addVisitors(plan.zoneIds.get(lastInbound), staying, minute, true);
+                    plan.returningVisitorsAtStep[0] += goingHome;
                     plan.visitorsAtStep[lastInbound] = 0;
                 }
             }
